@@ -1,0 +1,165 @@
+{
+  "bits": 0,
+  "ship_count": 5,
+  "time_played": 0,
+  "all_multiplier": 1,
+  "resources": [
+    {
+      "name": "Greenite",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 114, 197, 147, 255 ],
+      "level": 1,
+      "baseCost": 2.7027,
+      "baseValue": 1,
+      "costMultiplier": 1.11,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 8,
+      "spawned": 20,
+      "capacity": 25
+    },
+    {
+      "name": "Bluedium",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 114, 176, 197, 255 ],
+      "level": 0,
+      "baseCost": 140,
+      "baseValue": 50,
+      "costMultiplier": 1.11,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 10,
+      "spawned": 3,
+      "capacity": 5
+    },
+    {
+      "name": "Reddite",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 197, 114, 114, 255 ],
+      "level": 0,
+      "baseCost": 7000,
+      "baseValue": 2500,
+      "costMultiplier": 1.09,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 12,
+      "spawned": 2,
+      "capacity": 5
+    },
+    {
+      "name": "Yellominium",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 197, 197, 114, 255 ],
+      "level": 0,
+      "baseCost": 350000,
+      "baseValue": 125000,
+      "costMultiplier": 1.09,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 14,
+      "spawned": 2,
+      "capacity": 5
+    },
+    {
+      "name": "Orangite",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 197, 161, 114, 255 ],
+      "level": 0,
+      "baseCost": 17500000,
+      "baseValue": 6250000,
+      "costMultiplier": 1.09,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 16,
+      "spawned": 2,
+      "capacity": 5
+    },
+    {
+      "name": "Violum",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 155, 114, 197, 255 ],
+      "level": 0,
+      "baseCost": 8.75e8,
+      "baseValue": 3.125e8,
+      "costMultiplier": 1.07,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 18,
+      "spawned": 2,
+      "capacity": 3
+    },
+    {
+      "name": "Indigine",
+      "icon_filepath": "ui/icon_bit_t1.png",
+      "color": [ 114, 124, 196, 255 ],
+      "level": 0,
+      "baseCost": 4.375e11,
+      "baseValue": 1.5625e11,
+      "costMultiplier": 1.07,
+      "valueMultiplier": 1,
+      "timer": 0,
+      "spawnTime": 20,
+      "spawned": 2,
+      "capacity": 3
+    }
+  ],
+  "upgrades": [
+    [5e2, 0, 0, 3],
+    [5e3, 1, 1, 5],
+
+    [2.5e4, 0, 0, 3],
+    [5e4, 1, 0, 3],
+    [1e5, 2, 1, 5],
+
+    [7.5e5, 0, 0, 3],
+    [3e6, 1, 0, 3],
+    [6e6, 2, 0, 3],
+    [9e6, 3, 1, 5],
+
+    [3e7, 0, 0, 3],
+    [4e7, 1, 0, 3],
+    [5e7, 2, 0, 3],
+    [6e7, 3, 0, 3],
+    [7e7, 4, 1, 5],
+    [1e8, 0, 0, 3],
+    [2e8, 1, 0, 3],
+    [5e8, 2, 0, 3],
+    [7e8, 3, 0, 3],
+    [8e8, 4, 0, 3],
+
+    [1e9, 0, 0, 3],
+    [3e9, 1, 0, 3],
+    [5e9, 2, 0, 3],
+    [7e9, 3, 0, 3],
+    [1e10, 4, 0, 3],
+    [5e10, 5, 1, 3],
+    [6e10, 0, 0, 5],
+    [7e10, 1, 0, 5],
+    [8e10, 2, 0, 5],
+    [9e10, 3, 0, 5],
+    [1e11, 4, 0, 5],
+    [2.5e11, 5, 0, 5],
+
+    [6e11, 0, 1, 25],
+    [8e11, 1, 1, 20],
+    [1e12, 2, 1, 15],
+    [3e12, 3, 1, 10],
+    [5e13, 4, 1, 5],
+    [7e13, 5, 1, 4],
+    [9e13, 6, 1, 2],
+    [2.5e14, 7, 0, 7]
+  ],
+  "upgrades_purchased":[
+  ],
+  "squadrons": [
+    {
+      "name": "default",
+      "sprite": "sprites/ship.png",
+      "size": 7,
+      "speed": 5.5,
+      "force": 0.18
+    }
+  ],
+  "squadrons_purchased": [
+  ]
+}
