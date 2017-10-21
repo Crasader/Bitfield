@@ -201,7 +201,7 @@ void Generator::addLevelUp() {
     // Label Strings
     std::string labelString;
     std::string iconString;
-    if (Player::bit_info[id].level > Player::LEVEL_TIER[3] + Player::LEVEL_TIER[4]) {
+    if (Player::bit_info[id].level > Player::LEVEL_TIER[2] + Player::LEVEL_TIER[3]) {
         labelString = BIT_STRINGS[id] + " value tripled!" ;
         iconString = "x3";
     }

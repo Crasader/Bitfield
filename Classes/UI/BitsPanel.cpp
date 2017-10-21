@@ -2,8 +2,8 @@
 
 #include "Util.h"
 #include "Constants.h"
-#include "Generator.h";
-#include "Upgrade.h";
+#include "Generator.h"
+#include "Upgrade.h"
 #include "UI/UIImageView.h"
 #include "UI/UIScrollView.h"
 #include "UI/UIText.h"
