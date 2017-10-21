@@ -31,6 +31,12 @@ bool PurchaseButton::init(cocos2d::Size size)
     return true;
 }
 
+void PurchaseButton::setButtonColor(const cocos2d::Color4B & color)
+{
+    auto node = utils::findChild(this, "button");
+    node->setColor(Color3B(color));
+}
+
 void PurchaseButton::setHeaderColor(const cocos2d::Color4B & color)
 {
     auto node = utils::findChild(this, "header_background");
@@ -63,7 +69,7 @@ void PurchaseButton::setCostType(CostType type)
 void PurchaseButton::addButton()
 {
     auto button = Util::createRoundedButton(UI_ROUNDED_RECT, getContentSize(), UI_COLOR_1);
-    button->setZoomScale(0.05f);
+    button->setZoomScale(0);
     addChild(button, 0, "button");
 }
 
@@ -83,7 +89,7 @@ void PurchaseButton::addHeader()
 {
     auto header_background = utils::findChild(this, "header_background");
     auto size = header_background->getContentSize();
-    auto header = ui::Text::create("Unnamed", FONT_DEFAULT, size.height * 0.8f);
+    auto header = ui::Text::create("Unnamed", FONT_DEFAULT, size.height * 0.9f);
     header->setPositionNormalized(Vec2(0.5f, 0.5f));
     header_background->addChild(header, 0, "header");
 }
@@ -96,7 +102,7 @@ void PurchaseButton::addCost()
     auto hbox = ui::HBox::create(getContentSize());
     hbox->setCascadeOpacityEnabled(true);
     hbox->setAnchorPoint(Vec2(0.5f, 0.5f));
-    hbox->setPositionNormalized(Vec2(0.5f, 0.3f));
+    hbox->setPositionNormalized(Vec2(0.5f, 0.26f));
     auto param = ui::LinearLayoutParameter::create();
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
     hbox->setLayoutParameter(param);

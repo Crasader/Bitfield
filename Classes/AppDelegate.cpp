@@ -20,7 +20,7 @@ using namespace CocosDenshion;
 USING_NS_CC;
 
 static cocos2d::Size windowSize = cocos2d::Size(WINDOW_WIDTH, WINDOW_HEIGHT);
-static cocos2d::Size gameResolution = cocos2d::Size(WIDTH, HEIGHT);
+static cocos2d::Size gameResolution = cocos2d::Size(GAME_WIDTH, GAME_HEIGHT);
 
 AppDelegate::AppDelegate()
 {
@@ -71,7 +71,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setAnimationInterval(1.0f / FPS);
 
     // Set the design resolution
-    glview->setDesignResolutionSize(WIDTH, HEIGHT, ResolutionPolicy::SHOW_ALL);
+    glview->setDesignResolutionSize(GAME_WIDTH, GAME_HEIGHT, ResolutionPolicy::SHOW_ALL);
 
     register_all_packages();
 

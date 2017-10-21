@@ -14,8 +14,8 @@ static const bool USE_SAVE = true;
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
 static const int FPS = 60;
-static const int WIDTH = 1080;
-static const int HEIGHT = 1920;
+static const int GAME_WIDTH = 1080;
+static const int GAME_HEIGHT = 1920;
 static std::string DEFAULT_FILE = "data/default.json";
 static std::string SAVE_FILE = "data/save.json";
 static const std::string FONT_DEFAULT = "fonts/exprswy_free.ttf";
@@ -43,9 +43,15 @@ const double BIT_INF = BIT_MAX + 1;
 
 //---- UI
 static const int PANEL_WIDTH = 1048;
-static const int PANEL_HEIGHT = 616;
+static const int PANEL_HEIGHT = 632;
 static const int SCROLL_WIDTH = 984;
 static const int SCROLL_HEIGHT = 591;
+static const int PANEL_Y = 98;
+static const int UI_CENTER_X = GAME_WIDTH / 2;
+static const int UI_CENTER_Y = GAME_HEIGHT / 2;
+static const cocos2d::Vec2 ANCHOR_CENTER(0.5f, 0.5f);
+static const cocos2d::Vec2 ANCHOR_CENTER_BOTTOM(0.5f, 0);
+static const cocos2d::Vec2 ANCHOR_BL(0, 0);
 
 static const int BIT_COUNTER_SIZE = 86;
 static const int PANEL_HEADER_SIZE = 84;
@@ -58,7 +64,7 @@ static const float BUY_BUTTON_FADE_PERCENT = 0.5f;
 
 static const cocos2d::Color4B WORLD_COLOR(38, 40, 48, 255);
 static const cocos2d::Color4B UI_COLOR_1(28, 29, 35, 255);
-static const cocos2d::Color4B UI_COLOR_2 = WORLD_COLOR;
+static const cocos2d::Color4B UI_COLOR_2(38, 40, 48, 255);
 static const cocos2d::Color4B UI_COLOR_3(24, 25, 31, 255);
 static const cocos2d::Color4B UI_COLOR_BLUE(79, 137, 196, 255);
 static const cocos2d::Color4B UI_COLOR_RED(197, 114, 114, 255);
@@ -66,7 +72,8 @@ static const cocos2d::Color4B UI_COLOR_WHITE(245, 245, 245, 255);
 
 static const std::string SPRITE_BLANK = "sprites/blank.png";
 static const std::string SPRITE_CIRCLE = "sprites/circle.png";
-static const std::string UI_ROUNDED_RECT = "ui/rounded_corners_8.png";
+static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
+static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";
 static const std::string UI_ICON_CAPACITY = "ui/icon_bit_t1.png";
 static const std::string UI_ICON_SHIP = SPRITE_SHIP;

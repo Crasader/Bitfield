@@ -147,10 +147,15 @@ void Generator::addSpawnCapacity() {
 void Generator::addBuyButton() {
     auto buy_button = PurchaseButton::create(Size(264, 114));
     buy_button->setHeaderColor(Player::bit_info[id].color);
-    buy_button->setPosition(Vec2(704, 10));
+    buy_button->setAnchorPoint(Vec2(0.5f, 0.5f));
+    buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
 
-    buy_button->getChildByName<ui::Button*>("button")->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
+    buy_button->getChildByName<ui::Button*>("button")->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
+        if (type == ui::Widget::TouchEventType::BEGAN) {
+            buy_button->setScale(1.05f);
+        }
         if (type == ui::Widget::TouchEventType::ENDED) {
+            buy_button->setScale(1.0f);
             auto oldLevel = Player::bit_info[id].level;
             auto nextTier = Player::getNextTier(id);
             auto didPurchase = Player::purchaseBitUpgrade(id);

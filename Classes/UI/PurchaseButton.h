@@ -12,6 +12,7 @@ public:
     static PurchaseButton* create(cocos2d::Size size);
     bool init(cocos2d::Size size);
 
+    void setButtonColor(const cocos2d::Color4B & color);
     void setHeaderColor(const cocos2d::Color4B& color);
     void setHeader(const std::string& header);
     void setCost(double amount);

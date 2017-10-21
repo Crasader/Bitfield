@@ -156,6 +156,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClCompile Include="..\Classes\UI\BitsPanel.cpp" />
     <ClCompile Include="..\Classes\UI\HUD.cpp" />
     <ClCompile Include="..\Classes\UI\Generator.cpp" />
+    <ClCompile Include="..\Classes\UI\SquadronPanel.cpp" />
     <ClCompile Include="..\Classes\UI\Upgrade.cpp" />
     <ClCompile Include="..\Classes\UI\PurchaseButton.cpp" />
     <ClCompile Include="..\Classes\UI\World.cpp" />
@@ -173,6 +174,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\UI\BitsPanel.h" />
     <ClInclude Include="..\Classes\UI\HUD.h" />
     <ClInclude Include="..\Classes\UI\Generator.h" />
+    <ClInclude Include="..\Classes\UI\SquadronPanel.h" />
     <ClInclude Include="..\Classes\UI\Upgrade.h" />
     <ClInclude Include="..\Classes\UI\PurchaseButton.h" />
     <ClInclude Include="..\Classes\UI\World.h" />

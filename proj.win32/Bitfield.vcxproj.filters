@@ -63,6 +63,9 @@
     <ClCompile Include="..\Classes\UI\Generator.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\UI\SquadronPanel.cpp">
+      <Filter>src\UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -108,6 +111,9 @@
       <Filter>src\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Generator.h">
+      <Filter>src\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\SquadronPanel.h">
       <Filter>src\UI</Filter>
     </ClInclude>
   </ItemGroup>

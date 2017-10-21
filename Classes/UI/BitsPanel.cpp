@@ -66,10 +66,10 @@ void BitsPanel::addBackground()
 static ui::Button* createTab(const std::string& label, float posX)
 {
     auto tab = Util::createRoundedButton(UI_ROUNDED_RECT, Size(228, 64), UI_COLOR_1);
-    tab->setPosition(Vec2(posX, 618));
+    tab->setPosition(Vec2(posX, PANEL_HEIGHT));
     tab->setZoomScale(0);
     auto tab_label = ui::Text::create(label, FONT_DEFAULT, FONT_SIZE_MEDIUM);
-    tab_label->setPositionNormalized(Vec2(0.5f, 0.5f));
+    tab_label->setPositionNormalized(Vec2(0.5f, 0.6f));
     tab->addChild(tab_label, 0, "tab_label");
     return tab;
 }
