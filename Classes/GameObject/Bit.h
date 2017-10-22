@@ -2,7 +2,7 @@
 #define __BIT_H__
 
 #include "cocos2d.h"
-#include "Player.h"
+#include "PlayerData/Player.h"
 
 class Bit : public cocos2d::Sprite
 {

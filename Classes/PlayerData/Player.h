@@ -1,13 +1,13 @@
-#ifndef __PLAYER_H__
-#define __PLAYER_H__
+#pragma once
 
 #include "cocos2d.h"
 #include "rapidjson\document.h"
 #include <string>
 #include <map>
 #include <set>
+#include "UpgradeManager.h"
 
-enum class BuyMode {
+enum BuyMode {
     One,
     Ten,
     Hundred,
@@ -41,46 +41,25 @@ struct BitInfo {
     int capacity;
 };
 
-enum UpgradeType {
-    Value,
-    Capacity
-};
-
-struct UpgradeInfo {
-    double cost;
-    BitType bitType;
-    UpgradeType upgradeType;
-    double value;
-
-    std::string name;
-    std::string desc;
-    std::string icon_filepath;
-    cocos2d::Color4B color;
-};
-
 class Player {
 public:
+    // Loading and Saving
     static rapidjson::Document document;
-    static double bits;
-    static double time_played;
-
-    static void save();
     static void load();
-
-    static void addBits(double bits);
-    static void subBits(double bits);
-    static std::string getFormattedBits(double bits);
-    static std::string getSuffix(int exponent);
-
-    // Resources
+    static void save();
+    
+    // Bits
+    static double bits;
     static double all_multiplier;
     static std::map<BitType, BitInfo> bit_info;
     static BuyMode buy_mode;
     static const int LEVEL_TIER[];
 
+    static void addBits(double bits);
+    static void subBits(double bits);
     static int getTier(BitType type);
     static int getNextTier(BitType type);
-    static double calculatePrice(BitType type);
+    static double calculateCost(BitType type);
     static double calculateValue(BitType type);
     static int getBuyAmount(BitType type);
     static int calculateMaxLevels(int level, double baseCost, double multiplier);
@@ -88,7 +67,7 @@ public:
     static void toggleBuyMode();
 
     // Upgrades
-    static std::map<int, UpgradeInfo> upgrade_info;
+    static std::map<int, Upgrade> upgrades;
     static std::set<int> upgrades_purchased;
     static bool purchaseUpgrade(int id);
     static bool canBuyUpgrade();
@@ -107,9 +86,6 @@ public:
     static float ship_vision;
     static float ship_separation;
 
-    static bool touch_down;
-    static cocos2d::Vec2 touch_location;
-
 private:
     static void loadDocument();
     static void loadUpgrades();
@@ -117,6 +93,5 @@ private:
 
     static void saveBits();
     static void saveUpgrades();
+    static void saveDocument();
 };
-
-#endif // __PLAYER_H__

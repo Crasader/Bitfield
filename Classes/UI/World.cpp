@@ -1,5 +1,6 @@
 #include "World.h"
 
+#include "Util.h"
 #include "..\Constants.h"
 #include "..\Scene\GameScene.h"
 #include "..\GameObject\Ship.h"
@@ -32,7 +33,6 @@ void World::onEnter() {
     // Spawn Ships
     addShip();
     auto ship = ships.at(0);
-    //ship->setColor(SHIP_COLOR);
     ship->setPosition(getContentSize() / 2.0f);
     auto follow = Follow::createWithOffset(ship, 0, 350, Rect(0, -730, getContentSize().width, getContentSize().height + 730));
     runAction(follow);
@@ -122,18 +122,18 @@ void World::createInput() {
     // Touch
     auto touch = EventListenerTouchOneByOne::create();
     touch->onTouchBegan = [this](Touch* touch, Event* event) {
-        Player::touch_down = true;
-        Player::touch_location = touch->getLocation();
+        Util::touch_down = true;
+        Util::touch_location = touch->getLocation();
         return true;
     };
     touch->onTouchMoved = [this](Touch* touch, Event* event) {
-        Player::touch_location = touch->getLocation();
+        Util::touch_location = touch->getLocation();
     };
     touch->onTouchCancelled = [](Touch* touch, Event* event) {
-        Player::touch_down = false;
+        Util::touch_down = false;
     };
     touch->onTouchEnded = [=](Touch* touch, Event* event) {
-        Player::touch_down = false;
+        Util::touch_down = false;
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
 }
@@ -157,9 +157,9 @@ void World::updateShips() {
             continue;
         }
 
-        if (Player::touch_down && ship == ships.at(0)) {
+        if (Util::touch_down && ship == ships.at(0)) {
             // Seek towards touch position
-            auto target = Player::touch_location - getPosition();
+            auto target = Util::touch_location - getPosition();
             Vec2 seekForce = ship->seek(target);
             ship->applyForce(seekForce, Player::seek);
             auto toMouse = target - ship->getPosition();

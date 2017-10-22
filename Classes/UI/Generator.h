@@ -2,7 +2,7 @@
 #define __GENERATOR_H__
 
 #include "cocos2d.h"
-#include "Player.h"
+#include "PlayerData/Player.h"
 #include "UI/UIWidget.h"
 
 class Generator : public cocos2d::ui::Widget

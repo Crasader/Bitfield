@@ -2,7 +2,7 @@
 #define __WORLD_H__
 
 #include "cocos2d.h"
-#include "../Player.h"
+#include "PlayerData/Player.h"
 #include <map>
 
 class Ship;

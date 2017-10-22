@@ -1,8 +1,8 @@
 #include "Ship.h"
 
-#include "Scene\GameScene.h"
-#include "Constants.h"
-#include "PlayerData/Player.h"
+#include "..\Scene\GameScene.h"
+#include "..\Constants.h"
+#include "..\Player.h"
 #include "Bit.h"
 
 USING_NS_CC;

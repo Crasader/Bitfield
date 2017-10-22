@@ -1,16 +1,16 @@
 #include "HUD.h"
 #include "World.h"
-#include "..\Util.h"
-#include "..\Constants.h"
-#include "..\Player.h"
-#include "..\Scene\GameScene.h"
+#include "Util.h"
+#include "Constants.h"
+#include "PlayerData/Player.h"
+#include "Scene\GameScene.h"
 
-#include "..\UI\BitsPanel.h"
-#include "..\UI\SquadronPanel.h"
-#include "..\UI\Upgrade.h"
+#include "UI\BitsPanel.h"
+#include "UI\SquadronPanel.h"
+#include "UI\UpgradeItem.h"
 
-#include "UI\UIText.h"
-#include "UI\UIScrollView.h"
+#include "ui\UIText.h"
+#include "ui\UIScrollView.h"
 #include "ui\UIButton.h"
 #include "ui\UILayoutParameter.h"
 #include "ui\UIImageView.h"
@@ -70,7 +70,7 @@ void HUD::update(float delta) {
     auto bit_counter_layer = getChildByName("bit_counter_layer");
     auto icon = bit_counter_layer->getChildByName("icon");
     auto counter = bit_counter_layer->getChildByName<ui::Text*>("counter");
-    counter->setString(Player::getFormattedBits(Player::bits));
+    counter->setString(Util::getFormattedDouble(Player::bits));
     bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
         counter->getContentSize().height));
 }

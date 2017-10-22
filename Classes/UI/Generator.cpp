@@ -289,7 +289,7 @@ void Generator::updateSpawnBar()
 
     // Value
     auto value = getChildByName<ui::Text*>("value");
-    ss << Player::getFormattedBits(Player::calculateValue(id));
+    ss << Util::getFormattedDouble(Player::calculateValue(id));
     value->setString(ss.str());
     ss.str("");
 
@@ -334,7 +334,7 @@ void Generator::updateBuyButton()
 
     // Set Button Text
     auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    auto cost = Player::calculatePrice(id);
+    auto cost = Player::calculateCost(id);
     buy_button->setCost(cost);
     if (cost < BIT_MAX) {
         auto amount = Player::getBuyAmount(id);

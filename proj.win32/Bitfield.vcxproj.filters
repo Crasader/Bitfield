@@ -19,6 +19,9 @@
     <Filter Include="src\GameObject">
       <UniqueIdentifier>{9c7ad42c-6f89-4bca-ac3d-0d8c7f3d26af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\PlayerData">
+      <UniqueIdentifier>{7287750f-c4e7-4d23-a629-f8d446d584fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -42,9 +45,6 @@
     <ClCompile Include="..\Classes\UI\HUD.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\Player.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\AppDelegate.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -57,13 +57,16 @@
     <ClCompile Include="..\Classes\UI\BitsPanel.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\UI\Upgrade.cpp">
-      <Filter>src\UI</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\UI\Generator.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\SquadronPanel.cpp">
+      <Filter>src\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\PlayerData\Player.cpp">
+      <Filter>src\PlayerData</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\UpgradeItem.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,9 +95,6 @@
     <ClInclude Include="..\Classes\Constants.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\Player.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\AppDelegate.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -107,13 +107,16 @@
     <ClInclude Include="..\Classes\UI\PurchaseButton.h">
       <Filter>src\UI</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\UI\Upgrade.h">
-      <Filter>src\UI</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\UI\Generator.h">
       <Filter>src\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\SquadronPanel.h">
+      <Filter>src\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\PlayerData\Player.h">
+      <Filter>src\PlayerData</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\UpgradeItem.h">
       <Filter>src\UI</Filter>
     </ClInclude>
   </ItemGroup>

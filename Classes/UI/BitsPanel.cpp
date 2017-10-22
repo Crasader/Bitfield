@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "Constants.h"
 #include "Generator.h"
-#include "Upgrade.h"
+#include "UpgradeItem.h"
 #include "UI/UIImageView.h"
 #include "UI/UIScrollView.h"
 #include "UI/UIText.h"
@@ -181,10 +181,11 @@ void BitsPanel::addUpgrades()
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
     param->setMargin(ui::Margin(0, 0, 0, 16));
 
-    for (auto i = 0; i < Player::upgrade_info.size(); i++) {
-        auto button = Upgrade::create(i);
+    for (auto info : Player::upgrades) {
+        if (Player::isUpgradePurchased(info.first)) continue;
+        auto button = UpgradeItem::create(info.first);
         button->setLayoutParameter(param);
-        upgrade_layer->addChild(button, 0, i);
+        upgrade_layer->addChild(button, 0, info.first);
     }
 
     const int UPGRADE_SIZE = 150;

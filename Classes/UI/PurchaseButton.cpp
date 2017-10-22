@@ -53,7 +53,7 @@ void PurchaseButton::setCost(double amount)
 {
     auto hbox = utils::findChild(this, "hbox");
     auto label = hbox->getChildByName<ui::Text*>("label");
-    label->setString(Player::getFormattedBits(amount));
+    label->setString(Util::getFormattedDouble(amount));
 
     auto iconSize = hbox->getChildByName("icon")->getContentSize();
     auto labelSize = label->getContentSize();

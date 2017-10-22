@@ -36,7 +36,6 @@ GameScene::~GameScene() {
 
 void GameScene::update(float delta) {
     Scene::update(delta);
-    Player::time_played += delta;
 }
 
 void GameScene::createWorld() {
