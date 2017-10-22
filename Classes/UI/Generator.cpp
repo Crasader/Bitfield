@@ -145,14 +145,17 @@ void Generator::addSpawnCapacity() {
 }
 
 void Generator::addBuyButton() {
-    auto buy_button = PurchaseButton::create(Size(264, 114));
+    auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
+    buy_button->setColor(Color3B(UI_COLOR_1));
     buy_button->setHeaderColor(Player::bit_info[id].color);
-    buy_button->setAnchorPoint(Vec2(0.5f, 0.5f));
     buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
 
-    buy_button->getChildByName<ui::Button*>("button")->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
+    buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
         if (type == ui::Widget::TouchEventType::BEGAN) {
             buy_button->setScale(1.05f);
+        }
+        if (type == ui::Widget::TouchEventType::CANCELED) {
+            buy_button->setScale(1.0f);
         }
         if (type == ui::Widget::TouchEventType::ENDED) {
             buy_button->setScale(1.0f);
@@ -176,7 +179,6 @@ void Generator::addBuyButton() {
     });
 
     addChild(buy_button, 0, "buy_button");
-
 }
 
 void Generator::addLevelUp() {
@@ -330,10 +332,8 @@ void Generator::updateBuyButton()
     auto info = Player::bit_info[id];
     std::stringstream ss;
 
-    // Buy Button
+    // Set Button Text
     auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    
-    // Header
     auto cost = Player::calculatePrice(id);
     buy_button->setCost(cost);
     if (cost < BIT_MAX) {
@@ -354,7 +354,7 @@ void Generator::updateBuyButton()
     bool previousTierPurchased = (id == BitType::Green) || Player::bit_info[BitType(id - 1)].level > 0;
     if (!previousTierPurchased) {
         setOpacity(0);
-        buy_button->getChildByName<ui::Button*>("button")->setTouchEnabled(false);
+        buy_button->setTouchEnabled(false);
     }
     else {
         // Show the next tier, faded out
@@ -362,7 +362,7 @@ void Generator::updateBuyButton()
             setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
         }
         else {
-            buy_button->getChildByName<ui::Button*>("button")->setTouchEnabled(true);
+            buy_button->setTouchEnabled(true);
             setOpacity(255);
             if (Player::bits < cost) {
                 buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);

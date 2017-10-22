@@ -33,6 +33,7 @@ static const cocos2d::Vec2 WORLD_POSITION(0, 730);
 
 static const std::string SPRITE_SHIP = "sprites/ship.png";
 static const std::string SPRITE_BIT = "sprites/bit.png";
+static const std::string SPRITE_DIAMOND = "sprites/diamond.png";
 static const cocos2d::Color4B SHIP_COLOR(225, 255, 255, 255);
 
 //---- BIT COUNTER
@@ -72,6 +73,7 @@ static const cocos2d::Color4B UI_COLOR_WHITE(245, 245, 245, 255);
 
 static const std::string SPRITE_BLANK = "sprites/blank.png";
 static const std::string SPRITE_CIRCLE = "sprites/circle.png";
+static const std::string SPRITE_SILHOUETTE = "sprites/ship_silhouette.png";
 static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
 static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";

@@ -167,7 +167,7 @@ void HUD::setPanel(PanelID id) {
             tab_button->setOpacity(255);
         }
         else {
-            tab_button->setOpacity(255 * 0.75f);
+            tab_button->setOpacity(255 * 0.5f);
         }
     }
 }
