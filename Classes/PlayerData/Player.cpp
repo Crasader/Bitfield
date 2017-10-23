@@ -102,10 +102,7 @@ void Player::loadUpgrades() {
     const auto& upgradeArray = document["upgrades"].GetArray();
     for (SizeType i = 0; i < upgradeArray.Size(); i++) {
         // Skip purchased upgrades
-        if (isUpgradePurchased(i)) {
-            cocos2d::log("Already bought %d, skipping", i);
-            continue;
-        }
+        if (isUpgradePurchased(i)) continue;
 
         const auto& values = upgradeArray[i].GetArray();
         Upgrade info;

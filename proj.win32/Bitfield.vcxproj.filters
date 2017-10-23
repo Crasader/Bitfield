@@ -69,6 +69,9 @@
     <ClCompile Include="..\Classes\UI\UpgradeItem.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Wanderer.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -118,6 +121,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\UI\UpgradeItem.h">
       <Filter>src\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Types.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Wanderer.h">
+      <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

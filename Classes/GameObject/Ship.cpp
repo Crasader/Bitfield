@@ -1,5 +1,6 @@
 #include "Ship.h"
 
+#include "Util.h"
 #include "Scene\GameScene.h"
 #include "Constants.h"
 #include "PlayerData/Player.h"
@@ -26,6 +27,9 @@ void Ship::onExit() {
 
 void Ship::update(float delta) {
     Sprite::update(delta);
+    acceleration = Vec2(0, 0);
+
+    calculateForces();
 
     // Movement
     velocity += acceleration;
@@ -34,10 +38,46 @@ void Ship::update(float delta) {
         velocity.normalize();
         velocity.scale(Player::ship_speed);
     }
-    //screenWrap();
     
     // Point towards velocity
     this->setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
+}
+
+void Ship::calculateForces() {
+    if (Util::touch_down /*&& ship == ships.at(0)*/) {
+        // Seek towards touch position
+        auto target = Util::touch_location - getPosition();
+        Vec2 seekForce = seek(target);
+        applyForce(seekForce, Player::seek);
+        auto toMouse = target - getPosition();
+        toMouse.normalize();
+        toMouse.scale(50);
+    }
+    else {
+        // Seek to the closest, largest value bit
+        Vec2 bitForce;
+        for (int i = BitType::All - 1; i >= 0; i--) {
+            bitForce = seekBits((*bits)[BitType(i)]);
+            if (!bitForce.isZero()) {
+                break;
+            }
+        }
+        if (!bitForce.isZero()) {
+            applyForce(bitForce, Player::seekBits);
+        }
+        else {
+            Vec2 wanderForce = wander();
+            applyForce(wanderForce, Player::wander);
+        }
+
+        // Flock
+        Vec2 alignForce = align(*neighbours);
+        applyForce(alignForce, Player::alignment);
+        Vec2 cohesionForce = cohesion(*neighbours);
+        applyForce(cohesionForce, Player::cohesion);
+        Vec2 separateForce = separate(*neighbours);
+        applyForce(separateForce, Player::separation);
+    }
 }
 
 void Ship::applyForce(cocos2d::Vec2 force, float scale) {
@@ -224,21 +264,12 @@ const cocos2d::Vec2& Ship::getTargetOffset() {
     return targetOffset;
 }
 
-void Ship::setAcceleration(const cocos2d::Vec2& acceleration) {
-    this->acceleration = acceleration;
+void Ship::setNeighbours(cocos2d::Vector<Ship*>* neighbours)
+{
+    this->neighbours = neighbours;
 }
 
-void Ship::setTargetOffset(const cocos2d::Vec2& targetOffset) {
-    this->targetOffset = targetOffset;
-}
-
-void Ship::screenWrap() {
-    Vec2 newPos = getPosition() + velocity;
-    float w = getParent()->getContentSize().width;
-    float h = getParent()->getContentSize().height;
-    if (newPos.x > w) newPos.x = 0;
-    if (newPos.y > h) newPos.y = 0;
-    if (newPos.x < 0) newPos.x = w;
-    if (newPos.y < 0) newPos.y = h;
-    setPosition(newPos);
+void Ship::setBits(std::map<BitType, cocos2d::Vector<Bit*>>* bits)
+{
+    this->bits = bits;
 }

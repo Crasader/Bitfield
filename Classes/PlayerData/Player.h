@@ -2,44 +2,9 @@
 
 #include "cocos2d.h"
 #include "rapidjson\document.h"
-#include <string>
 #include <map>
 #include <set>
-#include "UpgradeManager.h"
-
-enum BuyMode {
-    One,
-    Ten,
-    Hundred,
-    Max,
-    Count
-};
-
-enum BitType {
-    Green,
-    Blue,
-    Red,
-    Yellow,
-    Orange,
-    Violet,
-    Indigo,
-    All
-};
-
-struct BitInfo {
-    std::string name;
-    std::string icon_filepath;
-    cocos2d::Color4B color;
-    int level;
-    double baseCost;
-    double baseValue;
-    double costMultiplier;
-    double valueMultiplier;
-    double timer;
-    double spawnTime;
-    int spawned;
-    int capacity;
-};
+#include "Types.h"
 
 class Player {
 public:

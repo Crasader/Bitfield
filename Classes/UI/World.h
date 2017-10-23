@@ -33,9 +33,6 @@ private:
 
     void createInput();
     void createGrid();
-    void createLights();
-
-    void touchHoldCallback();
 
     void updateShips();
     void handleSpawns(float delta);

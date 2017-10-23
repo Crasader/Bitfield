@@ -48,5 +48,5 @@ void GameScene::createWorld() {
 void GameScene::createHUD() {
     auto hud = HUD::create();
     hud->setWorld(getChildByName<World*>("world"));
-    addChild(hud, 1);
+    addChild(hud, 1, "hud");
 }

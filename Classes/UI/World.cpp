@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "..\Constants.h"
 #include "..\Scene\GameScene.h"
-#include "..\GameObject\Ship.h"
+#include "..\GameObject\Wanderer.h"
 #include "..\GameObject\Bit.h"
 #include "ui\UIText.h"
 
@@ -26,7 +26,6 @@ void World::onEnter() {
     scheduleUpdate();
     setCascadeOpacityEnabled(true);
 
-    createLights();
     createGrid();
     createInput();
 
@@ -55,16 +54,10 @@ cocos2d::Vector<Ship*>& World::getShips() {
     return ships;
 }
 
-void World::createLights() {
-    auto ambient = AmbientLight::create(Color3B(255, 255, 255));
-    addChild(ambient);
-
-    auto light = DirectionLight::create(Vec3(-1, -1, -1), Color3B(255, 255, 255));
-    addChild(light);
-}
-
 void World::addShip() {
-    auto ship = Ship::create();
+    auto ship = Wanderer::create();
+    ship->setNeighbours(&ships);
+    ship->setBits(&bits);
     ship->initWithFile(SPRITE_SHIP);
     if (ships.size() > 0) {
         ship->setPosition(ships.at(0)->getPosition());
@@ -139,60 +132,7 @@ void World::createInput() {
 }
 
 void World::updateShips() {
-    for (Ship* ship : ships) {
-        ship->setAcceleration(Vec2(0, 0));
-       
-        auto boundary = Rect(Vec2(0, 0), getContentSize());
-        auto center = Vec2(getContentSize().width / 2.0f, getContentSize().height / 2.0f);
-        auto seekCenter = ship->seek(center);
-        ship->applyForce(seekCenter, 0.2f);
 
-        // Stay within boundaries
-        if (!boundary.containsPoint(ship->getPosition())) {    
-            ship->applyForce(seekCenter);
-            auto toCenter = center - ship->getPosition();
-            toCenter.normalize();
-            toCenter.scale(50);
-            ship->setTargetOffset(toCenter);
-            continue;
-        }
-
-        if (Util::touch_down && ship == ships.at(0)) {
-            // Seek towards touch position
-            auto target = Util::touch_location - getPosition();
-            Vec2 seekForce = ship->seek(target);
-            ship->applyForce(seekForce, Player::seek);
-            auto toMouse = target - ship->getPosition();
-            toMouse.normalize();
-            toMouse.scale(50);
-            ship->setTargetOffset(toMouse);
-            continue;
-        }
-
-        // Seek to the closest, largest value bit
-        Vec2 bitForce;
-        for (int i = BitType::All - 1; i >= 0; i--) {
-            bitForce = ship->seekBits(bits[BitType(i)]);
-            if (!bitForce.isZero()) {
-                break;
-            }
-        }
-        if (!bitForce.isZero()) {
-            ship->applyForce(bitForce, Player::seekBits);
-        }
-        else {
-            Vec2 wanderForce = ship->wander();
-            ship->applyForce(wanderForce, Player::wander);
-        }
-
-        // Flock
-        Vec2 alignForce = ship->align(ships);
-        ship->applyForce(alignForce, Player::alignment);
-        Vec2 cohesionForce = ship->cohesion(ships);
-        ship->applyForce(cohesionForce, Player::cohesion);
-        Vec2 separateForce = ship->separate(ships);
-        ship->applyForce(separateForce, Player::separation);
-    }
 }
 
 void World::handleSpawns(float delta) {
