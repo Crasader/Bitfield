@@ -1,10 +1,12 @@
 #include "SquadronPanel.h"
 
 #include "Constants.h"
-#include"Util.h"
+#include "Util.h"
 #include "PurchaseButton.h"
 
 USING_NS_CC;
+
+static std::stack<Vec2> positions;
 
 SquadronPanel* SquadronPanel::create() {
     SquadronPanel* panel = new (std::nothrow) SquadronPanel();
@@ -45,8 +47,8 @@ void SquadronPanel::addBackground()
 
 void SquadronPanel::addPurchaseButton()
 {
-    auto parent = getChildByName("background");
-    auto parentSize = parent->getContentSize();
+    auto background = getChildByName("background");
+    auto parentSize = background->getContentSize();
 
     auto purchase_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(484, 140), PurchaseButton::IconType::Bits);
     purchase_button->setButtonColor(UI_COLOR_2);
@@ -64,11 +66,25 @@ void SquadronPanel::addPurchaseButton()
         }
         if (type == ui::Widget::TouchEventType::ENDED) {
             purchase_button->setScale(1.0f);
-            Player::buyShip();
+
+            auto ship_count = Player::squadrons[0].ints["count"];
+            auto cost = Player::ship_costs[ship_count - 1];
+            if (ship_count < 6) {
+                if (Player::buyShip()) {
+                    addFilledShip();
+                }
+            }
+            else {
+                //Player::unlockFleetPanel();
+                if (Player::bits >= cost) {
+                    Player::bits -= cost;
+                    cocos2d::log("UNLOCKED FLEET");
+                }
+            }
         }
     });
 
-    parent->addChild(purchase_button, 0, "purchase_button");
+    background->addChild(purchase_button, 0, "purchase_button");
 }
 
 void SquadronPanel::addSilhouettes()
@@ -80,6 +96,7 @@ void SquadronPanel::addSilhouettes()
         auto silhouette = Sprite::create(SPRITE_SILHOUETTE);
         silhouette->setScale(1.5f);
         silhouette->setPosition(x, y);
+        positions.push(Vec2(x, y));
         background->addChild(silhouette);
     };
 
@@ -98,6 +115,30 @@ void SquadronPanel::addSilhouettes()
             }
         }
     }
+
+    // Add in any filled ships from save
+    for (int i = 0; i < Player::squadrons[0].ints["count"]; i++) {
+        addFilledShip();
+    }
+}
+
+void SquadronPanel::addFilledShip()
+{
+    auto background = getChildByName("background");
+
+    auto filledShip = Sprite::create(SPRITE_SHIP);
+    filledShip->setScale(1.5f);
+    filledShip->setPosition(positions.top());
+    filledShip->setOpacity(255 * 0.5f);
+    filledShip->runAction(RepeatForever::create(
+        Sequence::create(
+            FadeIn::create(1.0f),
+            DelayTime::create(1.0f + rand_minus1_1() * 0.1f),
+            FadeTo::create(1.0f, 255 * 0.5f),
+            nullptr))
+    );
+    positions.pop();
+    background->addChild(filledShip);
 }
 
 void SquadronPanel::updatePurchaseButton()
@@ -112,5 +153,10 @@ void SquadronPanel::updatePurchaseButton()
     }
     else {
         purchase_button->setOpacity(255);
+    }
+
+    if (ship_count == 6) {
+        purchase_button->setHeaderColor(Player::bit_info[BitType::Red].color);
+        purchase_button->setHeader("Unlock Fleet");
     }
 }

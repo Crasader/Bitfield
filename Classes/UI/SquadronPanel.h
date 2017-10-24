@@ -13,6 +13,7 @@ private:
     void addBackground();
     void addPurchaseButton();
     void addSilhouettes();
+    void addFilledShip();
 
     void updatePurchaseButton();
 };

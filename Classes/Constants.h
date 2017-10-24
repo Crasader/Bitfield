@@ -26,10 +26,10 @@ static const std::string BIT_STRINGS[] = {
 };
 
 //---- WORLD
-static const int WORLD_WIDTH = 7500;
-static const int WORLD_HEIGHT = 7500;
+static const int WORLD_WIDTH = 5000;
+static const int WORLD_HEIGHT = 5000;
 static const int WORLD_OFFSET = GAME_WIDTH / 2;
-static const int GRID_RESOLUTION = 30;
+static const int GRID_RESOLUTION = 25;
 static const float BIT_SCALE = 0.25f;
 
 static const std::string SPRITE_SHIP = "sprites/ship.png";

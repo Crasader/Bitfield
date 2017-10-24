@@ -159,7 +159,6 @@ void Player::loadSquadronDefaults() {
     for (int i = 0; i < 6; i++) {
         const auto& cost = costs[i];
         ship_costs[i] = cost.GetDouble();
-        cocos2d::log("%.2f", ship_costs[i]);
     }
 }
 void Player::loadSquadrons() {
