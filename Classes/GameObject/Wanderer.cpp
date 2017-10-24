@@ -7,12 +7,17 @@
 
 USING_NS_CC;
 
-Wanderer* Wanderer::create() {
-    Wanderer *btn = new (std::nothrow) Wanderer();
-    if (btn && btn->init()) {
-        btn->autorelease();
-        return btn;
+Wanderer::Wanderer(SquadronInfo info)
+    : Ship(info)
+{
+}
+
+Wanderer* Wanderer::create(SquadronInfo info) {
+    Wanderer* ship = new (std::nothrow) Wanderer(info);
+    if (ship && ship->initWithFile(info.strings["sprite"])) {
+        ship->autorelease();
+        return ship;
     }
-    CC_SAFE_DELETE(btn);
+    CC_SAFE_DELETE(ship);
     return nullptr;
 }

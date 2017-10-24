@@ -16,6 +16,7 @@ using namespace rapidjson;
 static const cocos2d::Rect CAP_INSETS(48, 48, 48, 48);
 bool Util::touch_down = false;
 cocos2d::Vec2 Util::touch_location = cocos2d::Vec2(0, 0);
+cocos2d::Vec2 Util::touch_location_original = cocos2d::Vec2(0, 0);
 
 
 ui::ImageView* Util::createRoundedRect(const std::string& path, cocos2d::Size size, cocos2d::Color4B color) {
@@ -109,4 +110,14 @@ std::string Util::getSuffix(int exponent) {
         second = ALPHABET[((exponent - 36) / 3) % 26];
         return std::string() + first + second;
     }
+}
+
+cocos2d::Vec2 Util::capVector(cocos2d::Vec2 v, double xMin, double yMin, double xMax, double yMax)
+{
+    auto ret = v;
+    if (ret.x < xMin) ret.x = xMin;
+    if (ret.x > xMax) ret.x = xMax;
+    if (ret.y < yMin) ret.y = yMin;
+    if (ret.y > yMax) ret.y = yMax;
+    return ret;
 }

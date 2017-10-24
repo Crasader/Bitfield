@@ -6,6 +6,18 @@
 
 USING_NS_CC;
 
+SquadronPanel* SquadronPanel::create() {
+    SquadronPanel* panel = new (std::nothrow) SquadronPanel();
+
+    if (panel && panel->init())
+    {
+        panel->autorelease();
+        return panel;
+    }
+    CC_SAFE_DELETE(panel);
+    return nullptr;
+}
+
 bool SquadronPanel::init()
 {
     if (!Node::init()) return false;
@@ -15,7 +27,14 @@ bool SquadronPanel::init()
     addPurchaseButton();
     addSilhouettes();
 
+    scheduleUpdate();
     return true;
+}
+
+void SquadronPanel::update(float delta)
+{
+    Node::update(delta);
+    updatePurchaseButton();
 }
 
 void SquadronPanel::addBackground()
@@ -45,6 +64,7 @@ void SquadronPanel::addPurchaseButton()
         }
         if (type == ui::Widget::TouchEventType::ENDED) {
             purchase_button->setScale(1.0f);
+            Player::buyShip();
         }
     });
 
@@ -78,4 +98,11 @@ void SquadronPanel::addSilhouettes()
             }
         }
     }
+}
+
+void SquadronPanel::updatePurchaseButton()
+{
+    auto purchase_button = utils::findChild<PurchaseButton*>(this, "purchase_button");
+    auto ship_count = Player::squadrons[0].ints["count"];
+    purchase_button->setCost(Player::ship_costs[ship_count - 1]);
 }

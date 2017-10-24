@@ -40,7 +40,7 @@ void GameScene::update(float delta) {
 
 void GameScene::createWorld() {
     auto world = World::create();
-    world->setPosition(WORLD_POSITION);
+    //world->setPosition(Vec2());
     world->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
     addChild(world, 0, "world");
 }

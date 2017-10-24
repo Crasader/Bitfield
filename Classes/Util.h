@@ -20,7 +20,10 @@ public:
     static std::string getFormattedDouble(double bits);
     static std::string getSuffix(int exponent);
 
+    static cocos2d::Vec2 Util::capVector(cocos2d::Vec2 v, double xMin, double yMin, double xMax, double yMax);
+
     static bool touch_down;
     static cocos2d::Vec2 touch_location;
+    static cocos2d::Vec2 touch_location_original;
 };
 

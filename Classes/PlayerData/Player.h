@@ -38,25 +38,22 @@ public:
     static bool canBuyUpgrade();
     static bool isUpgradePurchased(int id);
 
-    // Eventually squadron_info;
-    static float alignment;
-    static float cohesion;
-    static float separation;
-    static float wander;
-    static float seek;
-    static float seekBits;
-    static int ship_count;
-    static float ship_speed;
-    static float ship_force;
-    static float ship_vision;
-    static float ship_separation;
+    // Squadron
+    static std::map<std::string, SquadronInfo> squadron_defaults;
+    static std::map<int, SquadronInfo> squadrons;
+    static int num_squadrons;
+    static double ship_costs[6];
+    static bool buyShip();
 
 private:
     static void loadDocument();
     static void loadUpgrades();
     static void loadBits();
+    static void loadSquadronDefaults();
+    static void loadSquadrons();
 
     static void saveBits();
     static void saveUpgrades();
+    static void saveSquadrons();
     static void saveDocument();
 };

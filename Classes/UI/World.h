@@ -26,15 +26,16 @@ public:
 
     cocos2d::Vector<Ship*>& getShips();
 
+    void followShip(bool centered);
+    void debugShip();
+
 private:
-    cocos2d::Camera* camera;
     cocos2d::Vector<Ship*> ships;
     std::map< BitType, cocos2d::Vector< Bit* > > bits;
 
     void createInput();
     void createGrid();
 
-    void updateShips();
     void handleSpawns(float delta);
     void handleCollisions();
 };

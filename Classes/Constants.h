@@ -9,7 +9,7 @@
 //---- DEVELOPER
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
-static const bool USE_SAVE = true;
+static const bool USE_SAVE = false;
 
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
@@ -27,9 +27,9 @@ static const std::string BIT_STRINGS[] = {
 //---- WORLD
 static const int WORLD_WIDTH = 5000;
 static const int WORLD_HEIGHT = 5000;
-static const int GRID_RESOLUTION = 30;
+static const int WORLD_OFFSET = GAME_WIDTH / 2;
+static const int GRID_RESOLUTION = 25;
 static const float BIT_SCALE = 0.25f;
-static const cocos2d::Vec2 WORLD_POSITION(0, 730);
 
 static const std::string SPRITE_SHIP = "sprites/ship.png";
 static const std::string SPRITE_BIT = "sprites/bit.png";

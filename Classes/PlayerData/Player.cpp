@@ -30,27 +30,21 @@ std::map<int, Upgrade> Player::upgrades;
 std::set<int> Player::upgrades_purchased;
 
 //---- Squadron
-float Player::alignment = 0.0f;
-float Player::cohesion = 0.0f;
-float Player::separation = 1.0f;
-float Player::wander = 1.0f;
-float Player::seek = 1.6f;
-float Player::seekBits = 1.2f;
-int Player::ship_count = 1;
-float Player::ship_speed = 5.8f;
-float Player::ship_force = 0.16f;
-float Player::ship_vision = 400;
-float Player::ship_separation = 72;
+std::map<std::string, SquadronInfo> Player::squadron_defaults;
+std::map<int, SquadronInfo> Player::squadrons;
+int Player::num_squadrons;
+double Player::ship_costs[6];
 
 //---- PLAYER
 void Player::load() {
     loadDocument();
 
     bits = document["bits"].GetDouble();
-    ship_count = document["ship_count"].GetDouble();
     all_multiplier = document["all_multiplier"].GetDouble();
     loadBits();
     loadUpgrades();
+    loadSquadronDefaults();
+    loadSquadrons();
 }
 void Player::loadDocument() {
     std::string filePath = FileUtils::getInstance()->getWritablePath() + SAVE_FILE;
@@ -64,7 +58,6 @@ void Player::loadDocument() {
 
     auto fileData = FileUtils::getInstance()->getStringFromFile(filePath);
     document.Parse(fileData.c_str());
-    cocos2d::log("%s", Util::jsonToString(document).c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
 }
 void Player::loadBits() {
@@ -96,7 +89,6 @@ void Player::loadUpgrades() {
     for (SizeType i = 0; i < purchased.Size(); i++) {
         auto id = purchased[i].GetInt();
         upgrades_purchased.insert(id);
-        cocos2d::log("%d already purchased.", i);
     }
 
     const auto& upgradeArray = document["upgrades"].GetArray();
@@ -141,16 +133,72 @@ void Player::loadUpgrades() {
         upgrades[i] = info;
     }
 }
+void Player::loadSquadronDefaults() {
+    const auto& category = document["squadron_defaults"].GetArray();
+    for (SizeType i = 0; i < category.Size(); i++) {
+        const auto& item = category[i];
+
+        SquadronInfo info;
+        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
+            auto key = it->name.GetString();
+            const auto& value = it->value;
+
+            if (value.IsString()) {
+                info.strings[key] = value.GetString();
+                cocos2d::log(value.GetString());
+            } else if (value.IsInt()) {
+                info.ints[key] = value.GetInt();
+            } else if (value.IsDouble()) {
+                info.doubles[key] = value.GetDouble();
+            }
+        }
+
+        squadron_defaults[info.strings["type"]] = info;
+    }
+
+    const auto& costs = document["ship_costs"].GetArray();
+    for (int i = 0; i < 6; i++) {
+        const auto& cost = costs[i];
+        ship_costs[i] = cost.GetDouble();
+        cocos2d::log("%.2f", ship_costs[i]);
+    }
+}
+
+void Player::loadSquadrons() {
+    const auto& category = document["squadrons"].GetArray();
+    for (SizeType i = 0; i < category.Size(); i++) {
+        const auto& item = category[i];
+        auto type = item["type"].GetString();
+
+        SquadronInfo info = squadron_defaults["Default"];
+        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
+            auto key = it->name.GetString();
+            const auto& value = it->value;
+
+            if (value.IsString()) {
+                info.strings[key] = value.GetString();
+            }
+            else if (value.IsInt()) {
+                info.ints[key] = value.GetInt();
+            }
+            else if (value.IsDouble()) {
+                info.doubles[key] = value.GetDouble();
+            }
+        }
+
+        squadrons[i] = info;
+    }
+}
 
 void Player::save() {
     if (!USE_SAVE) return;
 
     document["bits"] = bits;
-    document["ship_count"] = ship_count;
     document["all_multiplier"] = all_multiplier;
     saveBits();
     saveUpgrades();
     saveDocument();
+    saveSquadrons();
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
@@ -193,6 +241,9 @@ void Player::saveDocument() {
     std::string jsonObjectData = Util::jsonToString(document);
     fputs(jsonObjectData.c_str(), fp);
     fclose(fp);
+}
+void Player::saveSquadrons() {
+
 }
 
 //---- Bit Generators
@@ -344,4 +395,16 @@ bool Player::canBuyUpgrade() {
 }
 bool Player::isUpgradePurchased(int id) {
     return upgrades_purchased.find(id) != upgrades_purchased.end();
+}
+
+//---- Squadrons
+bool Player::buyShip() {
+    auto count = squadrons[0].ints["count"];
+    auto cost = ship_costs[count - 1];
+    if (count >= 7 || bits < cost) return false;
+
+    // Purchase the upgrade
+    bits -= cost;
+    squadrons[0].ints["count"]++;
+    return true;
 }

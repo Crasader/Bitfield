@@ -149,6 +149,12 @@ void HUD::setPanel(PanelID id) {
     if (currentPanel == id) {
         auto panel = getChildByTag(id);
         panel->setVisible(!panel->isVisible());
+        if (!panel->isVisible()) {
+            world->followShip(true);
+        }
+        else {
+            world->followShip(false);
+        }
     }
     else {
         auto oldPanel = getChildByTag(currentPanel);
