@@ -52,7 +52,7 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
     auto fileData = FileUtils::getInstance()->getStringFromFile(path);
     Document document;
     document.Parse(fileData.c_str());
-    cocos2d::log("%s", Util::jsonToString(document).c_str());
+    cocos2d::log("%s", jsonToString(document).c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
     return document;
 }

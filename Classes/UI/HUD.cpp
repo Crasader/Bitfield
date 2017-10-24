@@ -94,7 +94,7 @@ void HUD::addBitCounter() {
 
 void HUD::addPanels()
 {
-    auto addCentered = [&](cocos2d::Node* node, PanelID id) {
+    auto addCentered = [=](cocos2d::Node* node, PanelID id) {
         node->setAnchorPoint(ANCHOR_CENTER_BOTTOM);
         node->setPosition(Vec2(UI_CENTER_X, PANEL_Y));
         node->setVisible(false);

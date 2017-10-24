@@ -145,7 +145,6 @@ void Player::loadSquadronDefaults() {
 
             if (value.IsString()) {
                 info.strings[key] = value.GetString();
-                cocos2d::log(value.GetString());
             } else if (value.IsInt()) {
                 info.ints[key] = value.GetInt();
             } else if (value.IsDouble()) {

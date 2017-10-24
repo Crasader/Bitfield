@@ -6,5 +6,5 @@ class Wanderer : public Ship
 {
 public:
     Wanderer(SquadronInfo info);
-    static Wanderer* Wanderer::create(SquadronInfo info);
+    static Wanderer* create(SquadronInfo info);
 };
