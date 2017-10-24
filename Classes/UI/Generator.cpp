@@ -185,10 +185,10 @@ void Generator::addLevelUp() {
     if (getParent()->getParent()->getParent()->getParent()->getChildByName("popup") != nullptr) return;
 
     // Popup Layer
-    auto popup = Util::createRoundedRect(UI_ROUNDED_RECT, Size(552, 72), UI_COLOR_1);
+    auto popup = Util::createRoundedRect(UI_ROUNDED_RECT, Size(552 + 40, 72 + 20), UI_COLOR_1);
     popup->setIgnoreAnchorPointForPosition(false);
     popup->setAnchorPoint(Vec2(0.5f, 0.5f));
-    popup->setPositionNormalized(Vec2(0.5f, 0.43f));
+    popup->setPositionNormalized(Vec2(0.5f, 0.45f));
     popup->setCascadeOpacityEnabled(true);
     popup->setOpacity(0);
     getParent()->getParent()->getParent()->getParent()->addChild(popup, 1, "popup"); // TODO

@@ -16,22 +16,22 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 8,
-      "spawned": 20,
-      "capacity": 25
+      "spawned": 40,
+      "capacity": 50
     },
     {
       "name": "Bluedium",
       "icon_filepath": "ui/icon_bit_t1.png",
       "color": [ 114, 176, 197, 255 ],
       "level": 0,
-      "baseCost": 140,
+      "baseCost": 60,
       "baseValue": 50,
       "costMultiplier": 1.11,
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 10,
-      "spawned": 3,
-      "capacity": 5
+      "spawned": 17,
+      "capacity": 25
     },
     {
       "name": "Reddite",
@@ -44,8 +44,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 12,
-      "spawned": 2,
-      "capacity": 5
+      "spawned": 10,
+      "capacity": 20
     },
     {
       "name": "Yellominium",
@@ -58,8 +58,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 14,
-      "spawned": 2,
-      "capacity": 5
+      "spawned": 5,
+      "capacity": 10
     },
     {
       "name": "Orangite",
@@ -72,8 +72,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 16,
-      "spawned": 2,
-      "capacity": 5
+      "spawned": 5,
+      "capacity": 10
     },
     {
       "name": "Violum",
@@ -86,8 +86,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 18,
-      "spawned": 2,
-      "capacity": 3
+      "spawned": 5,
+      "capacity": 10
     },
     {
       "name": "Indigine",
@@ -100,8 +100,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 20,
-      "spawned": 2,
-      "capacity": 3
+      "spawned": 5,
+      "capacity": 10
     }
   ],
 
@@ -116,7 +116,7 @@
     [7.5e5, 0, 0, 3],
     [3e6, 1, 0, 3],
     [6e6, 2, 0, 3],
-    [9e6, 3, 1, 5],
+    [9e6, 3, 1, 25],
 
     [3e7, 0, 0, 3],
     [4e7, 1, 0, 3],
@@ -161,8 +161,12 @@
       "sprite": "sprites/ship.png",
 
       "count": 7,
-      "vision_radius": 400,
+      "vision_radius": 300,
       "separation_radius": 72,
+      "wall_separation_distance": 128,
+      "wander_length": 128,
+      "wander_radius": 64,
+      "wander_delta": 10,
 
       "max_speed": 7.6,
       "max_force": 0.16,  
@@ -171,16 +175,22 @@
       "w_separation": 1.4,
       "w_wander": 1.0,
       "w_seek": 1.8,
-      "w_seek_bits": 1.2
+      "w_seek_bits": 1.2,
+      "w_avoid_wall": 1.5,
+      "w_stay_grouped": 1.0
     }
   ],
 
   "squadrons": [
     {
       "type": "Wanderer",
-      "count": 1
+      "count": 1,
+      "max_speed": 7.6,
+      "w_alignment": 0.0,
+      "w_cohesion": 0.0,
+      "w_stay_grouped": 0.0
     }
   ],
 
-  "ship_costs": [ 25.0, 1e4, 3e5, 1.5e9, 5e12, 5e14]
+  "ship_costs": [ 25.0, 50.0, 1e2, 1e3, 3e4, 1.5e9, 5e14]
 }

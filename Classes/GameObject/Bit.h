@@ -4,6 +4,8 @@
 #include "cocos2d.h"
 #include "PlayerData/Player.h"
 
+class Ship;
+
 class Bit : public cocos2d::Sprite
 {
 public:
@@ -15,9 +17,13 @@ public:
     virtual void update(float delta) override;
 
     BitType getType();
+    bool isTargettedBy(Ship* ship);
+    bool isTargetted();
+    void setShip(Ship* ship);
 
 private:
     BitType type;
+    Ship* ship;
 };
 
 #endif // __BIT_H__

@@ -23,7 +23,7 @@ double Player::bits = 0;
 double Player::all_multiplier = 1;
 std::map<BitType, BitInfo> Player::bit_info;
 BuyMode Player::buy_mode = BuyMode::One;
-const int Player::LEVEL_TIER[] = { 10, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
+const int Player::LEVEL_TIER[] = { 5, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
 
 //---- Upgrades
 std::map<int, Upgrade> Player::upgrades;
@@ -163,13 +163,13 @@ void Player::loadSquadronDefaults() {
         cocos2d::log("%.2f", ship_costs[i]);
     }
 }
-
 void Player::loadSquadrons() {
     const auto& category = document["squadrons"].GetArray();
     for (SizeType i = 0; i < category.Size(); i++) {
         const auto& item = category[i];
         auto type = item["type"].GetString();
 
+        // Load defaults and overwrite any differences
         SquadronInfo info = squadron_defaults["Default"];
         for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
             auto key = it->name.GetString();

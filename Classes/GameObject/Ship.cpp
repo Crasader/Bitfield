@@ -15,6 +15,11 @@ Ship::Ship(SquadronInfo info)
 
     vision_radius = info.ints["vision_radius"];
     separation_radius = info.ints["separation_radius"];
+    wall_separation_distance = info.ints["wall_separation_distance"];
+    wander_length = info.ints["wander_length"];
+    wander_radius = info.ints["wander_radius"];
+    wander_theta = 0;
+    wander_delta = info.ints["wander_delta"];
 
     max_speed = info.doubles["max_speed"];
     max_force = info.doubles["max_force"];
@@ -24,16 +29,17 @@ Ship::Ship(SquadronInfo info)
     w_wander = info.doubles["w_wander"];
     w_seek = info.doubles["w_seek"];
     w_seek_bits = info.doubles["w_seek_bits"];
+    w_avoid_wall = info.doubles["w_avoid_wall"];
+    w_stay_grouped = info.doubles["w_stay_grouped"];
 
     scheduleUpdate();
-    velocity = Vec2(0.1f, 0.1f);
+    velocity = Vec2(0, 0);
     acceleration = Vec2(0, 0);
-    //velocity = velocity.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(rand_0_1() * 360));
 }
 
 void Ship::update(float delta) {
     Sprite::update(delta);
-    
+
     // Forces --> Acceleration
     acceleration = Vec2(0, 0);
     calculateForces();
@@ -41,25 +47,38 @@ void Ship::update(float delta) {
     // Movement
     velocity += acceleration; // We never "desire" to go faster than max_speed, so don't have to limit here
     setPosition(getPosition() + velocity);
+    handleCollisions();
     
     // Point towards velocity
-    this->setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
+    setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
 }
 
 void Ship::calculateForces() {
+    // Stay in World Boundary
     auto stayWithinForce = stayWithin(boundary);
     if (!stayWithinForce.isZero()) {
         applyForce(stayWithinForce, w_avoid_wall);
         return;
     }
-    else if (Util::touch_down && w_seek > 0) {
+
+    // Obey touches
+    if (Util::touch_down && w_seek > 0) {
         // Seek towards touch position
         auto target = Util::touch_location;
         Vec2 seekForce = seek(target);
         applyForce(seekForce, w_seek);
     }
     else {
-        // Seek to nearby bit or wander
+        // Stay with group
+        auto stayGroupedForce = stayGrouped();
+        if (!stayGroupedForce.isZero() && w_stay_grouped > 0) {
+            auto center = getCenterOfMass(*neighbours);
+            auto toCenter = center - getPosition();
+            wander_theta = CC_RADIANS_TO_DEGREES(toCenter.getAngle());
+            applyForce(stayGroupedForce, w_stay_grouped);
+            return;
+        }
+
         Vec2 bitForce = seekBits(*bits);
         if (!bitForce.isZero() && w_seek_bits > 0) {
             applyForce(bitForce, w_seek_bits);
@@ -67,15 +86,38 @@ void Ship::calculateForces() {
         else {
             Vec2 wanderForce = wander();
             applyForce(wanderForce, w_wander);
+
+            // Flock
+            Vec2 alignForce = align(*neighbours);
+            applyForce(alignForce, w_alignment);
+            Vec2 cohesionForce = cohesion(*neighbours);
+            applyForce(cohesionForce, w_cohesion);
+            Vec2 separateForce = separate(*neighbours);
+            applyForce(separateForce, w_separation);
         }
-    
-        // Flock
-        Vec2 alignForce = align(*neighbours);
-        applyForce(alignForce, w_alignment);
-        Vec2 cohesionForce = cohesion(*neighbours);
-        applyForce(cohesionForce, w_cohesion);
-        Vec2 separateForce = separate(*neighbours);
-        applyForce(separateForce, w_separation);
+    }
+}
+
+void Ship::handleCollisions()
+{
+    for (auto& mapPair : *bits) {
+        auto type = mapPair.first;
+        auto& bitVector = mapPair.second;
+
+        for (auto it = bitVector.begin(); it != bitVector.end(); it++) {
+            auto bit = *it;
+            Vec2 dist = bit->getPosition() - getPosition();
+            if (dist.getLength() < getContentSize().width / 2) {
+                auto& info = Player::bit_info[type];
+                Player::addBits(Player::calculateValue(type));
+                info.spawned--;
+
+                // Remove bit
+                bit->removeFromParent();
+                it = bitVector.erase(it);
+                if (it == bitVector.end()) break;
+            }
+        }
     }
 }
 
@@ -131,24 +173,10 @@ cocos2d::Vec2 Ship::separate(const cocos2d::Vector<Ship*>& neighbours) {
     return Vec2(0, 0);
 }
 
-// Steer towards center of mass
+// Steer towards leader
 cocos2d::Vec2 Ship::cohesion(const cocos2d::Vector<Ship*>& neighbours) {
-    Vec2 desired;
-    float count = 0;
-
-    // Average together every ship's position to (roughly) find the center of mass
-    for (Ship* ship : neighbours) {
-        if (ship == this) continue;
-        desired.add(ship->getPosition());
-        count += 1;
-    }
-
-    if (count > 0) {
-        desired.scale(1.0f / count);
-        return seek(desired);
-    }
-
-    return Vec2(0, 0);
+    if (this == neighbours.at(0)) return Vec2(0, 0);
+    return seek(neighbours.at(0)->getPosition());
 }
 
 // Align direction with nearby ships
@@ -197,14 +225,11 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowDown) {
 
 // Seek towards closest bit
 cocos2d::Vec2 Ship::seekBits(std::map< BitType, cocos2d::Vector< Bit* > >& bits) {
-    // Find the closest bit and seek to it
-    Bit* nearestBit = getClosestBit();
-
-    if (nearestBit != nullptr) {
-        auto target = nearestBit->getPosition();
-        return seek(target);
+    auto targetBit = getTargetBit();
+    if (targetBit) {
+        return seek(targetBit->getPosition());
     }
-
+    
     return Vec2(0, 0);
 }
 
@@ -212,11 +237,17 @@ cocos2d::Vec2 Ship::stayWithin(cocos2d::Rect boundary) {
     auto heading = velocity.getNormalized();
     heading.scale(wall_separation_distance);
     if (boundary.containsPoint(getPosition() + heading)) return Vec2(0, 0);
-    
+
     auto mid = Vec2(boundary.getMidX(), boundary.getMidY());
     auto toTarget = mid - getPosition();
     wander_theta = CC_RADIANS_TO_DEGREES(toTarget.getAngle());
     return seek(mid);
+}
+
+cocos2d::Vec2 Ship::stayGrouped() {
+    auto center = getCenterOfMass(*neighbours);
+    if (center.isZero() || center.getDistance(getPosition()) < vision_radius) return Vec2(0, 0);
+    return seek(center);
 }
 
 bool Ship::isFront(const cocos2d::Vector<Ship*>& neighbours) {
@@ -263,24 +294,72 @@ void Ship::setBoundary(cocos2d::Rect boundary)
     this->boundary = boundary;
 }
 
-Bit * Ship::getClosestBit()
+// Target the closest untargetted bit. We may already be targetting it.
+Bit* Ship::getTargetBit()
 {
+    Bit* previousTarget = nullptr;
     Bit* nearestBit = nullptr;
-    for (auto map_pair : *bits) {
-        auto vec = map_pair.second;
-        for (Bit* bit : vec) {
-            if (!inRange(bit)) continue;
+    auto toNearest = Vec2(0, 0);
+    for (const auto& map_pair : *bits) {
+        const auto& vec = map_pair.second;
+        for (auto bit : vec) {
+            // Clear out of range targets
+            if (bit->isTargettedBy(this) && !inRange(bit)) {
+                bit->setShip(nullptr);
+            }
+            
+            // If Bit is targetted by another ship or out of range, ignore it
+            if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !inRange(bit)) continue;
+
+            // Check if bit is our last target
+            if (bit->isTargettedBy(this)) {
+                previousTarget = bit;
+            }
+
+            // Found initial bit
             if (nearestBit == nullptr) {
                 nearestBit = bit;
-                continue;
+                toNearest = nearestBit->getPosition() - getPosition();
             }
-            auto toBit = bit->getPosition() - getPosition();
-            auto toNearest = nearestBit->getPosition() - getPosition();
-            if (toBit.lengthSquared() < toNearest.lengthSquared()) {
-                nearestBit = bit;
+            else {
+                // See if new bit is closer than current closest
+                auto toBit = bit->getPosition() - getPosition();
+                if (toBit.lengthSquared() < toNearest.lengthSquared()) {
+                    nearestBit = bit;
+                }
             }
         }
     }
+
+    // Found a nearby bit that isn't targetted by another ship
+    if (nearestBit) {
+        // If it's not what we were targetting before, clear old and set up new
+        if (previousTarget && previousTarget != nearestBit) {
+            previousTarget->setShip(nullptr);
+        }
+        nearestBit->setShip(this);
+    }
+
     return nearestBit;
+}
+
+cocos2d::Vec2 Ship::getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours)
+{
+    Vec2 center;
+    int count = 0;
+
+    // Average together every ship's position to (roughly) find the center of mass
+    for (Ship* ship : neighbours) {
+        if (ship == this) continue;
+        center.add(ship->getPosition());
+        count += 1;
+    }
+
+    if (count > 0) {
+        center.scale(1.0f / count);
+        return center;
+    }
+
+    return Vec2(0, 0);
 }
 

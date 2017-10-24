@@ -104,5 +104,13 @@ void SquadronPanel::updatePurchaseButton()
 {
     auto purchase_button = utils::findChild<PurchaseButton*>(this, "purchase_button");
     auto ship_count = Player::squadrons[0].ints["count"];
-    purchase_button->setCost(Player::ship_costs[ship_count - 1]);
+    auto cost = Player::ship_costs[ship_count - 1];
+    purchase_button->setCost(cost);
+
+    if (Player::bits < cost) {
+        purchase_button->setOpacity(255 * 0.5f);
+    }
+    else {
+        purchase_button->setOpacity(255);
+    }
 }

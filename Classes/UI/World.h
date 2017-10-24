@@ -27,7 +27,6 @@ public:
     cocos2d::Vector<Ship*>& getShips();
 
     void followShip(bool centered);
-    void debugShip();
 
 private:
     cocos2d::Vector<Ship*> ships;
@@ -37,7 +36,7 @@ private:
     void createGrid();
 
     void handleSpawns(float delta);
-    void handleCollisions();
+    void debugShip();
 };
 
 #endif // __WORLD_H__

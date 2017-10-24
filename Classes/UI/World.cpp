@@ -25,6 +25,7 @@ void World::onEnter() {
 
     scheduleUpdate();
     setCascadeOpacityEnabled(true);
+    setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
 
     createGrid();
     createInput();
@@ -49,35 +50,22 @@ void World::update(float delta) {
         Util::touch_location = Util::capVector(Util::touch_location_original - getPosition(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     }
     handleSpawns(delta);
-    handleCollisions();
+    if (DEBUG_SHIP) debugShip();
+}
 
-    auto drawNode = getChildByName<DrawNode*>("drawNode");
+void World::followShip(bool centered) {
+    if (ships.empty()) return;
     auto ship = ships.at(0);
-    if (drawNode && ship) {
-        drawNode->clear();
-        drawNode->setPosition(ship->getPosition());
-        drawNode->drawCircle(Vec2(0, 0), ship->vision_radius, 0, 64, false, Color4F::WHITE);
-        drawNode->drawCircle(Vec2(0, 0), ship->separation_radius, 0, 64, false, Color4F::WHITE);
-
-        // Project future position
-        Vec2 projection = ship->velocity;
-        projection.normalize();
-        projection.scale(ship->wander_length);
-
-        // Point to a random spot on the circle
-        Vec2 toRadius = Vec2(ship->wander_radius, 0);
-        toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(ship->wander_theta));
-
-        drawNode->drawLine(Vec2(0, 0), projection, Color4F::RED);
-        drawNode->drawCircle(projection, ship->wander_radius, 0, 64, false, Color4F::RED);
-        drawNode->drawLine(Vec2(0, 0), projection + toRadius, Color4F::BLUE);
-    
-        if (ship->getClosestBit()) {
-            drawNode->drawLine(Vec2(0, 0), ship->getClosestBit()->getPosition() - ship->getPosition(), Color4F::GREEN);
-        }
-
-        drawNode->drawLine(Vec2(0, 0), ship->acceleration * 1000, Color4F::YELLOW);
+    int offset = 0;
+    stopAllActions();
+    if (!centered) {
+        offset = 350;
     }
+
+    auto follow = Follow::createWithOffset(ship, 0, offset,
+        Rect(-WORLD_OFFSET, -(730 + WORLD_OFFSET),
+            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + 730 + WORLD_OFFSET * 2));
+    runAction(follow);
 }
 
 cocos2d::Vector<Ship*>& World::getShips() {
@@ -91,7 +79,6 @@ void World::addShip() {
     ship->setBoundary(Rect(0, 0, WORLD_WIDTH, WORLD_HEIGHT));
 
     if (ships.empty()) {
-        addChild(DrawNode::create(), 0, "drawNode");
         ship->setPosition(getContentSize() / 2.0f);
     }
     else {
@@ -141,6 +128,9 @@ void World::createGrid() {
         Vec2 o = Vec2(c * colWidth, 0);
         Vec2 d = Vec2(c * colWidth, getContentSize().height);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
+        for (int i = 0; i <= RES; i++) {
+            drawNode->drawSolidCircle(o + Vec2(0, rowHeight * i), 2, 0, 8, Color4F(1, 1, 1, 0.14f));
+        }
     }
     for (int r = 0; r <= RES; r++) {
         Vec2 o(0, r * rowHeight);
@@ -201,42 +191,32 @@ void World::handleSpawns(float delta) {
     }
 }
 
-void World::handleCollisions() {
-    for (auto s = ships.begin(); s != ships.end(); s++) {
-        for (int i = 0; i < BitType::All; i++) {
-            auto type = BitType(i);
-            auto& bitVector = bits[type];
-            for (auto b = bitVector.begin(); b != bitVector.end(); b++) {
-                Vec2 diff = (*s)->getPosition() - (*b)->getPosition();
-                if (diff.getLengthSq() < 441) {
-                    auto& info = Player::bit_info[type];
-                    if (info.level == 0) {
-                        Player::bits++;
-                    }
-                    else {
-                        Player::addBits(Player::calculateValue(type));
-                        info.spawned--;
-                    }
-                    removeChild(*b);
-                    b = bitVector.erase(b);
-                    if (b == bitVector.end()) break;
-                }
-            }
-        }
-    }
-}
-
-void World::followShip(bool centered) {
-    if (ships.empty()) return;
+void World::debugShip()
+{
+    auto drawNode = getChildByName<DrawNode*>("drawNode");
     auto ship = ships.at(0);
-    int offset = 0;
-    stopAllActions();
-    if (!centered) {
-        offset = 350;
+    if (!drawNode) {
+        addChild(DrawNode::create(), 0, "drawNode");
     }
+    if (drawNode && ship) {
+        drawNode->clear();
+        drawNode->setPosition(ship->getPosition());
+        drawNode->drawCircle(Vec2(0, 0), ship->vision_radius, 0, 64, false, Color4F::WHITE);
+        drawNode->drawCircle(Vec2(0, 0), ship->separation_radius, 0, 64, false, Color4F::WHITE);
 
-    auto follow = Follow::createWithOffset(ship, 0, offset,
-        Rect(-WORLD_OFFSET, -(730 + WORLD_OFFSET),
-            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + 730 + WORLD_OFFSET * 2));
-    runAction(follow);
+        // Project future position
+        Vec2 projection = ship->velocity;
+        projection.normalize();
+        projection.scale(ship->wander_length);
+
+        // Point to a random spot on the circle
+        Vec2 toRadius = Vec2(ship->wander_radius, 0);
+        toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(ship->wander_theta));
+
+        drawNode->drawLine(Vec2(0, 0), projection, Color4F::RED);
+        drawNode->drawCircle(projection, ship->wander_radius, 0, 64, false, Color4F::RED);
+        drawNode->drawLine(Vec2(0, 0), projection + toRadius, Color4F::BLUE);
+
+        drawNode->drawLine(Vec2(0, 0), ship->acceleration * 1000, Color4F::YELLOW);
+    }
 }
