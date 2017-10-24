@@ -1,30 +1,27 @@
 #pragma once
 
 #include <cocos2d.h>
+#include "ui/UIButton.h"
 
-class PurchaseButton: public cocos2d::Node
+class PurchaseButton: public cocos2d::ui::Button
 {
 public:
-    enum CostType {
+    enum IconType {
         Bits, Diamonds
     };
 
-    static PurchaseButton* create(cocos2d::Size size);
-    bool init(cocos2d::Size size);
+    static PurchaseButton* create(const std::string& path,
+        cocos2d::Size size, IconType iconType);
+    bool init(const std::string& path, cocos2d::Size size, IconType iconType);
 
+    void setButtonColor(const cocos2d::Color4B& color);
     void setHeaderColor(const cocos2d::Color4B& color);
     void setHeader(const std::string& header);
     void setCost(double amount);
-    void setCostType(CostType type);
 
 private:
-    void addButton();
     void addHeaderBackground();
     void addHeader();
-    void addCost();
-
-    std::string header;
-    std::string cost;
-    CostType type;
+    void addCost(IconType iconType);
 };
 

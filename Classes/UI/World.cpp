@@ -1,8 +1,9 @@
 #include "World.h"
 
+#include "Util.h"
 #include "..\Constants.h"
 #include "..\Scene\GameScene.h"
-#include "..\GameObject\Ship.h"
+#include "..\GameObject\Wanderer.h"
 #include "..\GameObject\Bit.h"
 #include "ui\UIText.h"
 
@@ -24,18 +25,16 @@ void World::onEnter() {
 
     scheduleUpdate();
     setCascadeOpacityEnabled(true);
+    setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
 
-    createLights();
     createGrid();
     createInput();
 
     // Spawn Ships
-    addShip();
-    auto ship = ships.at(0);
-    //ship->setColor(SHIP_COLOR);
-    ship->setPosition(getContentSize() / 2.0f);
-    auto follow = Follow::createWithOffset(ship, 0, 350, Rect(0, -730, getContentSize().width, getContentSize().height + 730));
-    runAction(follow);
+    for (int i = 0; i < Player::squadrons[0].ints["count"]; i++) {
+        addShip();
+    }
+    followShip(false);
 }
 
 void World::onExit() {
@@ -46,29 +45,47 @@ void World::onExit() {
 void World::update(float delta) {
     Layer::update(delta);
 
-    updateShips();  
+    // Touch and Hold event
+    if (Util::touch_down) {
+        Util::touch_location = Util::capVector(Util::touch_location_original - getPosition(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    }
     handleSpawns(delta);
-    handleCollisions();
+    if (DEBUG_SHIP) debugShip();
+}
+
+void World::followShip(bool centered) {
+    if (ships.empty()) return;
+    auto ship = ships.at(0);
+    int offset = 0;
+    stopAllActions();
+    if (!centered) {
+        offset = 350;
+    }
+
+    auto follow = Follow::createWithOffset(ship, 0, offset,
+        Rect(-WORLD_OFFSET, -(730 + WORLD_OFFSET),
+            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + 730 + WORLD_OFFSET * 2));
+    runAction(follow);
 }
 
 cocos2d::Vector<Ship*>& World::getShips() {
     return ships;
 }
 
-void World::createLights() {
-    auto ambient = AmbientLight::create(Color3B(255, 255, 255));
-    addChild(ambient);
-
-    auto light = DirectionLight::create(Vec3(-1, -1, -1), Color3B(255, 255, 255));
-    addChild(light);
-}
-
 void World::addShip() {
-    auto ship = Ship::create();
-    ship->initWithFile(SPRITE_SHIP);
-    if (ships.size() > 0) {
-        ship->setPosition(ships.at(0)->getPosition());
+    auto ship = Wanderer::create(Player::squadrons[0]);
+    ship->setNeighbours(&ships);
+    ship->setBits(&bits);
+    ship->setBoundary(Rect(0, 0, WORLD_WIDTH, WORLD_HEIGHT));
+
+    if (ships.empty()) {
+        ship->setPosition(getContentSize() / 2.0f);
     }
+    else {
+        ship->setPosition(ships.at(0)->getPosition() + Vec2(64, 64) * rand_minus1_1());
+        ship->w_seek = 0;
+    }
+
     addChild(ship, 3);
     ships.pushBack(ship);
 }
@@ -98,20 +115,24 @@ void World::removeBit(BitType type) {
 void World::createGrid() {
     // Create Background
     auto drawNode = DrawNode::create();
-    drawNode->drawSolidRect(Vec2(0, -730), Size(WORLD_WIDTH, WORLD_HEIGHT + 730), Color4F(WORLD_COLOR));
+    drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -730 - WORLD_OFFSET),
+        Size(WORLD_WIDTH + WORLD_OFFSET, WORLD_HEIGHT + 730 + WORLD_OFFSET), Color4F(WORLD_COLOR));
     addChild(drawNode, 0);
 
     // Create grid
     drawNode->setLineWidth(1);
     const int RES = GRID_RESOLUTION;
-    int colWidth = getContentSize().width / RES;
-    int rowHeight = getContentSize().height / RES;
-    for (int c = 0; c < RES; c++) {
+    int colWidth = WORLD_WIDTH / RES;
+    int rowHeight = WORLD_HEIGHT / RES;
+    for (int c = 0; c <= RES; c++) {
         Vec2 o = Vec2(c * colWidth, 0);
         Vec2 d = Vec2(c * colWidth, getContentSize().height);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
+        for (int i = 0; i <= RES; i++) {
+            drawNode->drawSolidCircle(o + Vec2(0, rowHeight * i), 2, 0, 8, Color4F(1, 1, 1, 0.14f));
+        }
     }
-    for (int r = 0; r < RES; r++) {
+    for (int r = 0; r <= RES; r++) {
         Vec2 o(0, r * rowHeight);
         Vec2 d(getContentSize().width, r * rowHeight);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
@@ -122,86 +143,28 @@ void World::createInput() {
     // Touch
     auto touch = EventListenerTouchOneByOne::create();
     touch->onTouchBegan = [this](Touch* touch, Event* event) {
-        Player::touch_down = true;
-        Player::touch_location = touch->getLocation();
+        Util::touch_down = true;
+        Util::touch_location = Util::capVector(touch->getLocation(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        Util::touch_location_original = touch->getLocation();
         return true;
     };
     touch->onTouchMoved = [this](Touch* touch, Event* event) {
-        Player::touch_location = touch->getLocation();
+        Util::touch_location = Util::capVector(touch->getLocation(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        Util::touch_location_original = touch->getLocation();
     };
     touch->onTouchCancelled = [](Touch* touch, Event* event) {
-        Player::touch_down = false;
+        Util::touch_down = false;
     };
     touch->onTouchEnded = [=](Touch* touch, Event* event) {
-        Player::touch_down = false;
+        Util::touch_down = false;
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
 }
 
-void World::updateShips() {
-    for (Ship* ship : ships) {
-        ship->setAcceleration(Vec2(0, 0));
-       
-        auto boundary = Rect(Vec2(0, 0), getContentSize());
-        auto center = Vec2(getContentSize().width / 2.0f, getContentSize().height / 2.0f);
-        auto seekCenter = ship->seek(center);
-        ship->applyForce(seekCenter, 0.2f);
-
-        // Stay within boundaries
-        if (!boundary.containsPoint(ship->getPosition())) {    
-            ship->applyForce(seekCenter);
-            auto toCenter = center - ship->getPosition();
-            toCenter.normalize();
-            toCenter.scale(50);
-            ship->setTargetOffset(toCenter);
-            continue;
-        }
-
-        if (Player::touch_down && ship == ships.at(0)) {
-            // Seek towards touch position
-            auto target = Player::touch_location - getPosition();
-            Vec2 seekForce = ship->seek(target);
-            ship->applyForce(seekForce, Player::seek);
-            auto toMouse = target - ship->getPosition();
-            toMouse.normalize();
-            toMouse.scale(50);
-            ship->setTargetOffset(toMouse);
-            continue;
-        }
-
-        // Seek to the closest, largest value bit
-        Vec2 bitForce;
-        for (int i = BitType::All - 1; i >= 0; i--) {
-            bitForce = ship->seekBits(bits[BitType(i)]);
-            if (!bitForce.isZero()) {
-                break;
-            }
-        }
-        if (!bitForce.isZero()) {
-            ship->applyForce(bitForce, Player::seekBits);
-        }
-        else {
-            Vec2 wanderForce = ship->wander();
-            ship->applyForce(wanderForce, Player::wander);
-        }
-
-        // Flock
-        Vec2 alignForce = ship->align(ships);
-        ship->applyForce(alignForce, Player::alignment);
-        Vec2 cohesionForce = ship->cohesion(ships);
-        ship->applyForce(cohesionForce, Player::cohesion);
-        Vec2 separateForce = ship->separate(ships);
-        ship->applyForce(separateForce, Player::separation);
-    }
-}
-
 void World::handleSpawns(float delta) {
-    // Spawn Ships
-    while (ships.size() < Player::ship_count) {
+    // Ships
+    if (ships.size() < Player::squadrons[0].ints["count"]) {
         addShip();
-    }
-    while (ships.size() > Player::ship_count) {
-        removeShip();
     }
 
     // Spawn Bits
@@ -228,27 +191,32 @@ void World::handleSpawns(float delta) {
     }
 }
 
-void World::handleCollisions() {
-    for (auto s = ships.begin(); s != ships.end(); s++) {
-        for (int i = 0; i < BitType::All; i++) {
-            auto type = BitType(i);
-            auto& bitVector = bits[type];
-            for (auto b = bitVector.begin(); b != bitVector.end(); b++) {
-                Vec2 diff = (*s)->getPosition() - (*b)->getPosition();
-                if (diff.getLengthSq() < 441) {
-                    auto& info = Player::bit_info[type];
-                    if (info.level == 0) {
-                        Player::bits++;
-                    }
-                    else {
-                        Player::addBits(Player::calculateValue(type));
-                        info.spawned--;
-                    }
-                    removeChild(*b);
-                    b = bitVector.erase(b);
-                    if (b == bitVector.end()) break;
-                }
-            }
-        }
+void World::debugShip()
+{
+    auto drawNode = getChildByName<DrawNode*>("drawNode");
+    auto ship = ships.at(0);
+    if (!drawNode) {
+        addChild(DrawNode::create(), 0, "drawNode");
+    }
+    if (drawNode && ship) {
+        drawNode->clear();
+        drawNode->setPosition(ship->getPosition());
+        drawNode->drawCircle(Vec2(0, 0), ship->vision_radius, 0, 64, false, Color4F::WHITE);
+        drawNode->drawCircle(Vec2(0, 0), ship->separation_radius, 0, 64, false, Color4F::WHITE);
+
+        // Project future position
+        Vec2 projection = ship->velocity;
+        projection.normalize();
+        projection.scale(ship->wander_length);
+
+        // Point to a random spot on the circle
+        Vec2 toRadius = Vec2(ship->wander_radius, 0);
+        toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(ship->wander_theta));
+
+        drawNode->drawLine(Vec2(0, 0), projection, Color4F::RED);
+        drawNode->drawCircle(projection, ship->wander_radius, 0, 64, false, Color4F::RED);
+        drawNode->drawLine(Vec2(0, 0), projection + toRadius, Color4F::BLUE);
+
+        drawNode->drawLine(Vec2(0, 0), ship->acceleration * 1000, Color4F::YELLOW);
     }
 }

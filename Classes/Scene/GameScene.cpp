@@ -36,18 +36,15 @@ GameScene::~GameScene() {
 
 void GameScene::update(float delta) {
     Scene::update(delta);
-    Player::time_played += delta;
 }
 
 void GameScene::createWorld() {
     auto world = World::create();
-    world->setPosition(WORLD_POSITION);
-    world->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
     addChild(world, 0, "world");
 }
 
 void GameScene::createHUD() {
     auto hud = HUD::create();
     hud->setWorld(getChildByName<World*>("world"));
-    addChild(hud, 1);
+    addChild(hud, 1, "hud");
 }

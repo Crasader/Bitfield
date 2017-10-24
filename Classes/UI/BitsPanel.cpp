@@ -3,7 +3,7 @@
 #include "Util.h"
 #include "Constants.h"
 #include "Generator.h"
-#include "Upgrade.h"
+#include "UpgradeItem.h"
 #include "UI/UIImageView.h"
 #include "UI/UIScrollView.h"
 #include "UI/UIText.h"
@@ -66,10 +66,10 @@ void BitsPanel::addBackground()
 static ui::Button* createTab(const std::string& label, float posX)
 {
     auto tab = Util::createRoundedButton(UI_ROUNDED_RECT, Size(228, 64), UI_COLOR_1);
-    tab->setPosition(Vec2(posX, 618));
+    tab->setPosition(Vec2(posX, PANEL_HEIGHT));
     tab->setZoomScale(0);
     auto tab_label = ui::Text::create(label, FONT_DEFAULT, FONT_SIZE_MEDIUM);
-    tab_label->setPositionNormalized(Vec2(0.5f, 0.5f));
+    tab_label->setPositionNormalized(Vec2(0.5f, 0.6f));
     tab->addChild(tab_label, 0, "tab_label");
     return tab;
 }
@@ -181,10 +181,11 @@ void BitsPanel::addUpgrades()
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
     param->setMargin(ui::Margin(0, 0, 0, 16));
 
-    for (auto i = 0; i < Player::upgrade_info.size(); i++) {
-        auto button = Upgrade::create(i);
+    for (auto info : Player::upgrades) {
+        if (Player::isUpgradePurchased(info.first)) continue;
+        auto button = UpgradeItem::create(info.first);
         button->setLayoutParameter(param);
-        upgrade_layer->addChild(button, 0, i);
+        upgrade_layer->addChild(button, 0, info.first);
     }
 
     const int UPGRADE_SIZE = 150;

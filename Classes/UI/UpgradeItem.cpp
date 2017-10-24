@@ -1,4 +1,4 @@
-#include "Upgrade.h"
+#include "UpgradeItem.h"
 #include "Constants.h"
 #include "Util.h"
 #include "PurchaseButton.h"
@@ -11,13 +11,13 @@
 
 USING_NS_CC;
 
-Upgrade::Upgrade(int id) {
+UpgradeItem::UpgradeItem(int id) {
     this->id = id;
 }
 
-Upgrade* Upgrade::create(int id) {
-    Upgrade *btn = new (std::nothrow) Upgrade(id);
-    auto info = Player::upgrade_info[id];
+UpgradeItem* UpgradeItem::create(int id) {
+    UpgradeItem *btn = new (std::nothrow) UpgradeItem(id);
+    auto info = Player::upgrades[id];
     if (btn && btn->init()) {
         btn->autorelease();
         return btn;
@@ -26,7 +26,7 @@ Upgrade* Upgrade::create(int id) {
     return nullptr;
 }
 
-bool Upgrade::init() {
+bool UpgradeItem::init() {
     if (!Node::init()) return false;
     scheduleUpdate();
     setCascadeOpacityEnabled(true);
@@ -41,13 +41,13 @@ bool Upgrade::init() {
     return true;
 }
 
-void Upgrade::update(float delta) {
+void UpgradeItem::update(float delta) {
     Node::update(delta);
     std::stringstream ss;
 
     // Buy Button
     auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    auto cost = Player::upgrade_info[id].cost;
+    auto cost = Player::upgrades[id].cost;
 
     // Item Opacity
     if (Player::bits < cost) {
@@ -58,31 +58,31 @@ void Upgrade::update(float delta) {
     }
 }
 
-int Upgrade::getID() {
+int UpgradeItem::getID() {
     return id;
 }
 
-void Upgrade::addBackground() {
+void UpgradeItem::addBackground() {
     auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);
     addChild(background);
 }
 
-void Upgrade::addIcon() {
+void UpgradeItem::addIcon() {
     auto border = Util::createRoundedRect(UI_ROUNDED_RECT, Size(134, 114), UI_COLOR_3);
     border->setPosition(Vec2(16, 10));
     addChild(border);
 
-    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(126, 106), Player::upgrade_info[id].color);
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(126, 106), Player::upgrades[id].color);
     background->setPosition(Vec2(20, 14));
     addChild(background);
 
-    auto icon = ui::ImageView::create(Player::upgrade_info[id].icon_filepath);
+    auto icon = ui::ImageView::create(Player::upgrades[id].icon_filepath);
     icon->setPositionNormalized(Vec2(0.5f, 0.52f));
     background->addChild(icon);
 }
 
-void Upgrade::addName() {
-    auto name = ui::Text::create(Player::upgrade_info[id].name, FONT_DEFAULT, FONT_SIZE_MEDIUM);
+void UpgradeItem::addName() {
+    auto name = ui::Text::create(Player::upgrades[id].name, FONT_DEFAULT, FONT_SIZE_MEDIUM);
     name->setAnchorPoint(Vec2(0, 0));
     name->setPosition(Vec2(166, 93 - 10));
     addChild(name);
@@ -93,8 +93,8 @@ void Upgrade::addName() {
     addChild(line);
 }
 
-void Upgrade::addDescription() {
-    auto desc = ui::Text::create(Player::upgrade_info[id].desc, FONT_DEFAULT, 34);
+void UpgradeItem::addDescription() {
+    auto desc = ui::Text::create(Player::upgrades[id].desc, FONT_DEFAULT, 34);
     desc->setContentSize(Size(520, 72));
     desc->ignoreContentAdaptWithSize(false);
     desc->setAnchorPoint(Vec2(0, 1));
@@ -102,14 +102,23 @@ void Upgrade::addDescription() {
     addChild(desc);
 }
 
-void Upgrade::addBuyButton() {
-    auto buy_button = PurchaseButton::create(Size(264, 114));
-    buy_button->setPosition(Vec2(704, 10));
+void UpgradeItem::addBuyButton() {
+    auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
+    buy_button->setColor(Color3B(UI_COLOR_1));
+    buy_button->setHeaderColor(Player::upgrades[id].color);
+    buy_button->setPosition(Vec2(704 + 264 / 2, 10 + 114 / 2));
     buy_button->setHeader("Buy");
-    buy_button->setCost(Player::upgrade_info[id].cost);
+    buy_button->setCost(Player::upgrades[id].cost);
 
-    buy_button->getChildByName<ui::Button*>("button")->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
+    buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
+        if (type == ui::Widget::TouchEventType::BEGAN) {
+            buy_button->setScale(1.05f);
+        }
+        if (type == ui::Widget::TouchEventType::CANCELED) {
+            buy_button->setScale(1.0f);
+        }
         if (type == ui::Widget::TouchEventType::ENDED) {
+            buy_button->setScale(1.0f);
             if (Player::purchaseUpgrade(id)) {
                 removeFromParent();
                 Player::canBuyUpgrade();

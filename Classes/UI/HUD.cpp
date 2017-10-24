@@ -1,15 +1,16 @@
 #include "HUD.h"
 #include "World.h"
-#include "..\Util.h"
-#include "..\Constants.h"
-#include "..\Player.h"
-#include "..\Scene\GameScene.h"
+#include "Util.h"
+#include "Constants.h"
+#include "PlayerData/Player.h"
+#include "Scene\GameScene.h"
 
-#include "..\UI\BitsPanel.h"
-#include "..\UI\Upgrade.h"
+#include "UI\BitsPanel.h"
+#include "UI\SquadronPanel.h"
+#include "UI\UpgradeItem.h"
 
-#include "UI\UIText.h"
-#include "UI\UIScrollView.h"
+#include "ui\UIText.h"
+#include "ui\UIScrollView.h"
 #include "ui\UIButton.h"
 #include "ui\UILayoutParameter.h"
 #include "ui\UIImageView.h"
@@ -51,11 +52,10 @@ void HUD::onEnter() {
 
     addBitCounter();
     addPanels();
-
+    addTabs();
+    
     currentPanel = PanelID::Bits;
     setPanel(PanelID::Bits);
-
-    addTabs();
 }
 
 void HUD::onExit() {
@@ -70,7 +70,7 @@ void HUD::update(float delta) {
     auto bit_counter_layer = getChildByName("bit_counter_layer");
     auto icon = bit_counter_layer->getChildByName("icon");
     auto counter = bit_counter_layer->getChildByName<ui::Text*>("counter");
-    counter->setString(Player::getFormattedBits(Player::bits));
+    counter->setString(Util::getFormattedDouble(Player::bits));
     bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
         counter->getContentSize().height));
 }
@@ -78,7 +78,7 @@ void HUD::update(float delta) {
 void HUD::addBitCounter() {
     auto bit_counter_layer = ui::HBox::create(Size(400, 90));
     bit_counter_layer->setAnchorPoint(Vec2(0.5f, 0.5f));
-    bit_counter_layer->setPosition(Vec2(WIDTH * 0.5f, HEIGHT * 0.92f));
+    bit_counter_layer->setPosition(Vec2(GAME_WIDTH * 0.5f, GAME_HEIGHT * 0.92f));
     addChild(bit_counter_layer, 0, "bit_counter_layer");
 
     auto icon = ui::ImageView::create(SPRITE_BIT);
@@ -94,9 +94,15 @@ void HUD::addBitCounter() {
 
 void HUD::addPanels()
 {
-    auto bits_panel = BitsPanel::create();
-    bits_panel->setPosition(Vec2(16, 98));
-    addChild(bits_panel, 0, (int)PanelID::Bits);
+    auto addCentered = [=](cocos2d::Node* node, PanelID id) {
+        node->setAnchorPoint(ANCHOR_CENTER_BOTTOM);
+        node->setPosition(Vec2(UI_CENTER_X, PANEL_Y));
+        node->setVisible(false);
+        addChild(node, 0, id);
+    };
+
+    addCentered(BitsPanel::create(), PanelID::Bits);
+    addCentered(SquadronPanel::create(), PanelID::Squadron);
 }
 
 void HUD::addTabs() {
@@ -114,8 +120,8 @@ void HUD::addTabs() {
         tab_button->setPosition(Vec2(16 + 212 * i, 8));
         tab_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
             if (type == ui::Widget::TouchEventType::ENDED) {
-                if (i == 0) setPanel(PanelID(i));
-                if (i == 1 || i == 2) Player::bits = 0;
+                if (i == 0 || i == 1) setPanel(PanelID(i));
+                if (i == 2) Player::bits = 0;
                 if (i == 3) {
                     auto sum = 0;
                     for (int i = 0; i < BitType::All; i++) {
@@ -140,9 +146,34 @@ void HUD::addTabs() {
 }
 
 void HUD::setPanel(PanelID id) {
-    auto oldPanel = getChildByTag(currentPanel);
-    auto newPanel = getChildByTag(id);
-    currentPanel = id;
-    oldPanel->setVisible(false);
-    newPanel->setVisible(true);
+    if (currentPanel == id) {
+        auto panel = getChildByTag(id);
+        panel->setVisible(!panel->isVisible());
+        if (!panel->isVisible()) {
+            world->followShip(true);
+        }
+        else {
+            world->followShip(false);
+        }
+    }
+    else {
+        auto oldPanel = getChildByTag(currentPanel);
+        auto newPanel = getChildByTag(id);
+        currentPanel = id;
+        oldPanel->setVisible(false);
+        newPanel->setVisible(true);
+    }
+
+    // Change appearance of selected and unselected tabs
+    auto tab_layer = getChildByName("tab_layer");
+    for (int i = 0; i < 5; i++) {
+        auto panel = getChildByTag(i);
+        auto tab_button = tab_layer->getChildByTag<ui::Button*>(i);
+        if (panel != nullptr && panel->isVisible()) {
+            tab_button->setOpacity(255);
+        }
+        else {
+            tab_button->setOpacity(255 * 0.5f);
+        }
+    }
 }

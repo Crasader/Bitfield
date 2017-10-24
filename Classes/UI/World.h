@@ -2,7 +2,7 @@
 #define __WORLD_H__
 
 #include "cocos2d.h"
-#include "../Player.h"
+#include "PlayerData/Player.h"
 #include <map>
 
 class Ship;
@@ -26,20 +26,17 @@ public:
 
     cocos2d::Vector<Ship*>& getShips();
 
+    void followShip(bool centered);
+
 private:
-    cocos2d::Camera* camera;
     cocos2d::Vector<Ship*> ships;
     std::map< BitType, cocos2d::Vector< Bit* > > bits;
 
     void createInput();
     void createGrid();
-    void createLights();
 
-    void touchHoldCallback();
-
-    void updateShips();
     void handleSpawns(float delta);
-    void handleCollisions();
+    void debugShip();
 };
 
 #endif // __WORLD_H__

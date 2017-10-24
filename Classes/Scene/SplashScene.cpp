@@ -1,7 +1,7 @@
 #include "SplashScene.h"
 #include "GameScene.h"
-#include "..\Constants.h"
-#include "..\Player.h"
+#include "Constants.h"
+#include "PlayerData/Player.h"
 
 #include <sstream>
 #include <iomanip>

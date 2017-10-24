@@ -7,9 +7,9 @@
 
 USING_NS_CC;
 
-PurchaseButton* PurchaseButton::create(cocos2d::Size size) {
+PurchaseButton* PurchaseButton::create(const std::string& path, Size size, IconType iconType) {
     PurchaseButton *btn = new (std::nothrow) PurchaseButton();
-    if (btn && btn->init(size)) {
+    if (btn && btn->init(path, size, iconType)) {
         btn->autorelease();
         return btn;
     }
@@ -17,18 +17,24 @@ PurchaseButton* PurchaseButton::create(cocos2d::Size size) {
     return nullptr;
 }
 
-bool PurchaseButton::init(cocos2d::Size size)
+bool PurchaseButton::init(const std::string& path, cocos2d::Size size, IconType iconType)
 {
-    if (!Node::init()) return false;
+    if (!ui::Button::init(path)) return false;
+    setScale9Enabled(true);
     setContentSize(size);
     setCascadeOpacityEnabled(true);
+    setZoomScale(0);
 
-    addButton();
     addHeaderBackground();
     addHeader();
-    addCost();
+    addCost(iconType);
 
     return true;
+}
+
+void PurchaseButton::setButtonColor(const cocos2d::Color4B & color)
+{
+    setColor(Color3B(color));
 }
 
 void PurchaseButton::setHeaderColor(const cocos2d::Color4B & color)
@@ -45,26 +51,14 @@ void PurchaseButton::setHeader(const std::string& header)
 
 void PurchaseButton::setCost(double amount)
 {
-    cost = Player::getFormattedBits(amount);
     auto hbox = utils::findChild(this, "hbox");
     auto label = hbox->getChildByName<ui::Text*>("label");
-    label->setString(cost);
+    label->setString(Util::getFormattedDouble(amount));
 
     auto iconSize = hbox->getChildByName("icon")->getContentSize();
     auto labelSize = label->getContentSize();
     hbox->setContentSize(Size(iconSize.width + labelSize.width,
         std::max(iconSize.height, labelSize.height)));
-}
-
-void PurchaseButton::setCostType(CostType type)
-{
-}
-
-void PurchaseButton::addButton()
-{
-    auto button = Util::createRoundedButton(UI_ROUNDED_RECT, getContentSize(), UI_COLOR_1);
-    button->setZoomScale(0.05f);
-    addChild(button, 0, "button");
 }
 
 void PurchaseButton::addHeaderBackground()
@@ -76,38 +70,37 @@ void PurchaseButton::addHeaderBackground()
     auto header_background = Util::createRoundedRect(UI_ROUNDED_RECT, size, UI_COLOR_2);
     header_background->setAnchorPoint(Vec2(0, 1));
     header_background->setPosition(Vec2(8, getContentSize().height - 8));
-    utils::findChild(this, "button")->addChild(header_background, 0, "header_background");
+    addChild(header_background, 0, "header_background");
 }
 
 void PurchaseButton::addHeader()
 {
-    auto header_background = utils::findChild(this, "header_background");
+    auto header_background = getChildByName("header_background");
     auto size = header_background->getContentSize();
-    auto header = ui::Text::create("Unnamed", FONT_DEFAULT, size.height * 0.8f);
+    auto header = ui::Text::create("Unnamed", FONT_DEFAULT, size.height * 0.9f);
     header->setPositionNormalized(Vec2(0.5f, 0.5f));
     header_background->addChild(header, 0, "header");
 }
 
-void PurchaseButton::addCost()
+void PurchaseButton::addCost(IconType iconType)
 {
-    auto button = utils::findChild(this, "button");
-
     // Price container
     auto hbox = ui::HBox::create(getContentSize());
     hbox->setCascadeOpacityEnabled(true);
     hbox->setAnchorPoint(Vec2(0.5f, 0.5f));
-    hbox->setPositionNormalized(Vec2(0.5f, 0.3f));
+    hbox->setPositionNormalized(Vec2(0.5f, 0.26f));
     auto param = ui::LinearLayoutParameter::create();
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
     hbox->setLayoutParameter(param);
-    button->addChild(hbox, 0, "hbox");
+    addChild(hbox, 0, "hbox");
 
     // Price icon
+    auto iconPath = (iconType == IconType::Bits) ? SPRITE_BIT : SPRITE_DIAMOND;
     param = ui::LinearLayoutParameter::create();
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_VERTICAL);
     param->setMargin(ui::Margin(-8, 0, -4, 0));
-    auto icon = ui::ImageView::create(SPRITE_BIT);
-    icon->setScale((button->getContentSize().height * 0.3f) / 64.0f);
+    auto icon = ui::ImageView::create(iconPath);
+    icon->setScale((getContentSize().height * 0.3f) / 64.0f);
     icon->setLayoutParameter(param);
     hbox->addChild(icon, 0, "icon");
 

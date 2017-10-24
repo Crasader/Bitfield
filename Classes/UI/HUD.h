@@ -9,7 +9,7 @@ class HUD : public cocos2d::Layer
 {
 public:
     enum PanelID {
-        Bits, Upgrades, Squadron, Artifacts, Shop
+        Bits, Squadron, Missions, Artifacts, Shop
     };
 
     static HUD* create();

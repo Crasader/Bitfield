@@ -5,6 +5,7 @@ USING_NS_CC;
 
 Bit::Bit(BitType type) {
     this->type = type;
+    ship = nullptr;
 }
 
 Bit* Bit::create(BitType type) {
@@ -39,4 +40,19 @@ void Bit::update(float delta) {
 
 BitType Bit::getType() {
     return type;
+}
+
+bool Bit::isTargettedBy(Ship* ship)
+{
+    if (!ship) return false;
+    return this->ship == ship;
+}
+
+bool Bit::isTargetted() {
+    return ship != nullptr;
+}
+
+void Bit::setShip(Ship* ship)
+{
+    this->ship = ship;
 }

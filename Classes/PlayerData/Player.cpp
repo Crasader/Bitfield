@@ -1,5 +1,6 @@
 #include "Player.h"
 
+#include "Util.h"
 #include "Constants.h"
 #include "GameObject/Bit.h"
 
@@ -16,53 +17,34 @@ using namespace rapidjson;
 
 //---- General
 Document Player::document;
-double Player::bits = 0;
-double Player::time_played = 0;
 
-// ---- Resources
+//---- Bits
+double Player::bits = 0;
 double Player::all_multiplier = 1;
 std::map<BitType, BitInfo> Player::bit_info;
 BuyMode Player::buy_mode = BuyMode::One;
-const int Player::LEVEL_TIER[] = { 10, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
+const int Player::LEVEL_TIER[] = { 5, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
 
 //---- Upgrades
-std::map<int, UpgradeInfo> Player::upgrade_info;
+std::map<int, Upgrade> Player::upgrades;
 std::set<int> Player::upgrades_purchased;
 
 //---- Squadron
-float Player::alignment = 0.0f;
-float Player::cohesion = 0.0f;
-float Player::separation = 1.0f;
-float Player::wander = 1.0f;
-float Player::seek = 1.6f;
-float Player::seekBits = 1.2f;
-int Player::ship_count = 1;
-float Player::ship_speed = 5.8f;
-float Player::ship_force = 0.16f;
-float Player::ship_vision = 400;
-float Player::ship_separation = 72;
-
-bool Player::touch_down = false;
-cocos2d::Vec2 Player::touch_location = cocos2d::Vec2(0, 0);
-
-//---- Utility
-static std::string jsonToString(rapidjson::Document &jsonObject) {
-    StringBuffer buffer;
-    PrettyWriter<StringBuffer> jsonWriter(buffer);
-    jsonObject.Accept(jsonWriter);
-    return buffer.GetString();
-}
+std::map<std::string, SquadronInfo> Player::squadron_defaults;
+std::map<int, SquadronInfo> Player::squadrons;
+int Player::num_squadrons;
+double Player::ship_costs[6];
 
 //---- PLAYER
 void Player::load() {
     loadDocument();
 
     bits = document["bits"].GetDouble();
-    ship_count = document["ship_count"].GetDouble();
-    time_played = document["time_played"].GetDouble();
     all_multiplier = document["all_multiplier"].GetDouble();
     loadBits();
     loadUpgrades();
+    loadSquadronDefaults();
+    loadSquadrons();
 }
 void Player::loadDocument() {
     std::string filePath = FileUtils::getInstance()->getWritablePath() + SAVE_FILE;
@@ -76,7 +58,6 @@ void Player::loadDocument() {
 
     auto fileData = FileUtils::getInstance()->getStringFromFile(filePath);
     document.Parse(fileData.c_str());
-    cocos2d::log("%s", jsonToString(document).c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
 }
 void Player::loadBits() {
@@ -108,19 +89,15 @@ void Player::loadUpgrades() {
     for (SizeType i = 0; i < purchased.Size(); i++) {
         auto id = purchased[i].GetInt();
         upgrades_purchased.insert(id);
-        cocos2d::log("%d already purchased.", i);
     }
 
-    const auto& upgrades = document["upgrades"].GetArray();
-    for (SizeType i = 0; i < upgrades.Size(); i++) {
+    const auto& upgradeArray = document["upgrades"].GetArray();
+    for (SizeType i = 0; i < upgradeArray.Size(); i++) {
         // Skip purchased upgrades
-        if (isUpgradePurchased(i)) {
-            cocos2d::log("Already bought %d, skipping", i);
-            continue;
-        }
+        if (isUpgradePurchased(i)) continue;
 
-        const auto& values = upgrades[i].GetArray();
-        UpgradeInfo info;
+        const auto& values = upgradeArray[i].GetArray();
+        Upgrade info;
         info.cost = values[0].GetDouble();
         info.bitType = BitType(values[1].GetInt());
         info.upgradeType = UpgradeType(values[2].GetInt());
@@ -153,7 +130,61 @@ void Player::loadUpgrades() {
             (info.upgradeType == UpgradeType::Value ? "x" : "") << info.value << ".";
         info.desc = ss.str();
 
-        upgrade_info[i] = info;
+        upgrades[i] = info;
+    }
+}
+void Player::loadSquadronDefaults() {
+    const auto& category = document["squadron_defaults"].GetArray();
+    for (SizeType i = 0; i < category.Size(); i++) {
+        const auto& item = category[i];
+
+        SquadronInfo info;
+        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
+            auto key = it->name.GetString();
+            const auto& value = it->value;
+
+            if (value.IsString()) {
+                info.strings[key] = value.GetString();
+            } else if (value.IsInt()) {
+                info.ints[key] = value.GetInt();
+            } else if (value.IsDouble()) {
+                info.doubles[key] = value.GetDouble();
+            }
+        }
+
+        squadron_defaults[info.strings["type"]] = info;
+    }
+
+    const auto& costs = document["ship_costs"].GetArray();
+    for (int i = 0; i < 6; i++) {
+        const auto& cost = costs[i];
+        ship_costs[i] = cost.GetDouble();
+    }
+}
+void Player::loadSquadrons() {
+    const auto& category = document["squadrons"].GetArray();
+    for (SizeType i = 0; i < category.Size(); i++) {
+        const auto& item = category[i];
+        auto type = item["type"].GetString();
+
+        // Load defaults and overwrite any differences
+        SquadronInfo info = squadron_defaults["Default"];
+        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
+            auto key = it->name.GetString();
+            const auto& value = it->value;
+
+            if (value.IsString()) {
+                info.strings[key] = value.GetString();
+            }
+            else if (value.IsInt()) {
+                info.ints[key] = value.GetInt();
+            }
+            else if (value.IsDouble()) {
+                info.doubles[key] = value.GetDouble();
+            }
+        }
+
+        squadrons[i] = info;
     }
 }
 
@@ -161,30 +192,11 @@ void Player::save() {
     if (!USE_SAVE) return;
 
     document["bits"] = bits;
-    document["ship_count"] = ship_count;
-    document["time_played"] = time_played;
     document["all_multiplier"] = all_multiplier;
     saveBits();
     saveUpgrades();
-
-    // Write to file
-    std::ofstream outputFile;
-    auto filepath = FileUtils::getInstance()->getWritablePath() + "data";
-    if (!FileUtils::getInstance()->isDirectoryExist(filepath)) {
-        FileUtils::getInstance()->createDirectory(filepath);
-        cocos2d::log("Created directory %s", filepath.c_str());
-    }
-    filepath += "/save.json";
-
-    FILE *fp = fopen(filepath.c_str(), "w");
-    if (!fp) {
-        cocos2d::log("Could not create file %s", filepath.c_str());
-        return;
-    }
-
-    std::string jsonObjectData = jsonToString(document);
-    fputs(jsonObjectData.c_str(), fp);
-    fclose(fp);
+    saveDocument();
+    saveSquadrons();
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
@@ -209,23 +221,44 @@ void Player::saveUpgrades() {
         purchased.PushBack(id, allocator);
     }
 }
+void Player::saveDocument() {
+    std::ofstream outputFile;
+    auto filepath = FileUtils::getInstance()->getWritablePath() + "data";
+    if (!FileUtils::getInstance()->isDirectoryExist(filepath)) {
+        FileUtils::getInstance()->createDirectory(filepath);
+        cocos2d::log("Created directory %s", filepath.c_str());
+    }
+    filepath += "/save.json";
 
+    FILE *fp = fopen(filepath.c_str(), "w");
+    if (!fp) {
+        cocos2d::log("Could not create file %s", filepath.c_str());
+        return;
+    }
+
+    std::string jsonObjectData = Util::jsonToString(document);
+    fputs(jsonObjectData.c_str(), fp);
+    fclose(fp);
+}
+void Player::saveSquadrons() {
+
+}
+
+//---- Bit Generators
 void Player::addBits(double bits) {
     Player::bits = std::min<double>(Player::bits + bits, BIT_MAX);
 }
 void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
 }
-
-//---- Resources
 bool Player::purchaseBitUpgrade(BitType type) {
-    auto price = calculatePrice(type);
+    auto price = calculateCost(type);
     if (bits < price) return false;
 
     auto& info = bit_info[type];
     int amount = getBuyAmount(type);
     subBits(price);
-    
+
     while (amount > 0) {
         info.level++;
         if (info.level == LEVEL_TIER[0]) {
@@ -243,59 +276,6 @@ bool Player::purchaseBitUpgrade(BitType type) {
         amount--;
     }
     return true;
-}
-std::string Player::getFormattedBits(double bits) {
-    // Store the double in scientific notation: Looks like 1.23e+09 or 1.23e+308 or inf
-    std::stringstream ss;
-    ss << std::fixed << std::scientific << std::setprecision(4) << bits;
-    auto string = ss.str();
-    auto len = string.length();
-    if (len <= 3) return "INF";
-
-    // Extract the number part
-    double number = 0;
-    number += string[0] - '0';
-    for (int i = 2; i <= 5; i++) {
-        number += (string[i] - '0') / pow(10, i - 1);
-    }
-    
-    // Extract the exponent part
-    int exponent = 0;
-    if (len == 11) {
-        exponent += (string[8] - '0') * 100;
-        exponent += (string[9] - '0') * 10;
-        exponent += (string[10] - '0');
-    }
-    else {
-        exponent += (string[8] - '0') * 10;
-        exponent += (string[9] - '0');
-    }
-    if (string[7] == '-') exponent *= -1;
-    if (exponent > 276) return "INF";
-
-    std::stringstream outstream;
-    outstream << std::setprecision(3) << std::fixed << std::setprecision(2);
-    if (exponent < 3) {
-        outstream << (number * pow(10, exponent));
-    }
-    else {
-        outstream << (number * pow(10, exponent % 3)) << getSuffix(exponent);
-    }
-    return outstream.str();
-}
-std::string Player::getSuffix(int exponent) {
-    if (exponent < 3) return "";
-    else if (exponent <= 35) return SUFFIX[(exponent - 3) / 3]; // Standard suffixes up to Decillion
-    else if (exponent > 276) return "INF";
-    else if (exponent >= 276) return "SSS";
-    else if (exponent >= 273) return "SS";
-    else if (exponent >= 270) return "S";
-    else {
-        char first, second;
-        first = ALPHABET[int(((exponent - 36) / 3) / 26) % 26];
-        second = ALPHABET[((exponent - 36) / 3) % 26];
-        return std::string() + first + second;
-    }
 }
 int Player::getTier(BitType type) {
     auto level = bit_info[type].level;
@@ -327,7 +307,7 @@ int Player::getNextTier(BitType type) {
         return LEVEL_TIER[0];
     }
 }
-double Player::calculatePrice(BitType type) {
+double Player::calculateCost(BitType type) {
     int amount = getBuyAmount(type);
     auto info = bit_info[type];
 
@@ -379,7 +359,7 @@ void Player::toggleBuyMode() {
 
 //---- Upgrades
 bool Player::purchaseUpgrade(int id) {
-    const auto& upgrade = upgrade_info[id];
+    const auto& upgrade = upgrades[id];
     const double& cost = upgrade.cost;
     if (isUpgradePurchased(id) || bits < cost) return false;
 
@@ -405,7 +385,7 @@ bool Player::purchaseUpgrade(int id) {
     return true;
 }
 bool Player::canBuyUpgrade() {
-    for (auto& upgrade : upgrade_info) {
+    for (auto& upgrade : upgrades) {
         if (isUpgradePurchased(upgrade.first)) continue;
         return Player::bits >= upgrade.second.cost;
     }
@@ -413,4 +393,16 @@ bool Player::canBuyUpgrade() {
 }
 bool Player::isUpgradePurchased(int id) {
     return upgrades_purchased.find(id) != upgrades_purchased.end();
+}
+
+//---- Squadrons
+bool Player::buyShip() {
+    auto count = squadrons[0].ints["count"];
+    auto cost = ship_costs[count - 1];
+    if (count >= 7 || bits < cost) return false;
+
+    // Purchase the upgrade
+    bits -= cost;
+    squadrons[0].ints["count"]++;
+    return true;
 }
