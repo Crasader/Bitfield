@@ -4,9 +4,15 @@
 #include "cocos2d.h"
 #include "PlayerData/Player.h"
 #include <map>
+#include <tuple>
 
 class Ship;
 class Bit;
+
+typedef std::map<int,
+    std::pair< cocos2d::Vector<Ship*>,
+               cocos2d::Vector< cocos2d::MotionStreak* > > > Fleet;
+typedef std::map< BitType, cocos2d::Vector< Bit* > > Bits;
 
 class World : public cocos2d::Layer
 {
@@ -18,24 +24,19 @@ public:
 
     virtual void update(float delta);
 
-    void addShip();
-    void removeShip();
-
     void addBit(BitType type);
-    void removeBit(BitType type);
-
-    cocos2d::Vector<Ship*>& getShips();
-
-    void followShip(bool centered);
+    void offsetCamera(bool offset);
 
 private:
-    cocos2d::Vector<Ship*> ships;
-    std::map< BitType, cocos2d::Vector< Bit* > > bits;
+    Fleet fleet;
+    Bits bits;
 
     void createInput();
     void createGrid();
 
-    void handleSpawns(float delta);
+    void updateFleet(float delta);
+    void updateBits(float delta);
+
     void debugShip();
 };
 

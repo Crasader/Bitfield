@@ -55,7 +55,7 @@ void SquadronPanel::addPurchaseButton()
     purchase_button->setHeaderColor(UI_COLOR_BLUE);
     purchase_button->setHeader("Upgrade Squadron");
     purchase_button->setCost(25);
-    purchase_button->setAnchorPoint(ANCHOR_CENTER);
+    purchase_button->setAnchorPoint(VEC_CENTER);
     purchase_button->setPosition(Vec2(parentSize.width / 2, 16 + 140 / 2));
     purchase_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
         if (type == ui::Widget::TouchEventType::BEGAN) {

@@ -8,7 +8,7 @@
 
 USING_NS_CC;
 
-Ship::Ship(SquadronInfo info)
+Ship::Ship(SquadronInfo info, int squadronID, int shipID)
 {
     type = info.strings["type"];
     sprite = info.strings["sprite"];
@@ -35,6 +35,18 @@ Ship::Ship(SquadronInfo info)
     scheduleUpdate();
     velocity = Vec2(0, 0);
     acceleration = Vec2(0, 0);
+    this->squadronID = squadronID;
+    this->shipID = shipID;
+}
+
+Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
+    Ship* ship = new (std::nothrow) Ship(info, squadronID, shipID);
+    if (ship && ship->initWithFile(info.strings["sprite"])) {
+        ship->autorelease();
+        return ship;
+    }
+    CC_SAFE_DELETE(ship);
+    return nullptr;
 }
 
 void Ship::update(float delta) {
@@ -62,7 +74,7 @@ void Ship::calculateForces() {
     }
 
     // Obey touches
-    if (Util::touch_down && w_seek > 0) {
+    if (squadronID == 0 && shipID == 0 && Util::touch_down) {
         // Seek towards touch position
         auto target = Util::touch_location;
         Vec2 seekForce = seek(target);
@@ -92,7 +104,7 @@ void Ship::calculateForces() {
             applyForce(alignForce, w_alignment);
             Vec2 cohesionForce = cohesion(*neighbours);
             applyForce(cohesionForce, w_cohesion);
-            Vec2 separateForce = separate(*neighbours);
+            Vec2 separateForce = separate();
             applyForce(separateForce, w_separation);
         }
     }
@@ -141,12 +153,12 @@ cocos2d::Vec2 Ship::wander() {
 }
 
 // Steer away from nearby ships
-cocos2d::Vec2 Ship::separate(const cocos2d::Vector<Ship*>& neighbours) {
+cocos2d::Vec2 Ship::separate() {
     Vec2 desired(0, 0);
     float count = 0;
 
     // Steer away from nearby ships
-    for (Ship* ship : neighbours) {
+    for (Ship* ship : *neighbours) {
         Vec2 toOther = ship->getPosition() - getPosition();
         if (toOther.getLength() > 0 && toOther.getLength() < separation_radius) {
             Vec2 awayFromOther = getPosition() - ship->getPosition();
@@ -186,7 +198,7 @@ cocos2d::Vec2 Ship::align(const cocos2d::Vector<Ship*>& neighbours) {
 
     // Average together every ship's heading and try to align with the group
     for (Ship* ship : neighbours) {
-        if (!inRange(ship)) continue;
+        if (!canSee(ship)) continue;
         auto dir = ship->getVelocity();
         desired.add(dir);
         count += 1;
@@ -246,7 +258,7 @@ cocos2d::Vec2 Ship::stayWithin(cocos2d::Rect boundary) {
 
 cocos2d::Vec2 Ship::stayGrouped() {
     auto center = getCenterOfMass(*neighbours);
-    if (center.isZero() || center.getDistance(getPosition()) < vision_radius) return Vec2(0, 0);
+    if (center.isZero() || center.getDistance(getPosition()) < vision_radius || this == (*neighbours).at(0)) return Vec2(0, 0);
     return seek(center);
 }
 
@@ -341,6 +353,11 @@ Bit* Ship::getTargetBit()
     }
 
     return nearestBit;
+}
+
+const std::string& Ship::getType()
+{
+    return type;
 }
 
 cocos2d::Vec2 Ship::getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours)
