@@ -69,7 +69,10 @@
     <ClCompile Include="..\Classes\UI\UpgradeItem.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\GameObject\Wanderer.cpp">
+    <ClCompile Include="..\Classes\UI\FleetPanel.cpp">
+      <Filter>src\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,7 +128,10 @@
     <ClInclude Include="..\Classes\Types.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\GameObject\Wanderer.h">
+    <ClInclude Include="..\Classes\UI\FleetPanel.h">
+      <Filter>src\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\SquadronFactory.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

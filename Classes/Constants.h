@@ -51,7 +51,7 @@ static const int SCROLL_HEIGHT = 591;
 static const int PANEL_Y = 98;
 static const int UI_CENTER_X = GAME_WIDTH / 2;
 static const int UI_CENTER_Y = GAME_HEIGHT / 2;
-static const cocos2d::Vec2 ANCHOR_CENTER(0.5f, 0.5f);
+static const cocos2d::Vec2 VEC_CENTER(0.5f, 0.5f);
 static const cocos2d::Vec2 ANCHOR_CENTER_BOTTOM(0.5f, 0);
 static const cocos2d::Vec2 ANCHOR_BL(0, 0);
 
@@ -75,6 +75,7 @@ static const cocos2d::Color4B UI_COLOR_WHITE(245, 245, 245, 255);
 static const std::string SPRITE_BLANK = "sprites/blank.png";
 static const std::string SPRITE_CIRCLE = "sprites/circle.png";
 static const std::string SPRITE_SILHOUETTE = "sprites/ship_silhouette.png";
+static const std::string SPRITE_STREAK = "sprites/streak.png";
 static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
 static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";

@@ -7,6 +7,7 @@
 
 #include "UI\BitsPanel.h"
 #include "UI\SquadronPanel.h"
+#include "UI\FleetPanel.h"
 #include "UI\UpgradeItem.h"
 
 #include "ui\UIText.h"
@@ -102,7 +103,10 @@ void HUD::addPanels()
     };
 
     addCentered(BitsPanel::create(), PanelID::Bits);
-    addCentered(SquadronPanel::create(), PanelID::Squadron);
+    if (Player::squadrons[0].ints["count"] <= 6)
+        addCentered(SquadronPanel::create(), PanelID::Squadron);
+    else
+        addCentered(FleetPanel::create(), PanelID::Squadron);
 }
 
 void HUD::addTabs() {
@@ -149,11 +153,11 @@ void HUD::setPanel(PanelID id) {
     if (currentPanel == id) {
         auto panel = getChildByTag(id);
         panel->setVisible(!panel->isVisible());
-        if (!panel->isVisible()) {
-            world->followShip(true);
+        if (panel->isVisible()) {
+            world->offsetCamera(false);
         }
         else {
-            world->followShip(false);
+            world->offsetCamera(true);
         }
     }
     else {
@@ -162,6 +166,7 @@ void HUD::setPanel(PanelID id) {
         currentPanel = id;
         oldPanel->setVisible(false);
         newPanel->setVisible(true);
+        world->offsetCamera(false);
     }
 
     // Change appearance of selected and unselected tabs
