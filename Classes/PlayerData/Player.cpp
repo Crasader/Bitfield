@@ -23,7 +23,7 @@ double Player::bits = 0;
 double Player::all_multiplier = 1;
 std::map<BitType, BitInfo> Player::bit_info;
 BuyMode Player::buy_mode = BuyMode::One;
-const int Player::LEVEL_TIER[] = { 10, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
+const int Player::LEVEL_TIER[] = { 5, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
 
 //---- Upgrades
 std::map<int, Upgrade> Player::upgrades;
@@ -32,7 +32,7 @@ std::set<int> Player::upgrades_purchased;
 //---- Squadron
 std::map<std::string, SquadronInfo> Player::squadron_defaults;
 std::map<int, SquadronInfo> Player::squadrons;
-int Player::squadron_slots;
+int Player::num_squadrons;
 double Player::ship_costs[6];
 
 //---- PLAYER
@@ -160,8 +160,6 @@ void Player::loadSquadronDefaults() {
         const auto& cost = costs[i];
         ship_costs[i] = cost.GetDouble();
     }
-
-    squadron_slots = document["squadron_slots"].GetInt();
 }
 void Player::loadSquadrons() {
     const auto& category = document["squadrons"].GetArray();

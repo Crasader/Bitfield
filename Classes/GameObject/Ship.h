@@ -9,9 +9,7 @@ class Bit;
 class Ship : public cocos2d::Sprite
 {
 public:
-    Ship(SquadronInfo info, int squadronID, int shipID);
-    static Ship* create(SquadronInfo info, int squadronID, int shipID);
-
+    Ship(SquadronInfo info);
     virtual void update(float delta) override;
     virtual void calculateForces();
     virtual void handleCollisions();
@@ -19,7 +17,7 @@ public:
     void applyForce(cocos2d::Vec2 force, float scale = 1);
     cocos2d::Vec2 wander();
     cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowDown = false);
-    cocos2d::Vec2 separate();
+    cocos2d::Vec2 separate(const cocos2d::Vector<Ship*>& neighbours);
     cocos2d::Vec2 cohesion(const cocos2d::Vector<Ship*>& neighbours);
     cocos2d::Vec2 align(const cocos2d::Vector<Ship*>& neighbours);
     cocos2d::Vec2 seekBits(std::map< BitType, cocos2d::Vector< Bit* > >& bits);
@@ -36,7 +34,6 @@ public:
     void setBits(std::map< BitType, cocos2d::Vector< Bit* > >* bits);
     void setBoundary(cocos2d::Rect boundary);
     Bit* getTargetBit();
-    const std::string& getType();
     cocos2d::Vec2 getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours);
 
     cocos2d::Vec2 velocity;
@@ -61,9 +58,6 @@ public:
     double w_avoid_wall;
     double w_stay_grouped;
 
-    int squadronID;
-    int shipID;
-
 protected:
     cocos2d::Vector<Ship*>* neighbours;
     std::map< BitType, cocos2d::Vector< Bit* > >* bits;
@@ -71,6 +65,7 @@ protected:
 
     std::string type;
     std::string sprite;
+
 };
 
 #endif // __SHIP_H__

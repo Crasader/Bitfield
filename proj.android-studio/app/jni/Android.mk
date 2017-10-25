@@ -17,7 +17,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Util.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Ship.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Bit.cpp \
-                   $(LOCAL_PATH)/../../../Classes/GameObject/SquadronFactory.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Wanderer.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/SplashScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/GameScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/HUD.cpp \
@@ -26,7 +26,6 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/UpgradeItem.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/BitsPanel.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/SquadronPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/FleetPanel.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/PurchaseButton.cpp \
                    $(LOCAL_PATH)/../../../Classes/rapidjson/document.h
 
