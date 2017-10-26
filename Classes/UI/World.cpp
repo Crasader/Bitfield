@@ -53,23 +53,32 @@ void World::updateFleet(float delta) {
     for (int squadronID = 0; squadronID < Player::squadron_slots; squadronID++) {
         auto info = Player::squadrons[squadronID];
         auto type = info.strings["type"];
+        auto count = info.ints["count"];
 
         auto& ships = fleet[squadronID].first;
         auto& streaks = fleet[squadronID].second;
-        auto addShips = [=](cocos2d::Vector<Ship*>& ships, Vector<MotionStreak*>& streaks, int count) {
-            for (int shipID = 0; shipID < count; shipID++) {
+        auto addShips = [&](cocos2d::Vector<Ship*>& ships, Vector<MotionStreak*>& streaks, int count) {
+            for (int shipID = ships.size(); shipID < count; shipID++) {
                 // Add ship to vector
                 auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
                 ship->setNeighbours(&ships);
                 ship->setBits(&bits);
-                ship->setBoundary(getBoundingBox());
-                ship->setPosition(Vec2(2000, 2000));
+                ship->setBoundary(Rect(Vec2(0, 0), getContentSize()));
+
+                if (ships.empty()) {
+                    ship->setPosition(Vec2(WORLD_WIDTH / 2, WORLD_HEIGHT / 2));
+                }
+                else {
+                    ship->setPosition(ships.at(0)->getPosition());
+                }
+                
                 ships.pushBack(ship);
                 addChild(ship, 1);
 
                 // Also add streak
                 auto colorIndex = shipID % 7;
                 auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), SPRITE_STREAK);
+                streak->runAction(RepeatForever::create(Sequence::createWithTwoActions(TintBy::create(0.5f, 0, 30, 0), TintBy::create(0.5f, 0, -30, 0))));
                 streaks.pushBack(streak);
                 addChild(streak);
             }
@@ -77,34 +86,20 @@ void World::updateFleet(float delta) {
 
         // Ships don't exist in the world, so spawn them
         if (ships.empty()) {
-            addShips(ships, streaks, info.ints["count"]);
+            addShips(ships, streaks, count);
             if (squadronID == 0) offsetCamera(false);
         }
-        else {
-            // Types match. Just update streaks.
-            for (int shipID = 0; shipID < streaks.size(); shipID++) {
-                streaks.at(shipID)->setPosition(ships.at(shipID)->getPosition());
-            }
-
-            //// Ships already in this slot. Check if types match
-            //auto ship = ships.at(0);
-            //if (ship->getType() == type) {
-            //    // Types match. Just update streaks.
-            //    for (int shipID = 0; shipID < streaks.size(); shipID++) {
-            //        streaks.at(shipID)->setPosition(ships.at(shipID)->getPosition());
-            //    }
-            //    return;
-            //}
-            //else {
-            //    cocos2d::log("%s vs %s", type.c_str(), ship->getType().c_str());
-            //}
-
-            // Types don't match. Evict old ships and add new ones
-            //for (auto ship : ships) {
-            //    ship->
-            //}
-            //addShips(ships, streaks, info.ints["count"]);
+        else if (ships.size() < count) {
+            // Need more ships, add to world
+            addShips(ships, streaks, count);
         }
+
+        // Update streaks
+        for (int shipID = 0; shipID < streaks.size(); shipID++) {
+            streaks.at(shipID)->setPosition(ships.at(shipID)->getPosition());
+        }
+
+        // TODO: Eventually will need to evict ships if type doesnt match here
     }
 
     if (DEBUG_SHIP) debugShip();
@@ -137,8 +132,8 @@ void World::updateBits(float delta) {
 
 void World::addBit(BitType type) {
     auto bit = Bit::create(type);
-    bit->setPosition(getContentSize().width * (0.05f + rand_0_1() * 0.9f),
-        getContentSize().height * (0.05f + rand_0_1() * 0.9f));
+    bit->setPosition(getContentSize().width * (0.08f + rand_0_1() * 0.84f),
+        getContentSize().height * (0.08f + rand_0_1() * 0.84f));
     addChild(bit, 2);
     bits[type].pushBack(bit);
 }
@@ -175,7 +170,7 @@ void World::createGrid() {
         Vec2 d = Vec2(c * colWidth, getContentSize().height);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
         for (int i = 0; i <= RES; i++) {
-            drawNode->drawSolidCircle(o + Vec2(0, rowHeight * i), 2, 0, 8, Color4F(1, 1, 1, 0.14f));
+            drawNode->drawSolidCircle(o + Vec2(0, rowHeight * i), 2, 0, 6, Color4F(1, 1, 1, 0.14f));
         }
     }
     for (int r = 0; r <= RES; r++) {

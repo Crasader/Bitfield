@@ -13,6 +13,9 @@ Ship * SquadronFactory::createShipWithInfo(SquadronInfo info, int squadronID, in
     if (type == "Wanderer") {
         ship = Ship::create(info, squadronID, shipID);
     }
+    else {
+        ship = Ship::create(info, squadronID, shipID);
+    }
 
     return ship;
 }

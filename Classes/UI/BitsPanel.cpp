@@ -148,7 +148,7 @@ void BitsPanel::addBuyAmountButton()
             switch (Player::buy_mode) {
             case BuyMode::One: label_string = "Buy x1"; break;
             case BuyMode::Ten: label_string = "Buy x10"; break;
-            case BuyMode::Hundred: label_string = "Buy x100"; break;
+            case BuyMode::Fifty: label_string = "Buy x50"; break;
             case BuyMode::Max: label_string = "Buy Max"; break;
             }
             tab_buy_amount->getChildByName<ui::Text*>("tab_label")->setString(label_string);

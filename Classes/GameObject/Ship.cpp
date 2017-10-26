@@ -84,7 +84,7 @@ void Ship::calculateForces() {
         // Stay with group
         auto stayGroupedForce = stayGrouped();
         if (!stayGroupedForce.isZero() && w_stay_grouped > 0) {
-            auto center = getCenterOfMass(*neighbours);
+            auto center = getCenterOfSquadron(*neighbours);
             auto toCenter = center - getPosition();
             wander_theta = CC_RADIANS_TO_DEGREES(toCenter.getAngle());
             applyForce(stayGroupedForce, w_stay_grouped);
@@ -100,12 +100,14 @@ void Ship::calculateForces() {
             applyForce(wanderForce, w_wander);
 
             // Flock
-            Vec2 alignForce = align(*neighbours);
-            applyForce(alignForce, w_alignment);
-            Vec2 cohesionForce = cohesion(*neighbours);
-            applyForce(cohesionForce, w_cohesion);
-            Vec2 separateForce = separate();
-            applyForce(separateForce, w_separation);
+            if (shipID != 0) {
+                Vec2 alignForce = align(*neighbours);
+                applyForce(alignForce, w_alignment);
+                Vec2 cohesionForce = cohesion(*neighbours);
+                applyForce(cohesionForce, w_cohesion);
+                Vec2 separateForce = separate();
+                applyForce(separateForce, w_separation);
+            }
         }
     }
 }
@@ -116,12 +118,14 @@ void Ship::handleCollisions()
         auto type = mapPair.first;
         auto& bitVector = mapPair.second;
 
-        for (auto it = bitVector.begin(); it != bitVector.end(); it++) {
+        for (auto it = bitVector.begin(); it != bitVector.end(); ++it) {
             auto bit = *it;
             Vec2 dist = bit->getPosition() - getPosition();
             if (dist.getLength() < getContentSize().width / 2) {
                 auto& info = Player::bit_info[type];
-                Player::addBits(Player::calculateValue(type));
+                auto value = Player::calculateValue(type);
+                Player::addBits(value);
+                addValuePopup(bit);
                 info.spawned--;
 
                 // Remove bit
@@ -145,8 +149,8 @@ cocos2d::Vec2 Ship::wander() {
     projection.scale(wander_length);
 
     // Point to a random spot on the circle
-    Vec2 toRadius = Vec2(wander_radius, 0);
-    wander_theta += rand_minus1_1() * wander_delta;
+    Vec2 toRadius(wander_radius, 0);
+    wander_theta = (int)(wander_theta + cocos2d::rand_minus1_1() * wander_delta) % 360;
     toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(wander_theta));
 
     return seek(getPosition() + projection + toRadius);
@@ -159,6 +163,7 @@ cocos2d::Vec2 Ship::separate() {
 
     // Steer away from nearby ships
     for (Ship* ship : *neighbours) {
+        //if (!canSee(ship)) continue;
         Vec2 toOther = ship->getPosition() - getPosition();
         if (toOther.getLength() > 0 && toOther.getLength() < separation_radius) {
             Vec2 awayFromOther = getPosition() - ship->getPosition();
@@ -257,16 +262,9 @@ cocos2d::Vec2 Ship::stayWithin(cocos2d::Rect boundary) {
 }
 
 cocos2d::Vec2 Ship::stayGrouped() {
-    auto center = getCenterOfMass(*neighbours);
-    if (center.isZero() || center.getDistance(getPosition()) < vision_radius || this == (*neighbours).at(0)) return Vec2(0, 0);
+    auto center = getCenterOfSquadron(*neighbours);
+    if (center.isZero() || center.getDistance(getPosition()) < vision_radius || shipID == 0) return Vec2(0, 0);
     return seek(center);
-}
-
-bool Ship::isFront(const cocos2d::Vector<Ship*>& neighbours) {
-    for (Ship* ship : neighbours) {
-        if (canSee(ship)) return false;
-    }
-    return true;
 }
 
 bool Ship::canSee(cocos2d::Node* target) {
@@ -316,12 +314,12 @@ Bit* Ship::getTargetBit()
         const auto& vec = map_pair.second;
         for (auto bit : vec) {
             // Clear out of range targets
-            if (bit->isTargettedBy(this) && !inRange(bit)) {
+            if (bit->isTargettedBy(this) && !canSee(bit)) {
                 bit->setShip(nullptr);
             }
             
             // If Bit is targetted by another ship or out of range, ignore it
-            if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !inRange(bit)) continue;
+            if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !canSee(bit)) continue;
 
             // Check if bit is our last target
             if (bit->isTargettedBy(this)) {
@@ -360,7 +358,7 @@ const std::string& Ship::getType()
     return type;
 }
 
-cocos2d::Vec2 Ship::getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours)
+cocos2d::Vec2 Ship::getCenterOfSquadron(const cocos2d::Vector<Ship*>& neighbours)
 {
     Vec2 center;
     int count = 0;
@@ -378,5 +376,32 @@ cocos2d::Vec2 Ship::getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours)
     }
 
     return Vec2(0, 0);
+}
+
+void Ship::addValuePopup(Bit* bit)
+{
+    auto world = getParent();
+
+    //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
+    auto popup = Label::createWithTTF(Util::getFormattedDouble(Player::calculateValue(bit->getType())), FONT_DEFAULT, 40);
+    auto c = Color3B(Player::bit_info[bit->getType()].color);
+    popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
+    popup->setPosition(bit->getPosition());
+    popup->setOpacity(0);
+    popup->runAction(Sequence::create(
+        Spawn::createWithTwoActions(
+            EaseInOut::create(FadeIn::create(0.1f), 2),
+            EaseInOut::create(ScaleTo::create(0.1f, 1.3f), 2)
+        ),
+        DelayTime::create(0.5f),
+        Spawn::createWithTwoActions(
+            EaseInOut::create(FadeOut::create(0.3f), 2),
+            EaseInOut::create(ScaleTo::create(0.3f, 0.5f), 2)
+        ),
+        DelayTime::create(0.3f),
+        RemoveSelf::create(),
+        nullptr)
+    );
+    world->addChild(popup, 5);
 }
 

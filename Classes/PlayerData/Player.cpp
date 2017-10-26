@@ -33,7 +33,7 @@ std::set<int> Player::upgrades_purchased;
 std::map<std::string, SquadronInfo> Player::squadron_defaults;
 std::map<int, SquadronInfo> Player::squadrons;
 int Player::squadron_slots;
-double Player::ship_costs[6];
+double Player::ship_costs[7];
 
 //---- PLAYER
 void Player::load() {
@@ -156,7 +156,7 @@ void Player::loadSquadronDefaults() {
     }
 
     const auto& costs = document["ship_costs"].GetArray();
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         const auto& cost = costs[i];
         ship_costs[i] = cost.GetDouble();
     }
@@ -197,8 +197,9 @@ void Player::save() {
     document["all_multiplier"] = all_multiplier;
     saveBits();
     saveUpgrades();
-    saveDocument();
     saveSquadrons();
+
+    saveDocument();
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
@@ -223,6 +224,21 @@ void Player::saveUpgrades() {
         purchased.PushBack(id, allocator);
     }
 }
+void Player::saveSquadrons() {
+    document["squadrons"].SetArray();
+    const auto& saved_squadrons = document["squadrons"].GetArray();
+
+    Document::AllocatorType& allocator = document.GetAllocator();
+    for (auto& info : squadrons) {
+        auto obj = rapidjson::Value(rapidjson::kObjectType);
+        auto type = rapidjson::StringRef(info.second.strings["type"].c_str());
+        obj.AddMember("type", type, allocator);
+        // TODO: save multiplier...
+        if (type == "Default") obj.AddMember("count", info.second.ints["count"], allocator);
+
+        saved_squadrons.PushBack(obj, allocator);
+    }
+}
 void Player::saveDocument() {
     std::ofstream outputFile;
     auto filepath = FileUtils::getInstance()->getWritablePath() + "data";
@@ -241,9 +257,6 @@ void Player::saveDocument() {
     std::string jsonObjectData = Util::jsonToString(document);
     fputs(jsonObjectData.c_str(), fp);
     fclose(fp);
-}
-void Player::saveSquadrons() {
-
 }
 
 //---- Bit Generators
@@ -336,7 +349,7 @@ int Player::getBuyAmount(BitType type) {
     switch (buy_mode) {
     case BuyMode::One: amount = 1; break;
     case BuyMode::Ten: amount = 10; break;
-    case BuyMode::Hundred: amount = 100; break;
+    case BuyMode::Fifty: amount = 50; break;
     case BuyMode::Max: amount = calculateMaxLevels(info.level, info.baseCost, info.costMultiplier); break;
     default: break;
     }

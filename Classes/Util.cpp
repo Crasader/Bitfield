@@ -10,6 +10,9 @@
 #include <iomanip>
 #include <algorithm>
 
+#include "UI/UIHBox.h"
+#include "UI/UIText.h"
+
 USING_NS_CC;
 using namespace rapidjson;
 
@@ -120,4 +123,33 @@ cocos2d::Vec2 Util::capVector(cocos2d::Vec2 v, double xMin, double yMin, double 
     if (ret.y < yMin) ret.y = yMin;
     if (ret.y > yMax) ret.y = yMax;
     return ret;
+}
+
+cocos2d::Node* Util::createIconLabel(int iconType, double amount, double size) {
+    // Price container
+    auto container = ui::HBox::create(Size(GAME_WIDTH, GAME_HEIGHT));
+    container->setCascadeOpacityEnabled(true);
+    container->setCascadeColorEnabled(true);
+    container->setAnchorPoint(Vec2(0.5f, 0.5f));
+    //auto param = ui::LinearLayoutParameter::create();
+    //param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
+    //container->setLayoutParameter(param);
+
+    // Price icon
+    auto iconPath = (iconType == 0) ? SPRITE_BIT : SPRITE_DIAMOND;
+    auto param = ui::LinearLayoutParameter::create();
+    param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_VERTICAL);
+    param->setMargin(ui::Margin(0, 0, -8, 0));
+    auto icon = ui::ImageView::create(iconPath);
+    icon->setScale(size / 64.0f);
+    icon->setLayoutParameter(param);
+    container->addChild(icon, 0, "icon");
+
+    // Price label
+    auto label = ui::Text::create(getFormattedDouble(amount), FONT_DEFAULT, size);
+    label->setLayoutParameter(param);
+    container->addChild(label, 0, "label");
+
+    container->setContentSize(Size(icon->getContentSize().width + label->getContentSize().width, size));
+    return container;
 }

@@ -26,7 +26,6 @@ public:
     cocos2d::Vec2 stayWithin(cocos2d::Rect boundary);
     cocos2d::Vec2 stayGrouped();
 
-    bool isFront(const cocos2d::Vector<Ship*>& neighbours);
     bool canSee(cocos2d::Node* target);
     bool inRange(cocos2d::Node* target);
     const cocos2d::Vec2& getVelocity();
@@ -37,7 +36,7 @@ public:
     void setBoundary(cocos2d::Rect boundary);
     Bit* getTargetBit();
     const std::string& getType();
-    cocos2d::Vec2 getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours);
+    cocos2d::Vec2 getCenterOfSquadron(const cocos2d::Vector<Ship*>& neighbours);
 
     cocos2d::Vec2 velocity;
     cocos2d::Vec2 acceleration;
@@ -71,6 +70,9 @@ protected:
 
     std::string type;
     std::string sprite;
+
+private:
+    void addValuePopup(Bit* bit);
 };
 
 #endif // __SHIP_H__

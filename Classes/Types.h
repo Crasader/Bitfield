@@ -6,7 +6,7 @@
 enum BuyMode {
     One,
     Ten,
-    Hundred,
+    Fifty,
     Max,
     Count
 };

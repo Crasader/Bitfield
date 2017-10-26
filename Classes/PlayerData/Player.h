@@ -42,7 +42,7 @@ public:
     static std::map<std::string, SquadronInfo> squadron_defaults;
     static std::map<int, SquadronInfo> squadrons;
     static int squadron_slots;
-    static double ship_costs[6];
+    static double ship_costs[7];
     static bool buyShip();
 
 private:
