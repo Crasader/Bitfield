@@ -28,8 +28,9 @@ void World::onEnter() {
     setCascadeOpacityEnabled(true);
     setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
 
-    createGrid();
+    createBackground();
     createInput();
+    createGrid();
 }
 
 void World::onExit() {
@@ -45,8 +46,38 @@ void World::update(float delta) {
         Util::touch_location = Util::capVector(Util::touch_location_original - getPosition(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     }
 
+    updateGrid();
     updateFleet(delta);
     updateBits(delta);
+}
+
+void World::updateGrid()
+{
+    // Clear grid
+    for (int i = 0; i < GRID_WIDTH; i++) {
+        for (int j = 0; j < GRID_HEIGHT; j++) {
+            grid.at(i).at(j).clear();
+        }
+    }
+
+    // Remove dead bits or insert into grid
+    for (auto& pair : bits) {
+        auto& vec = pair.second;
+        for (auto it = vec.begin(); it != vec.end(); ++it) {
+            auto bit = *it;
+            if (bit->isRemoved()) {
+                bit->removeFromParent();
+                it = vec.erase(it);
+                if (it == vec.end()) break;
+            }
+            else {
+                auto pos = bit->getPosition();
+                int row = pos.x / GRID_SIZE;
+                int col = pos.y / GRID_SIZE;
+                grid.at(row).at(col).pushBack(bit);
+            }
+        }
+    }
 }
 
 void World::updateFleet(float delta) {
@@ -62,7 +93,7 @@ void World::updateFleet(float delta) {
                 // Add ship to vector
                 auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
                 ship->setNeighbours(&ships);
-                ship->setBits(&bits);
+                ship->setBits(&grid);
                 ship->setBoundary(Rect(Vec2(0, 0), getContentSize()));
 
                 if (ships.empty()) {
@@ -73,7 +104,7 @@ void World::updateFleet(float delta) {
                 }
                 
                 ships.pushBack(ship);
-                addChild(ship, 1);
+                addChild(ship, 99);
 
                 // Also add streak
                 auto colorIndex = shipID % 7;
@@ -106,6 +137,8 @@ void World::updateFleet(float delta) {
 }
 
 void World::updateBits(float delta) {
+
+
     // Spawn Bits
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
@@ -132,9 +165,9 @@ void World::updateBits(float delta) {
 
 void World::addBit(BitType type) {
     auto bit = Bit::create(type);
-    bit->setPosition(getContentSize().width * (0.08f + rand_0_1() * 0.84f),
-        getContentSize().height * (0.08f + rand_0_1() * 0.84f));
-    addChild(bit, 2);
+    bit->setPosition(getContentSize().width * (0.02f + rand_0_1() * 0.96f),
+        getContentSize().height * (0.02f + rand_0_1() * 0.96f));
+    addChild(bit, 88);
     bits[type].pushBack(bit);
 }
 
@@ -153,7 +186,7 @@ void World::offsetCamera(bool offset) {
     runAction(follow);
 }
 
-void World::createGrid() {
+void World::createBackground() {
     // Create Background
     auto drawNode = DrawNode::create();
     drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -730 - WORLD_OFFSET),
@@ -162,20 +195,19 @@ void World::createGrid() {
 
     // Create grid
     drawNode->setLineWidth(1);
-    const int RES = GRID_RESOLUTION;
-    int colWidth = WORLD_WIDTH / RES;
-    int rowHeight = WORLD_HEIGHT / RES;
-    for (int c = 0; c <= RES; c++) {
-        Vec2 o = Vec2(c * colWidth, 0);
-        Vec2 d = Vec2(c * colWidth, getContentSize().height);
+    int numCols = WORLD_WIDTH / GRID_SIZE;
+    int numRows = WORLD_HEIGHT / GRID_SIZE;
+    for (int c = 0; c <= numCols; c++) {
+        Vec2 o = Vec2(c * GRID_SIZE, 0);
+        Vec2 d = Vec2(c * GRID_SIZE, getContentSize().height);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
-        for (int i = 0; i <= RES; i++) {
-            drawNode->drawSolidCircle(o + Vec2(0, rowHeight * i), 2, 0, 6, Color4F(1, 1, 1, 0.14f));
+        for (int i = 0; i <= GRID_SIZE; i++) {
+            drawNode->drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 6, Color4F(1, 1, 1, 0.14f));
         }
     }
-    for (int r = 0; r <= RES; r++) {
-        Vec2 o(0, r * rowHeight);
-        Vec2 d(getContentSize().width, r * rowHeight);
+    for (int r = 0; r <= numRows; r++) {
+        Vec2 o(0, r * GRID_SIZE);
+        Vec2 d(getContentSize().width, r * GRID_SIZE);
         drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
     }
 }
@@ -200,6 +232,16 @@ void World::createInput() {
         Util::touch_down = false;
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
+}
+
+void World::createGrid()
+{
+    for (int i = 0; i < GRID_WIDTH; i++) {
+        grid.push_back(std::vector<cocos2d::Vector< Bit* > >());
+        for (int j = 0; j < GRID_HEIGHT; j++) {
+            grid[i].push_back(cocos2d::Vector< Bit* >());
+        }
+    }
 }
 
 void World::debugShip()

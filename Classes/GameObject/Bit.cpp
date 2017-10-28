@@ -6,6 +6,7 @@ USING_NS_CC;
 Bit::Bit(BitType type) {
     this->type = type;
     ship = nullptr;
+    removed = false;
 }
 
 Bit* Bit::create(BitType type) {
@@ -55,4 +56,14 @@ bool Bit::isTargetted() {
 void Bit::setShip(Ship* ship)
 {
     this->ship = ship;
+}
+
+bool Bit::isRemoved()
+{
+    return removed;
+}
+
+void Bit::remove()
+{
+    removed = true;
 }

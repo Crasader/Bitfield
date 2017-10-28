@@ -3,8 +3,10 @@
 
 #include "cocos2d.h"
 #include "Types.h"
+#include "UI/World.h"
 
 class Bit;
+typedef std::vector< std::vector < cocos2d::Vector< Bit* > > > Grid;
 
 class Ship : public cocos2d::Sprite
 {
@@ -22,7 +24,7 @@ public:
     cocos2d::Vec2 separate();
     cocos2d::Vec2 cohesion(const cocos2d::Vector<Ship*>& neighbours);
     cocos2d::Vec2 align(const cocos2d::Vector<Ship*>& neighbours);
-    cocos2d::Vec2 seekBits(std::map< BitType, cocos2d::Vector< Bit* > >& bits);
+    cocos2d::Vec2 seekBits();
     cocos2d::Vec2 stayWithin(cocos2d::Rect boundary);
     cocos2d::Vec2 stayGrouped();
 
@@ -32,7 +34,7 @@ public:
     const cocos2d::Vec2& getAcceleration();
 
     void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
-    void setBits(std::map< BitType, cocos2d::Vector< Bit* > >* bits);
+    void setBits(Grid* bits);
     void setBoundary(cocos2d::Rect boundary);
     Bit* getTargetBit();
     const std::string& getType();
@@ -65,7 +67,7 @@ public:
 
 protected:
     cocos2d::Vector<Ship*>* neighbours;
-    std::map< BitType, cocos2d::Vector< Bit* > >* bits;
+    Grid* bits;
     cocos2d::Rect boundary;
 
     std::string type;

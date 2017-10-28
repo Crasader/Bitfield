@@ -15,8 +15,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 2,
-      "spawned": 200,
-      "capacity": 250
+      "spawned": 500,
+      "capacity": 500
     },
     {
       "name": "Bluedium",
@@ -28,9 +28,9 @@
       "costMultiplier": 1.11,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 4,
-      "spawned": 50,
-      "capacity": 100
+      "spawnTime": 2,
+      "spawned": 250,
+      "capacity": 250
     },
     {
       "name": "Reddite",
@@ -42,9 +42,9 @@
       "costMultiplier": 1.09,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 6,
-      "spawned": 50,
-      "capacity": 100
+      "spawnTime": 3,
+      "spawned": 250,
+      "capacity": 250
     },
     {
       "name": "Yellominium",
@@ -56,9 +56,9 @@
       "costMultiplier": 1.09,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 8,
-      "spawned": 25,
-      "capacity": 50
+      "spawnTime": 4,
+      "spawned": 100,
+      "capacity": 100
     },
     {
       "name": "Orangite",
@@ -70,9 +70,9 @@
       "costMultiplier": 1.09,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 10,
-      "spawned": 25,
-      "capacity": 50
+      "spawnTime": 5,
+      "spawned": 100,
+      "capacity": 100
     },
     {
       "name": "Violum",
@@ -84,9 +84,9 @@
       "costMultiplier": 1.07,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 12,
-      "spawned": 10,
-      "capacity": 25
+      "spawnTime": 6,
+      "spawned": 100,
+      "capacity": 100
     },
     {
       "name": "Indigine",
@@ -98,9 +98,9 @@
       "costMultiplier": 1.07,
       "valueMultiplier": 1,
       "timer": 0,
-      "spawnTime": 14,
-      "spawned": 10,
-      "capacity": 25
+      "spawnTime": 7,
+      "spawned": 100,
+      "capacity": 100
     }
   ],
 
@@ -176,7 +176,7 @@
       "w_seek": 1.8,
       "w_seek_bits": 1.2,
       "w_avoid_wall": 1.4,
-      "w_stay_grouped": 1.6
+      "w_stay_grouped": 1.0
     },
     {
       "type": "Wanderer",
@@ -190,11 +190,35 @@
   "squadrons": [
     {
       "type": "Default",
-      "count": 1
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
+    },
+    {
+      "type": "Default",
+      "count": 7
     }
   ],
 
   "ship_costs": [ 50.0, 5000.0, 25000.0, 12500000.0, 5e8, 2.5e10, 5e12 ],
 
-  "squadron_slots": 1
+  "squadron_slots": 3
 }

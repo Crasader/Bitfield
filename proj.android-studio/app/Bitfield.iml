@@ -36,6 +36,9 @@
     <content url="file://$MODULE_DIR$/../../Classes/GameObject">
       <sourceFolder url="file://$MODULE_DIR$/../../Classes/GameObject" isTestSource="false" />
     </content>
+    <content url="file://$MODULE_DIR$/../../Classes/PlayerData">
+      <sourceFolder url="file://$MODULE_DIR$/../../Classes/PlayerData" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/../../Classes/Scene">
       <sourceFolder url="file://$MODULE_DIR$/../../Classes/Scene" isTestSource="false" />
     </content>

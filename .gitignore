@@ -6,6 +6,7 @@ proj.android-studio/app/obj
 proj.win32/AndroidT2.sdf
 proj.win32/AndroidT2.v11.suo
 proj.win32/Debug.win32
+proj.win32/Release.win32
 proj.win32/.vs
 proj.linux
 proj.tizen

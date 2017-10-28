@@ -21,9 +21,13 @@ public:
     bool isTargetted();
     void setShip(Ship* ship);
 
+    bool isRemoved();
+    void remove();
+
 private:
     BitType type;
     Ship* ship;
+    bool removed;
 };
 
 #endif // __BIT_H__

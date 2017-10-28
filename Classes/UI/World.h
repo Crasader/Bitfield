@@ -13,6 +13,7 @@ typedef std::map<int,
     std::pair< cocos2d::Vector<Ship*>,
                cocos2d::Vector< cocos2d::MotionStreak* > > > Fleet;
 typedef std::map< BitType, cocos2d::Vector< Bit* > > Bits;
+typedef std::vector< std::vector< cocos2d::Vector< Bit* > > > Grid;
 
 class World : public cocos2d::Layer
 {
@@ -30,10 +31,13 @@ public:
 private:
     Fleet fleet;
     Bits bits;
+    Grid grid;
 
+    void createBackground();
     void createInput();
     void createGrid();
 
+    void updateGrid();
     void updateFleet(float delta);
     void updateBits(float delta);
 

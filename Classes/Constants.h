@@ -11,7 +11,7 @@ static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
 static const bool USE_SAVE = false;
 static const bool DEBUG_SHIP = false;
-static const bool SHOW_FPS = false;
+static const bool SHOW_FPS = true;
 
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
@@ -30,7 +30,10 @@ static const std::string BIT_STRINGS[] = {
 static const int WORLD_WIDTH = 10000;
 static const int WORLD_HEIGHT = 10000;
 static const int WORLD_OFFSET = GAME_WIDTH / 2;
-static const int GRID_RESOLUTION = 25;
+static const int GRID_RESOLUTION = 20;
+static const int GRID_SIZE = WORLD_WIDTH / GRID_RESOLUTION;
+static const float GRID_WIDTH = WORLD_WIDTH / GRID_SIZE;
+static const float GRID_HEIGHT = WORLD_HEIGHT / GRID_SIZE;
 static const float BIT_SCALE = 0.25f;
 
 static const std::string SPRITE_SHIP = "sprites/ship.png";

@@ -91,7 +91,7 @@ void Ship::calculateForces() {
             return;
         }
 
-        Vec2 bitForce = seekBits(*bits);
+        Vec2 bitForce = seekBits();
         if (!bitForce.isZero() && w_seek_bits > 0) {
             applyForce(bitForce, w_seek_bits);
         }
@@ -114,24 +114,28 @@ void Ship::calculateForces() {
 
 void Ship::handleCollisions()
 {
-    for (auto& mapPair : *bits) {
-        auto type = mapPair.first;
-        auto& bitVector = mapPair.second;
+    auto pos = getPosition();
+    int row = pos.x / GRID_SIZE;
+    int col = pos.y / GRID_SIZE;
 
-        for (auto it = bitVector.begin(); it != bitVector.end(); ++it) {
-            auto bit = *it;
-            Vec2 dist = bit->getPosition() - getPosition();
-            if (dist.getLength() < getContentSize().width / 2) {
-                auto& info = Player::bit_info[type];
-                auto value = Player::calculateValue(type);
-                Player::addBits(value);
-                addValuePopup(bit);
-                info.spawned--;
+    for (int r = row - 1; r < row + 1; r++) {
+        for (int c = col - 1; c < col + 1; c++) {
+            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+                auto& grid = (*bits);
+                for (auto bit : grid[r][c]) {
+                    Vec2 dist = bit->getPosition() - getPosition();
+                    if (dist.getLength() < getContentSize().width / 2) {
+                        if (bit->isRemoved()) continue;
+                        auto& info = Player::bit_info[bit->getType()];
+                        auto value = Player::calculateValue(bit->getType());
+                        Player::addBits(value);
+                        addValuePopup(bit);
+                        info.spawned--;
 
-                // Remove bit
-                bit->removeFromParent();
-                it = bitVector.erase(it);
-                if (it == bitVector.end()) break;
+                        // Remove bit
+                        bit->remove();
+                    }
+                }
             }
         }
     }
@@ -241,7 +245,7 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowDown) {
 }
 
 // Seek towards closest bit
-cocos2d::Vec2 Ship::seekBits(std::map< BitType, cocos2d::Vector< Bit* > >& bits) {
+cocos2d::Vec2 Ship::seekBits() {
     auto targetBit = getTargetBit();
     if (targetBit) {
         return seek(targetBit->getPosition());
@@ -294,7 +298,7 @@ void Ship::setNeighbours(cocos2d::Vector<Ship*>* neighbours)
     this->neighbours = neighbours;
 }
 
-void Ship::setBits(std::map<BitType, cocos2d::Vector<Bit*>>* bits)
+void Ship::setBits(Grid* bits)
 {
     this->bits = bits;
 }
@@ -310,32 +314,41 @@ Bit* Ship::getTargetBit()
     Bit* previousTarget = nullptr;
     Bit* nearestBit = nullptr;
     auto toNearest = Vec2(0, 0);
-    for (const auto& map_pair : *bits) {
-        const auto& vec = map_pair.second;
-        for (auto bit : vec) {
-            // Clear out of range targets
-            if (bit->isTargettedBy(this) && !canSee(bit)) {
-                bit->setShip(nullptr);
-            }
-            
-            // If Bit is targetted by another ship or out of range, ignore it
-            if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !canSee(bit)) continue;
 
-            // Check if bit is our last target
-            if (bit->isTargettedBy(this)) {
-                previousTarget = bit;
-            }
+    auto pos = getPosition();
+    int row = pos.x / GRID_SIZE;
+    int col = pos.y / GRID_SIZE;
 
-            // Found initial bit
-            if (nearestBit == nullptr) {
-                nearestBit = bit;
-                toNearest = nearestBit->getPosition() - getPosition();
-            }
-            else {
-                // See if new bit is closer than current closest
-                auto toBit = bit->getPosition() - getPosition();
-                if (toBit.lengthSquared() < toNearest.lengthSquared()) {
-                    nearestBit = bit;
+    for (int r = row - 1; r < row + 1; r++) {
+        for (int c = col - 1; c < col + 1; c++) {
+            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+                auto& grid = (*bits);
+                for (auto bit : grid[r][c]) {
+                    // Clear out of range targets
+                    if (bit->isTargettedBy(this) && !canSee(bit)) {
+                        bit->setShip(nullptr);
+                    }
+                            
+                    // If Bit is targetted by another ship or out of range or removed, ignore it
+                    if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !canSee(bit)) continue;
+
+                    // Check if bit is our last target
+                    if (bit->isTargettedBy(this)) {
+                        previousTarget = bit;
+                    }
+
+                    // Found initial bit
+                    if (nearestBit == nullptr) {
+                        nearestBit = bit;
+                        toNearest = nearestBit->getPosition() - getPosition();
+                    }
+                    else {
+                        // See if new bit is closer than current closest
+                        auto toBit = bit->getPosition() - getPosition();
+                        if (toBit.lengthSquared() < toNearest.lengthSquared()) {
+                            nearestBit = bit;
+                        }
+                    }
                 }
             }
         }
