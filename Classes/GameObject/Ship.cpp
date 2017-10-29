@@ -54,7 +54,7 @@ void Ship::update(float delta) {
 
     // Forces --> Acceleration
     acceleration = Vec2(0, 0);
-    calculateForces();
+    calculateForces(delta);
 
     // Movement
     velocity += acceleration; // We never "desire" to go faster than max_speed, so don't have to limit here
@@ -65,49 +65,48 @@ void Ship::update(float delta) {
     setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
 }
 
-void Ship::calculateForces() {
+void Ship::calculateForces(float delta) {
     // Stay in World Boundary
-    auto stayWithinForce = stayWithin(boundary);
+    auto stayWithinForce = stayWithin();
     if (!stayWithinForce.isZero()) {
         applyForce(stayWithinForce, w_avoid_wall);
         return;
     }
 
-    // Obey touches
-    if (squadronID == 0 && shipID == 0 && Util::touch_down) {
-        // Seek towards touch position
-        auto target = Util::touch_location;
-        Vec2 seekForce = seek(target);
+    // Seek towards touch position
+    if (shipID == 0 && squadronID == 0 && Util::touch_down) {
+        Vec2 seekForce = seek(Util::touch_location);
         applyForce(seekForce, w_seek);
+        return;
+    }
+
+    // Stay with group
+    auto stayGroupedForce = stayGrouped();
+    if (!stayGroupedForce.isZero() && w_stay_grouped > 0) {
+        auto center = getCenterOfSquadron(*neighbours);
+        auto toCenter = center - getPosition();
+        wander_theta = CC_RADIANS_TO_DEGREES(toCenter.getAngle());
+        applyForce(stayGroupedForce, w_stay_grouped);
+        return;
+    }
+
+    // Seek bits
+    Vec2 bitForce = seekBits();
+    if (!bitForce.isZero() && w_seek_bits > 0) {
+        applyForce(bitForce, w_seek_bits);
     }
     else {
-        // Stay with group
-        auto stayGroupedForce = stayGrouped();
-        if (!stayGroupedForce.isZero() && w_stay_grouped > 0) {
-            auto center = getCenterOfSquadron(*neighbours);
-            auto toCenter = center - getPosition();
-            wander_theta = CC_RADIANS_TO_DEGREES(toCenter.getAngle());
-            applyForce(stayGroupedForce, w_stay_grouped);
-            return;
-        }
+        Vec2 wanderForce = wander();
+        applyForce(wanderForce, w_wander);
 
-        Vec2 bitForce = seekBits();
-        if (!bitForce.isZero() && w_seek_bits > 0) {
-            applyForce(bitForce, w_seek_bits);
-        }
-        else {
-            Vec2 wanderForce = wander();
-            applyForce(wanderForce, w_wander);
-
-            // Flock
-            if (shipID != 0) {
-                Vec2 alignForce = align(*neighbours);
-                applyForce(alignForce, w_alignment);
-                Vec2 cohesionForce = cohesion(*neighbours);
-                applyForce(cohesionForce, w_cohesion);
-                Vec2 separateForce = separate();
-                applyForce(separateForce, w_separation);
-            }
+        // Flock
+        if (shipID != 0) {
+            Vec2 alignForce = align();
+            applyForce(alignForce, w_alignment);
+            Vec2 cohesionForce = cohesion();
+            applyForce(cohesionForce, w_cohesion);
+            Vec2 separateForce = separate();
+            applyForce(separateForce, w_separation);
         }
     }
 }
@@ -160,22 +159,17 @@ cocos2d::Vec2 Ship::wander() {
     return seek(getPosition() + projection + toRadius);
 }
 
-// Steer away from nearby ships
-cocos2d::Vec2 Ship::separate() {
+// Align direction with nearby ships
+cocos2d::Vec2 Ship::align() {
     Vec2 desired(0, 0);
     float count = 0;
 
-    // Steer away from nearby ships
+    // Average together every ship's heading and try to align with the group
     for (Ship* ship : *neighbours) {
-        //if (!canSee(ship)) continue;
-        Vec2 toOther = ship->getPosition() - getPosition();
-        if (toOther.getLength() > 0 && toOther.getLength() < separation_radius) {
-            Vec2 awayFromOther = getPosition() - ship->getPosition();
-            awayFromOther.normalize();
-            awayFromOther.scale(1 / awayFromOther.getLength());
-            desired.add(awayFromOther);
-            count += 1;
-        }
+        if (!canSee(ship)) continue;
+        auto dir = ship->getVelocity();
+        desired.add(dir);
+        count += 1;
     }
 
     if (count > 0) {
@@ -195,22 +189,27 @@ cocos2d::Vec2 Ship::separate() {
 }
 
 // Steer towards leader
-cocos2d::Vec2 Ship::cohesion(const cocos2d::Vector<Ship*>& neighbours) {
-    if (this == neighbours.at(0)) return Vec2(0, 0);
-    return seek(neighbours.at(0)->getPosition());
+cocos2d::Vec2 Ship::cohesion() {
+    if (this == (*neighbours).at(0)) return Vec2(0, 0);
+    return seek((*neighbours).at(0)->getPosition());
 }
 
-// Align direction with nearby ships
-cocos2d::Vec2 Ship::align(const cocos2d::Vector<Ship*>& neighbours) {
+// Steer away from nearby ships
+cocos2d::Vec2 Ship::separate() {
     Vec2 desired(0, 0);
     float count = 0;
 
-    // Average together every ship's heading and try to align with the group
-    for (Ship* ship : neighbours) {
-        if (!canSee(ship)) continue;
-        auto dir = ship->getVelocity();
-        desired.add(dir);
-        count += 1;
+    // Steer away from nearby ships
+    for (Ship* ship : *neighbours) {
+        //if (!canSee(ship)) continue;
+        Vec2 toOther = ship->getPosition() - getPosition();
+        if (toOther.getLength() > 0 && toOther.getLength() < separation_radius) {
+            Vec2 awayFromOther = getPosition() - ship->getPosition();
+            awayFromOther.normalize();
+            awayFromOther.scale(1 / awayFromOther.getLength());
+            desired.add(awayFromOther);
+            count += 1;
+        }
     }
 
     if (count > 0) {
@@ -254,7 +253,7 @@ cocos2d::Vec2 Ship::seekBits() {
     return Vec2(0, 0);
 }
 
-cocos2d::Vec2 Ship::stayWithin(cocos2d::Rect boundary) {
+cocos2d::Vec2 Ship::stayWithin() {
     auto heading = velocity.getNormalized();
     heading.scale(wall_separation_distance);
     if (boundary.containsPoint(getPosition() + heading)) return Vec2(0, 0);

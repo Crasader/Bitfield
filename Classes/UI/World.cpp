@@ -53,13 +53,6 @@ void World::update(float delta) {
 
 void World::updateGrid()
 {
-    // Clear grid
-    for (int i = 0; i < GRID_WIDTH; i++) {
-        for (int j = 0; j < GRID_HEIGHT; j++) {
-            grid.at(i).at(j).clear();
-        }
-    }
-
     // Remove dead bits or insert into grid
     for (auto& pair : bits) {
         auto& vec = pair.second;
@@ -67,14 +60,14 @@ void World::updateGrid()
             auto bit = *it;
             if (bit->isRemoved()) {
                 bit->removeFromParent();
-                it = vec.erase(it);
-                if (it == vec.end()) break;
-            }
-            else {
+
                 auto pos = bit->getPosition();
                 int row = pos.x / GRID_SIZE;
                 int col = pos.y / GRID_SIZE;
-                grid.at(row).at(col).pushBack(bit);
+                grid.at(row).at(col).eraseObject(bit);
+
+                it = vec.erase(it);
+                if (it == vec.end()) break;
             }
         }
     }
@@ -137,8 +130,6 @@ void World::updateFleet(float delta) {
 }
 
 void World::updateBits(float delta) {
-
-
     // Spawn Bits
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
@@ -169,6 +160,12 @@ void World::addBit(BitType type) {
         getContentSize().height * (0.02f + rand_0_1() * 0.96f));
     addChild(bit, 88);
     bits[type].pushBack(bit);
+
+    // Add to grid
+    auto pos = bit->getPosition();
+    int row = pos.x / GRID_SIZE;
+    int col = pos.y / GRID_SIZE;
+    grid.at(row).at(col).pushBack(bit);
 }
 
 void World::offsetCamera(bool offset) {

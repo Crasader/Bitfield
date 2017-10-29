@@ -15,27 +15,27 @@ public:
     static Ship* create(SquadronInfo info, int squadronID, int shipID);
 
     virtual void update(float delta) override;
-    virtual void calculateForces();
+    virtual void calculateForces(float delta);
     virtual void handleCollisions();
-
     void applyForce(cocos2d::Vec2 force, float scale = 1);
-    cocos2d::Vec2 wander();
+
     cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowDown = false);
+    cocos2d::Vec2 align();
+    cocos2d::Vec2 cohesion();
     cocos2d::Vec2 separate();
-    cocos2d::Vec2 cohesion(const cocos2d::Vector<Ship*>& neighbours);
-    cocos2d::Vec2 align(const cocos2d::Vector<Ship*>& neighbours);
+    cocos2d::Vec2 wander();
     cocos2d::Vec2 seekBits();
-    cocos2d::Vec2 stayWithin(cocos2d::Rect boundary);
+    cocos2d::Vec2 stayWithin();
     cocos2d::Vec2 stayGrouped();
+
+    void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
+    void setBits(Grid* bits);
+    void setBoundary(cocos2d::Rect boundary);
 
     bool canSee(cocos2d::Node* target);
     bool inRange(cocos2d::Node* target);
     const cocos2d::Vec2& getVelocity();
     const cocos2d::Vec2& getAcceleration();
-
-    void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
-    void setBits(Grid* bits);
-    void setBoundary(cocos2d::Rect boundary);
     Bit* getTargetBit();
     const std::string& getType();
     cocos2d::Vec2 getCenterOfSquadron(const cocos2d::Vector<Ship*>& neighbours);

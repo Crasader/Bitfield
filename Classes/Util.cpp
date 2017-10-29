@@ -55,7 +55,6 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
     auto fileData = FileUtils::getInstance()->getStringFromFile(path);
     Document document;
     document.Parse(fileData.c_str());
-    cocos2d::log("%s", jsonToString(document).c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
     return document;
 }
@@ -63,6 +62,10 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
 std::string Util::getFormattedDouble(double bits) {
     // Store the double in scientific notation: Looks like 1.23e+09 or 1.23e+308 or inf
     std::stringstream ss;
+    if (bits < 1000 && (bits == floor(bits) || ceil(bits) == 3)) {
+        ss << std::fixed << std::setprecision(0) << bits;
+        return ss.str();
+    }
     ss << std::fixed << std::scientific << std::setprecision(4) << bits;
     auto string = ss.str();
     auto len = string.length();

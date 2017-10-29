@@ -16,6 +16,7 @@ static const bool SHOW_FPS = true;
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
 static const int FPS = 60;
+static const float TIMESTEP = (1 / 60.f);
 static const int GAME_WIDTH = 1080;
 static const int GAME_HEIGHT = 1920;
 static std::string DEFAULT_FILE = "data/default.json";
@@ -30,7 +31,7 @@ static const std::string BIT_STRINGS[] = {
 static const int WORLD_WIDTH = 10000;
 static const int WORLD_HEIGHT = 10000;
 static const int WORLD_OFFSET = GAME_WIDTH / 2;
-static const int GRID_RESOLUTION = 20;
+static const int GRID_RESOLUTION = 25;
 static const int GRID_SIZE = WORLD_WIDTH / GRID_RESOLUTION;
 static const float GRID_WIDTH = WORLD_WIDTH / GRID_SIZE;
 static const float GRID_HEIGHT = WORLD_HEIGHT / GRID_SIZE;
