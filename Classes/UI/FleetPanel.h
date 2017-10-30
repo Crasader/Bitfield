@@ -20,6 +20,7 @@ private:
     void addTabs();
     
     void addFleetLayer();
+    void addSquadronsLayer();
 
     View currentView;
 };

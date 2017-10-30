@@ -54,7 +54,6 @@ void SquadronPanel::addPurchaseButton()
     purchase_button->setButtonColor(UI_COLOR_2);
     purchase_button->setHeaderColor(UI_COLOR_BLUE);
     purchase_button->setHeader("Upgrade Squadron");
-    purchase_button->setCost(25);
     purchase_button->setAnchorPoint(VEC_CENTER);
     purchase_button->setPosition(Vec2(parentSize.width / 2, 16 + 140 / 2));
     purchase_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
@@ -78,7 +77,7 @@ void SquadronPanel::addPurchaseButton()
                 //Player::unlockFleetPanel();
                 if (Player::bits >= cost) {
                     Player::bits -= cost;
-                    cocos2d::log("UNLOCKED FLEET");
+                    Player::squadron_slots++;
                 }
             }
         }
@@ -128,7 +127,7 @@ void SquadronPanel::addFilledShip()
     line->setPosition(positions.front());
     line->drawLine(Vec2(0, -18),
         Vec2(0, -(filledShip->getPositionY())),
-        Color4F(WORLD_COLOR));
+        Color4F(Player::bit_info[BitType(7 - positions.size())].color));
     line->setScaleY(0);
     line->runAction(EaseCircleActionOut::create(ScaleTo::create(0.8f, 1, 1)));
     background->addChild(line, 1);
@@ -142,7 +141,7 @@ void SquadronPanel::updatePurchaseButton()
     auto purchase_button = utils::findChild<PurchaseButton*>(this, "purchase_button");
     auto ship_count = Player::squadrons[0].ints["count"];
     auto cost = Player::ship_costs[ship_count - 1];
-    purchase_button->setCost(cost);
+    purchase_button->setCost(Util::getFormattedDouble(cost));
 
     if (Player::bits < cost) {
         purchase_button->getChildByName("hbox")->setOpacity(255 * 0.3f);

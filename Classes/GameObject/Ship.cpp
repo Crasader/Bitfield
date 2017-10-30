@@ -60,7 +60,7 @@ void Ship::update(float delta) {
     velocity += acceleration; // We never "desire" to go faster than max_speed, so don't have to limit here
     setPosition(getPosition() + velocity);
     handleCollisions();
-    
+
     // Point towards velocity
     setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
 }
@@ -128,8 +128,8 @@ void Ship::handleCollisions()
                         auto& info = Player::bit_info[bit->getType()];
                         auto value = Player::calculateValue(bit->getType());
                         Player::addBits(value);
-                        addValuePopup(bit);
                         info.spawned--;
+                        addValuePopup(bit);
 
                         // Remove bit
                         bit->remove();
@@ -276,7 +276,7 @@ bool Ship::canSee(cocos2d::Node* target) {
     auto heading = getVelocity().getNormalized();
     auto toTarget = (target->getPosition() - getPosition()).getNormalized();
     auto angle = CC_RADIANS_TO_DEGREES(Vec2::angle(heading, toTarget));
-    return (angle >= 0 && angle <= 135);
+    return (angle >= 0 && angle <= 180);
 }
 
 bool Ship::inRange(cocos2d::Node* target) {
@@ -395,7 +395,7 @@ void Ship::addValuePopup(Bit* bit)
     auto world = getParent();
 
     //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
-    auto popup = Label::createWithTTF(Util::getFormattedDouble(Player::calculateValue(bit->getType())), FONT_DEFAULT, 40);
+    auto popup = Label::createWithTTF(Player::bit_info[bit->getType()].valueString, FONT_DEFAULT, 40);
     auto c = Color3B(Player::bit_info[bit->getType()].color);
     popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
     popup->setPosition(bit->getPosition());

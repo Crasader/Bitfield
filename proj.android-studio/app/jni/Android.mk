@@ -28,8 +28,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/BitsPanel.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/SquadronPanel.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/FleetPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/PurchaseButton.cpp \
-                   $(LOCAL_PATH)/../../../Classes/rapidjson/document.h
+                   $(LOCAL_PATH)/../../../Classes/UI/PurchaseButton.cpp
 
 
 

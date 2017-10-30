@@ -108,7 +108,7 @@ void UpgradeItem::addBuyButton() {
     buy_button->setHeaderColor(Player::upgrades[id].color);
     buy_button->setPosition(Vec2(704 + 264 / 2, 10 + 114 / 2));
     buy_button->setHeader("Buy");
-    buy_button->setCost(Player::upgrades[id].cost);
+    buy_button->setCost(Util::getFormattedDouble(Player::upgrades[id].cost));
 
     buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
         if (type == ui::Widget::TouchEventType::BEGAN) {

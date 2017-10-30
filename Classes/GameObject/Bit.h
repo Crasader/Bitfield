@@ -12,10 +12,6 @@ public:
     Bit(BitType type);
     static Bit* create(BitType type);
 
-    virtual void onEnter() override;
-    virtual void onExit() override;
-    virtual void update(float delta) override;
-
     BitType getType();
     bool isTargettedBy(Ship* ship);
     bool isTargetted();

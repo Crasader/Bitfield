@@ -49,11 +49,11 @@ void PurchaseButton::setHeader(const std::string& header)
     node->setString(header);
 }
 
-void PurchaseButton::setCost(double amount)
+void PurchaseButton::setCost(const std::string& cost)
 {
     auto hbox = utils::findChild(this, "hbox");
     auto label = hbox->getChildByName<ui::Text*>("label");
-    label->setString(Util::getFormattedDouble(amount));
+    label->setString(cost);
 
     auto iconSize = hbox->getChildByName("icon")->getContentSize();
     auto labelSize = label->getContentSize();

@@ -37,6 +37,8 @@ double Player::ship_costs[7];
 
 //---- PLAYER
 void Player::load() {
+    Texture2D::setDefaultAlphaPixelFormat(Texture2D::PixelFormat::RGBA4444);
+
     loadDocument();
 
     bits = document["bits"].GetDouble();
@@ -64,6 +66,7 @@ void Player::loadBits() {
     const auto& resources = document["resources"].GetArray();
     for (SizeType i = 0; i < resources.Size(); i++) {
         const auto& resource = resources[i];
+        auto type = BitType(i);
 
         BitInfo info;
         info.name = resource["name"].GetString();
@@ -79,8 +82,13 @@ void Player::loadBits() {
         info.spawnTime = resource["spawnTime"].GetDouble();
         info.spawned = resource["spawned"].GetInt();
         info.capacity = resource["capacity"].GetInt();
+        bit_info[type] = info;
 
-        bit_info[BitType(i)] = info;
+        // Runtime
+        bit_info[type].cost = calculateCost(type);
+        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
+        bit_info[type].value = calculateValue(type);
+        bit_info[type].valueString = Util::getFormattedDouble(bit_info[type].value);
     }
 }
 void Player::loadUpgrades() {
@@ -233,8 +241,11 @@ void Player::saveSquadrons() {
         auto obj = rapidjson::Value(rapidjson::kObjectType);
         auto type = rapidjson::StringRef(info.second.strings["type"].c_str());
         obj.AddMember("type", type, allocator);
-        // TODO: save multiplier...
-        if (type == "Default") obj.AddMember("count", info.second.ints["count"], allocator);
+        // TODO: just save all key value pairs you dummy
+        // actually wait a lot of them we dont need..
+        if (info.second.strings["type"] == "Default") {
+            obj.AddMember("count", info.second.ints["count"], allocator);
+        }
 
         saved_squadrons.PushBack(obj, allocator);
     }
@@ -274,6 +285,7 @@ bool Player::purchaseBitUpgrade(BitType type) {
     int amount = getBuyAmount(type);
     subBits(price);
 
+    // Apply effects
     while (amount > 0) {
         info.level++;
         if (info.level == LEVEL_TIER[0]) {
@@ -290,6 +302,13 @@ bool Player::purchaseBitUpgrade(BitType type) {
         }
         amount--;
     }
+
+    // Update runtime values
+    info.cost = calculateCost(type);
+    info.costString = Util::getFormattedDouble(info.cost);
+    info.value = calculateValue(type);
+    info.valueString = Util::getFormattedDouble(info.value);
+
     return true;
 }
 int Player::getTier(BitType type) {
@@ -370,6 +389,12 @@ int Player::calculateMaxLevels(int level, double baseCost, double multiplier) {
 void Player::toggleBuyMode() {
     int mode = ((int)buy_mode + 1) % (int)BuyMode::Count;
     buy_mode = BuyMode(mode);
+
+    for (int i = 0; i < BitType::All; i++) {
+        auto type = BitType(i);
+        bit_info[type].cost = calculateCost(type);
+        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
+    }
 }
 
 //---- Upgrades

@@ -17,7 +17,7 @@ public:
     void setButtonColor(const cocos2d::Color4B& color);
     void setHeaderColor(const cocos2d::Color4B& color);
     void setHeader(const std::string& header);
-    void setCost(double amount);
+    void setCost(const std::string& cost);
 
 private:
     void addHeaderBackground();

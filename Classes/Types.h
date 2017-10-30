@@ -35,6 +35,12 @@ struct BitInfo {
     double spawnTime;
     int spawned;
     int capacity;
+
+    // Runtime, not saved
+    double cost;
+    double value;
+    std::string costString;
+    std::string valueString;
 };
 
 enum UpgradeType {

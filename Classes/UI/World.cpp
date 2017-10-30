@@ -31,6 +31,10 @@ void World::onEnter() {
     createBackground();
     createInput();
     createGrid();
+    createCamera();
+    for (int i = 0; i < 7; i++) {
+        bits_spawned[i] = 0;
+    }
 }
 
 void World::onExit() {
@@ -49,16 +53,26 @@ void World::update(float delta) {
     updateGrid();
     updateFleet(delta);
     updateBits(delta);
+    updateCamera();
+}
+
+void World::updateCamera()
+{
+    if (fleet[0].first.empty()) return;
+    auto ship = fleet[0].first.at(0);
+    auto camera = getChildByName("camera");
+    camera->setPosition(ship->getPosition());
 }
 
 void World::updateGrid()
 {
     // Remove dead bits or insert into grid
-    for (auto& pair : bits) {
-        auto& vec = pair.second;
-        for (auto it = vec.begin(); it != vec.end(); ++it) {
+    //for (auto& pair : bits) {
+    //    auto& vec = pair.second;
+        for (auto it = bits.begin(); it != bits.end(); ++it) {
             auto bit = *it;
             if (bit->isRemoved()) {
+                bits_spawned[bit->getType()]--;
                 bit->removeFromParent();
 
                 auto pos = bit->getPosition();
@@ -66,11 +80,20 @@ void World::updateGrid()
                 int col = pos.y / GRID_SIZE;
                 grid.at(row).at(col).eraseObject(bit);
 
-                it = vec.erase(it);
-                if (it == vec.end()) break;
+                it = bits.erase(it);
+                if (it == bits.end()) break;
+            }
+            else {
+                // Hide off-camera bits
+                if (cameraContains(bit->getPosition())) {
+                    bit->setVisible(true);
+                }
+                else {
+                    bit->setVisible(false);
+                }
             }
         }
-    }
+    //}
 }
 
 void World::updateFleet(float delta) {
@@ -102,7 +125,7 @@ void World::updateFleet(float delta) {
                 // Also add streak
                 auto colorIndex = shipID % 7;
                 auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), SPRITE_STREAK);
-                streak->runAction(RepeatForever::create(Sequence::createWithTwoActions(TintBy::create(0.5f, 0, 30, 0), TintBy::create(0.5f, 0, -30, 0))));
+                streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
             }
@@ -111,7 +134,7 @@ void World::updateFleet(float delta) {
         // Ships don't exist in the world, so spawn them
         if (ships.empty()) {
             addShips(ships, streaks, count);
-            if (squadronID == 0) offsetCamera(false);
+            if (squadronID == 0) offsetCameraForPanelIsVisible(false);
         }
         else if (ships.size() < count) {
             // Need more ships, add to world
@@ -120,12 +143,14 @@ void World::updateFleet(float delta) {
 
         // Update streaks
         for (int shipID = 0; shipID < streaks.size(); shipID++) {
-            streaks.at(shipID)->setPosition(ships.at(shipID)->getPosition());
+            auto ship = ships.at(shipID);
+            auto streak = streaks.at(shipID);
+            streak->setPosition(ship->getPosition());
         }
+
 
         // TODO: Eventually will need to evict ships if type doesnt match here
     }
-
     if (DEBUG_SHIP) debugShip();
 }
 
@@ -148,7 +173,7 @@ void World::updateBits(float delta) {
             info.timer = 0;
         }
 
-        while (bits[type].size() < Player::bit_info[type].spawned) {
+        while (bits_spawned[type] < Player::bit_info[type].spawned) {
             addBit(type);
         }
     }
@@ -156,10 +181,11 @@ void World::updateBits(float delta) {
 
 void World::addBit(BitType type) {
     auto bit = Bit::create(type);
-    bit->setPosition(getContentSize().width * (0.02f + rand_0_1() * 0.96f),
-        getContentSize().height * (0.02f + rand_0_1() * 0.96f));
+    bit->setPosition(getContentSize().width * (0.005f + rand_0_1() * 0.99f),
+        getContentSize().height * (0.005f + rand_0_1() * 0.99f));
     addChild(bit, 88);
-    bits[type].pushBack(bit);
+    bits.pushBack(bit);
+    bits_spawned[type]++;
 
     // Add to grid
     auto pos = bit->getPosition();
@@ -168,19 +194,27 @@ void World::addBit(BitType type) {
     grid.at(row).at(col).pushBack(bit);
 }
 
-void World::offsetCamera(bool offset) {
-    if (fleet.empty()) return;
+void World::offsetCameraForPanelIsVisible(bool visible) {
+    if (fleet[0].first.empty()) return;
     auto ship = fleet[0].first.at(0);
+    auto camera = getChildByName("camera");
+    
     int offsetAmount = 0;
     stopAllActions();
-    if (!offset) {
+    if (!visible) {
         offsetAmount = 350;
     }
 
-    auto follow = Follow::createWithOffset(ship, 0, offsetAmount,
+    auto follow = Follow::createWithOffset(camera, 0, offsetAmount,
         Rect(-WORLD_OFFSET, -(730 + WORLD_OFFSET),
             WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + 730 + WORLD_OFFSET * 2));
     runAction(follow);
+}
+
+bool World::cameraContains(cocos2d::Vec2 point)
+{
+    auto rect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
+    return (rect.containsPoint(point));
 }
 
 void World::createBackground() {
@@ -197,15 +231,18 @@ void World::createBackground() {
     for (int c = 0; c <= numCols; c++) {
         Vec2 o = Vec2(c * GRID_SIZE, 0);
         Vec2 d = Vec2(c * GRID_SIZE, getContentSize().height);
-        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
-        for (int i = 0; i <= GRID_SIZE; i++) {
-            drawNode->drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 6, Color4F(1, 1, 1, 0.14f));
+        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.2f));
+        for (int i = 0; i <= numCols; i++) {
+            auto nodeSize = 4;
+            drawNode->drawSolidRect(o + Vec2(0 - nodeSize, GRID_SIZE * i - nodeSize),
+                o + Vec2(0 + nodeSize, GRID_SIZE * i + nodeSize),
+                Color4F(1, 1, 1, 0.2f));//drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 4, Color4F(1, 1, 1, 0.14f));
         }
     }
     for (int r = 0; r <= numRows; r++) {
         Vec2 o(0, r * GRID_SIZE);
         Vec2 d(getContentSize().width, r * GRID_SIZE);
-        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.14f));
+        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.2f));
     }
 }
 
@@ -239,6 +276,12 @@ void World::createGrid()
             grid[i].push_back(cocos2d::Vector< Bit* >());
         }
     }
+}
+
+void World::createCamera()
+{
+    auto camera = Node::create();
+    addChild(camera, 0, "camera");
 }
 
 void World::debugShip()

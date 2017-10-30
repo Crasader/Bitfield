@@ -289,9 +289,7 @@ void Generator::updateSpawnBar()
 
     // Value
     auto value = getChildByName<ui::Text*>("value");
-    ss << Util::getFormattedDouble(Player::calculateValue(id));
-    value->setString(ss.str());
-    ss.str("");
+    value->setString(info.valueString);
 
     // Timer
     auto timer = getChildByName<ui::Text*>("spawn_timer");
@@ -334,9 +332,8 @@ void Generator::updateBuyButton()
 
     // Set Button Text
     auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    auto cost = Player::calculateCost(id);
-    buy_button->setCost(cost);
-    if (cost < BIT_MAX) {
+    buy_button->setCost(info.costString);
+    if (info.cost < BIT_MAX) {
         auto amount = Player::getBuyAmount(id);
         if (info.level == 0) {
             ss << "Unlock";
@@ -353,22 +350,25 @@ void Generator::updateBuyButton()
     // Buy Button Opacity
     bool previousTierPurchased = (id == BitType::Green) || Player::bit_info[BitType(id - 1)].level > 0;
     if (!previousTierPurchased) {
-        setOpacity(0);
+        if (getOpacity() > 0) setOpacity(0);
         buy_button->setTouchEnabled(false);
     }
     else {
         // Show the next tier, faded out
-        if (info.level == 0 && Player::bits < cost) {
-            setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+        if (info.level == 0 && Player::bits < info.cost) {
+            if (getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
+                setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
         }
         else {
             buy_button->setTouchEnabled(true);
-            setOpacity(255);
-            if (Player::bits < cost) {
-                buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+            if (getOpacity() != 255) setOpacity(255);
+            if (Player::bits < info.cost) {
+                if (buy_button->getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
+                    buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
             }
             else {
-                buy_button->setOpacity(255);
+                if (buy_button->getOpacity() != 255)
+                    buy_button->setOpacity(255);
             }
         }
     }

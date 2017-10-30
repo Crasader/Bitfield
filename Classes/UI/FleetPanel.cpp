@@ -95,3 +95,20 @@ void FleetPanel::addFleetLayer()
     generator_layer->setVisible(false);
     addChild(generator_layer, 0, "generator_layer");
 }
+
+void FleetPanel::addSquadronsLayer()
+{
+    auto generator_layer = ui::ScrollView::create();
+    generator_layer->setContentSize(Size(984, 591));
+    generator_layer->setAnchorPoint(Vec2(0, 0));
+    generator_layer->setPosition(Vec2(32, 16));
+    generator_layer->setLayoutType(cocos2d::ui::Layout::Type::VERTICAL);
+    generator_layer->setDirection(ui::ScrollView::Direction::VERTICAL);
+    generator_layer->setScrollBarPositionFromCorner(Vec2(0, 0));
+    generator_layer->setScrollBarOpacity(255);
+    generator_layer->setScrollBarAutoHideTime(0.7f);
+    generator_layer->setScrollBarColor(Color3B::WHITE);
+    generator_layer->setTag(View::Fleet);
+    generator_layer->setVisible(false);
+    addChild(generator_layer, 0, "squadrons_layer");
+}

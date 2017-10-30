@@ -75,8 +75,8 @@
     <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\Quadtree.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="..\Classes\Scene\TestScene.cpp">
+      <Filter>src\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,8 +137,8 @@
     <ClInclude Include="..\Classes\GameObject\SquadronFactory.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\Quadtree.h">
-      <Filter>src</Filter>
+    <ClInclude Include="..\Classes\Scene\TestScene.h">
+      <Filter>src\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

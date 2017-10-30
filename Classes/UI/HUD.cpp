@@ -103,7 +103,7 @@ void HUD::addPanels()
     };
 
     addCentered(BitsPanel::create(), PanelID::Bits);
-    if (Player::squadrons[0].ints["count"] <= 6)
+    if (Player::squadrons[0].ints["count"] < 7)
         addCentered(SquadronPanel::create(), PanelID::Squadron);
     else
         addCentered(FleetPanel::create(), PanelID::Squadron);
@@ -154,10 +154,10 @@ void HUD::setPanel(PanelID id) {
         auto panel = getChildByTag(id);
         panel->setVisible(!panel->isVisible());
         if (panel->isVisible()) {
-            world->offsetCamera(false);
+            world->offsetCameraForPanelIsVisible(false);
         }
         else {
-            world->offsetCamera(true);
+            world->offsetCameraForPanelIsVisible(true);
         }
     }
     else {
@@ -166,7 +166,7 @@ void HUD::setPanel(PanelID id) {
         currentPanel = id;
         oldPanel->setVisible(false);
         newPanel->setVisible(true);
-        world->offsetCamera(false);
+        world->offsetCameraForPanelIsVisible(false);
     }
 
     // Change appearance of selected and unselected tabs
