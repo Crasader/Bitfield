@@ -96,10 +96,15 @@ void HUD::addBitCounter() {
 void HUD::addPanels()
 {
     auto addCentered = [=](cocos2d::Node* node, PanelID id) {
-        node->setAnchorPoint(ANCHOR_CENTER_BOTTOM);
-        node->setPosition(Vec2(UI_CENTER_X, PANEL_Y));
+        auto clip = ClippingRectangleNode::create(Rect(0, 98, GAME_WIDTH, GAME_HEIGHT));
+        clip->setContentSize(Size(GAME_WIDTH, GAME_HEIGHT));
+        clip->setPosition(Vec2(0, 0));
+
+        node->setAnchorPoint(Vec2(0.5f, 1));
+        node->setPosition(Vec2(UI_CENTER_X, 0));
         node->setVisible(false);
-        addChild(node, 0, id);
+        clip->addChild(node, 0, "panel");
+        addChild(clip, 0, id);
     };
 
     addCentered(BitsPanel::create(), PanelID::Bits);
@@ -150,31 +155,63 @@ void HUD::addTabs() {
 }
 
 void HUD::setPanel(PanelID id) {
+    auto oldPanel = getChildByTag(currentPanel)->getChildByName("panel");
+    auto newPanel = getChildByTag(id)->getChildByName("panel");
+    if (oldPanel->getNumberOfRunningActions() > 0) return;
+
+    auto actionShow = Sequence::create(
+        Show::create(),
+        Spawn::create(
+            EaseBackOut::create(MoveTo::create(0.35f, Vec2(UI_CENTER_X, 730))),
+            EaseSineIn::create(FadeIn::create(0.1f)),
+            nullptr
+        ),
+        nullptr
+    );
+
+    auto actionHide = Sequence::create(
+        Spawn::create(
+            EaseSineIn::create(MoveTo::create(0.25f, Vec2(UI_CENTER_X, 0))),
+            EaseSineIn::create(FadeOut::create(0.1f)),
+            nullptr
+        ),
+        Hide::create(),
+        nullptr
+    );
+
     if (currentPanel == id) {
-        auto panel = getChildByTag(id);
-        panel->setVisible(!panel->isVisible());
-        if (panel->isVisible()) {
-            world->offsetCameraForPanelIsVisible(true);
+        // Selecting same tab
+        if (oldPanel->isVisible()) {
+            oldPanel->runAction(actionHide);
+            world->offsetCameraForPanelIsVisible(false);
         }
         else {
-            world->offsetCameraForPanelIsVisible(false);
+            oldPanel->runAction(actionShow);
+            world->offsetCameraForPanelIsVisible(true);
         }
     }
     else {
-        auto oldPanel = getChildByTag(currentPanel);
-        auto newPanel = getChildByTag(id);
+        // Selecting different tab
         currentPanel = id;
-        oldPanel->setVisible(false);
-        newPanel->setVisible(true);
+        oldPanel->runAction(actionHide);
+        newPanel->runAction(actionShow);
         world->offsetCameraForPanelIsVisible(true);
     }
 
     // Change appearance of selected and unselected tabs
     auto tab_layer = getChildByName("tab_layer");
     for (int i = 0; i < 5; i++) {
-        auto panel = getChildByTag(i);
         auto tab_button = tab_layer->getChildByTag<ui::Button*>(i);
-        if (panel != nullptr && panel->isVisible()) {
+
+        ///////////
+        if (i > 1) {
+            tab_button->setOpacity(255 * 0.5f);
+            continue;
+        }
+        ////////////////////
+
+        auto panel = getChildByTag(i)->getChildByName("panel");
+        if (currentPanel == i) {
             tab_button->setOpacity(255);
         }
         else {

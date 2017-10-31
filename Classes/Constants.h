@@ -11,7 +11,7 @@ static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
 static const bool USE_SAVE = false;
 static const bool DEBUG_SHIP = false;
-static const bool SHOW_FPS = true;
+static const bool SHOW_FPS = false;
 
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";

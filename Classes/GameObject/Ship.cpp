@@ -414,6 +414,6 @@ void Ship::addValuePopup(Bit* bit)
         RemoveSelf::create(),
         nullptr)
     );
-    world->addChild(popup, 5);
+    world->addChild(popup, 5 + bit->getType());
 }
 

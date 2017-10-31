@@ -15,6 +15,7 @@ bool BitsPanel::init()
     if (!Node::init()) return false;
     scheduleUpdate();
     setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT));
+    setCascadeOpacityEnabled(true);
     
     addBackground();
     addTabs();
@@ -77,6 +78,7 @@ static ui::Button* createTab(const std::string& label, float posX)
 void BitsPanel::addTabs()
 {
     auto tab_layer = Node::create();
+    tab_layer->setCascadeOpacityEnabled(true);
     addChild(tab_layer, 0, "tab_layer");
 
     auto generators_tab = createTab("Generators", 0);

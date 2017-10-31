@@ -347,11 +347,6 @@ double Player::calculateCost(BitType type) {
     if (info.level == 0) {
         return info.baseCost;
     }
-    //double ret = 0;
-    //for (int i = 0; i < amount; i++) {
-    //    ret += info.baseCost * (pow(info.costMultiplier, info.level));
-    //    info.level++;
-    //}
 
     double b = info.baseCost;
     double r = info.costMultiplier;
@@ -382,7 +377,7 @@ int Player::calculateMaxLevels(int level, double baseCost, double multiplier) {
     // https://www.gamasutra.com/blogs/AnthonyPecorella/20161013/282422/The_Math_of_Idle_Games_Part_I.php
     double numerator = bits * (multiplier - 1);
     double denom = baseCost * pow(multiplier, level);
-    return std::min(double(999), std::max(double(1), floor(log(numerator / denom + 1) / log(multiplier))));
+    return std::min(double(9999), std::max(double(1), floor(log(numerator / denom + 1) / log(multiplier))));
 }
 void Player::toggleBuyMode() {
     int mode = ((int)buy_mode + 1) % (int)BuyMode::Count;

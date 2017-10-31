@@ -149,7 +149,6 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   <ItemGroup>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
     <ClCompile Include="..\Classes\GameObject\Bit.cpp" />
-    <ClCompile Include="..\Classes\GameObject\ParallaxPolygon.cpp" />
     <ClCompile Include="..\Classes\GameObject\Ship.cpp" />
     <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
     <ClCompile Include="..\Classes\PlayerData\Player.cpp" />
@@ -171,7 +170,6 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\AppDelegate.h" />
     <ClInclude Include="..\Classes\Constants.h" />
     <ClInclude Include="..\Classes\GameObject\Bit.h" />
-    <ClInclude Include="..\Classes\GameObject\ParallaxPolygon.h" />
     <ClInclude Include="..\Classes\GameObject\Ship.h" />
     <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
     <ClInclude Include="..\Classes\PlayerData\Player.h" />

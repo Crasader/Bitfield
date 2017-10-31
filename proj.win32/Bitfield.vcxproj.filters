@@ -78,9 +78,6 @@
     <ClCompile Include="..\Classes\Scene\TestScene.cpp">
       <Filter>src\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\GameObject\ParallaxPolygon.cpp">
-      <Filter>src\GameObject</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -142,9 +139,6 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Scene\TestScene.h">
       <Filter>src\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\GameObject\ParallaxPolygon.h">
-      <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -117,7 +117,9 @@ void World::updateCamera()
     if (fleet[0].first.empty()) return;
     auto ship = fleet[0].first.at(0);
     auto camera = getChildByName("camera");
-    camera->setPosition(ship->getPosition());
+    auto cameraOffset = getChildByName("cameraOffset");
+    camera->setPosition(ship->getPosition() - cameraOffset->getPosition());
+    cocos2d::log("%.2f", cameraOffset->getPositionY());
 }
 
 void World::updateGrid()
@@ -187,7 +189,7 @@ void World::updateFleet(float delta) {
         // Ships don't exist in the world, so spawn them
         if (ships.empty()) {
             addShips(ships, streaks, count);
-            if (squadronID == 0) offsetCameraForPanelIsVisible(true);
+            //if (squadronID == 0) offsetCameraForPanelIsVisible(true);
         }
         else if (ships.size() < count) {
             // Need more ships, add to world
@@ -248,22 +250,13 @@ void World::addBit(BitType type) {
 }
 
 void World::offsetCameraForPanelIsVisible(bool visible) {
-    if (fleet[0].first.empty()) return;
-    auto ship = fleet[0].first.at(0);
-    auto camera = getChildByName("camera");
-
-    stopAllActions();
+    auto cameraOffset = getChildByName("cameraOffset");
     if (visible) {
-        cameraOffset = 350;
+        cameraOffset->runAction(EaseSineOut::create(MoveTo::create(0.3f, Vec2(0, 350))));
     }
     else {
-        cameraOffset = 0;
+        cameraOffset->runAction(EaseSineOut::create(MoveTo::create(0.3f, VEC_ZERO)));
     }
-
-    auto follow = Follow::createWithOffset(camera, 0, cameraOffset,
-        Rect(-WORLD_OFFSET, -WORLD_OFFSET - 730,
-            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (730 + WORLD_OFFSET) * 2));
-    runAction(follow);
 }
 
 bool World::cameraContains(cocos2d::Vec2 point)
@@ -282,7 +275,9 @@ void World::createBackground() {
     // Create Background and Grid
     {
         auto drawNode = DrawNode::create(1);
-        drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -WORLD_OFFSET - 730), Vec2(WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (WORLD_OFFSET + 730) * 2), Color4F(WORLD_COLOR));
+        drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -WORLD_OFFSET - 730),
+            Vec2(WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (WORLD_OFFSET + 730) * 2),
+            Color4F(WORLD_COLOR));
 
         drawNode->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
         drawNode->setAnchorPoint(Vec2(0.5f, 0.5f));
@@ -304,7 +299,7 @@ void World::createBackground() {
             drawNode->drawLine(o, d, lineColor);
         }
         drawNode->setName("layer0");
-        parallax->addChild(drawNode, -99, Vec2(1, 1), Vec2(0, 0));
+        parallax->addChild(drawNode, -5, Vec2(1, 1), Vec2(0, 0));
     }
 
     // Add parallax layers
@@ -357,9 +352,18 @@ void World::createGrid()
 
 void World::createCamera()
 {
+    // Always follow the camera
     auto camera = Node::create();
     addChild(camera, 0, "camera");
-    cameraOffset = 350;
+
+    auto follow = Follow::createWithOffset(camera, 0, 0,
+        Rect(-WORLD_OFFSET, -WORLD_OFFSET - 730,
+            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (730 + WORLD_OFFSET) * 2));
+    runAction(follow);
+
+    // Offset node (THE HACKS ARE REAL)
+    auto cameraOffset = Node::create();
+    addChild(cameraOffset, 0, "cameraOffset");
 }
 
 void World::initBits()

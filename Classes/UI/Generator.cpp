@@ -335,7 +335,9 @@ void Generator::updateBuyButton()
 
     // Constantly update cost string if we're on Max
     if (Player::buy_mode == BuyMode::Max) {
-        info.costString = Util::getFormattedDouble(Player::calculateCost(id));
+        auto cost = Player::calculateCost(id);
+        info.cost = cost;
+        info.costString = Util::getFormattedDouble(cost);
     }
     buy_button->setCost(info.costString);
 

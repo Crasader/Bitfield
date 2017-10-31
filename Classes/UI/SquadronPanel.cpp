@@ -23,7 +23,8 @@ SquadronPanel* SquadronPanel::create() {
 bool SquadronPanel::init()
 {
     if (!Node::init()) return false;
-    setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT + 16));
+    setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT));
+    setCascadeOpacityEnabled(true);
 
     addBackground();
     addPurchaseButton();
