@@ -342,19 +342,23 @@ int Player::getNextTier(BitType type) {
     }
 }
 double Player::calculateCost(BitType type) {
-    int amount = getBuyAmount(type);
+    int buyAmount = getBuyAmount(type);
     auto info = bit_info[type];
-
     if (info.level == 0) {
         return info.baseCost;
     }
+    //double ret = 0;
+    //for (int i = 0; i < amount; i++) {
+    //    ret += info.baseCost * (pow(info.costMultiplier, info.level));
+    //    info.level++;
+    //}
 
-    double ret = 0;
-    for (int i = 0; i < amount; i++) {
-        ret += info.baseCost * (pow(info.costMultiplier, info.level));
-        info.level++;
-    }
-    return std::min(ret, BIT_INF);
+    double b = info.baseCost;
+    double r = info.costMultiplier;
+    double k = info.level;
+
+    double cost = b * (pow(r, k) * (pow(r, buyAmount) - 1)) / (r - 1);
+    return std::min(cost, BIT_INF);
 }
 double Player::calculateValue(BitType type) {
     auto info = bit_info[type];
@@ -375,16 +379,10 @@ int Player::getBuyAmount(BitType type) {
     return amount;
 }
 int Player::calculateMaxLevels(int level, double baseCost, double multiplier) {
-    int max_levels = 0;
-    double cost = 0;
-    
-    do {
-        max_levels++;
-        cost += baseCost * pow(multiplier, level);
-        level++;
-    } while ((cost + baseCost * pow(multiplier, level)) <= Player::bits);
-    
-    return max_levels;
+    // https://www.gamasutra.com/blogs/AnthonyPecorella/20161013/282422/The_Math_of_Idle_Games_Part_I.php
+    double numerator = bits * (multiplier - 1);
+    double denom = baseCost * pow(multiplier, level);
+    return std::min(double(999), std::max(double(1), floor(log(numerator / denom + 1) / log(multiplier))));
 }
 void Player::toggleBuyMode() {
     int mode = ((int)buy_mode + 1) % (int)BuyMode::Count;

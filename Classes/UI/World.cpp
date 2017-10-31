@@ -15,7 +15,8 @@ World* World::create() {
     if (world && world->init()) {
         world->autorelease();
         return world;
-    } else {
+    }
+    else {
         CC_SAFE_DELETE(world);
         return nullptr;
     }
@@ -32,9 +33,7 @@ void World::onEnter() {
     createInput();
     createGrid();
     createCamera();
-    for (int i = 0; i < 7; i++) {
-        bits_spawned[i] = 0;
-    }
+    initBits();
 }
 
 void World::onExit() {
@@ -50,10 +49,67 @@ void World::update(float delta) {
         Util::touch_location = Util::capVector(Util::touch_location_original - getPosition(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     }
 
+    updateBackground();
     updateGrid();
     updateFleet(delta);
     updateBits(delta);
     updateCamera();
+}
+
+void World::updateBackground()
+{
+    auto parallax = getChildByName("parallax");
+
+    //std::function<void(Node*, Vec2, int, Color4F, float)> spawnPoly;
+    auto spawnPoly = [&](Node* layer, Vec2 pos, int size, Color4F color, float a) {
+        auto poly = DrawNode::create();
+        poly->drawSolidPoly(POLYGON_VERTS, 4, color);
+        poly->setContentSize(Size(2, 2));
+        poly->setAnchorPoint(VEC_CENTER);
+        poly->setPositionNormalized(pos);
+        poly->setOpacity(0);
+        poly->setScale(0);
+
+        poly->runAction(Sequence::create(
+            Spawn::create(
+                EaseExponentialInOut::create(ScaleTo::create(2.f, size)),
+                EaseExponentialInOut::create(FadeTo::create(2.f, 255 * a)),
+                nullptr
+            ),
+            DelayTime::create(0.75f),
+            Spawn::create(
+                EaseExponentialInOut::create(ScaleTo::create(1.f, 0)),
+                EaseExponentialInOut::create(FadeOut::create(1.f)),
+                nullptr
+            ),
+            RemoveSelf::create(),
+            nullptr
+        ));
+        layer->addChild(poly);
+    };
+
+    Ship* ship = nullptr;
+    if (!fleet.empty() && !fleet.at(0).first.empty())
+        ship = fleet.at(0).first.at(0);
+    if (!ship) return;
+
+    auto addPolygons = [=](const std::string& name, int limit,
+        float chance, int sizeMin, int sizeDelta, float alpha)
+    {
+        auto layer = parallax->getChildByName(name);
+        if (layer->getChildrenCount() < limit && rand_0_1() > chance) {
+            auto pos = Vec2(ship->getPosition().x / WORLD_WIDTH - 0.075f + rand_0_1() * 0.15f,
+                ship->getPosition().y / WORLD_HEIGHT - 0.075f + rand_0_1() * 0.15f);
+            auto color = Color4F(Player::bit_info[BitType(cocos2d::random() % 7)].color);
+            auto size = sizeMin + rand_0_1() * sizeDelta;
+            spawnPoly(layer, pos, size, color, alpha);
+        }
+    };
+
+    addPolygons("layer1", 4, 0.9f, 150, 50, 0.35f);
+    addPolygons("layer2", 6, 0.88f, 75, 25, 0.3f);
+    addPolygons("layer3", 8, 0.86f, 25, 25, 0.25f);
+    addPolygons("layer4", 10, 0.84f, 10, 15, 0.2f);
 }
 
 void World::updateCamera()
@@ -67,33 +123,30 @@ void World::updateCamera()
 void World::updateGrid()
 {
     // Remove dead bits or insert into grid
-    //for (auto& pair : bits) {
-    //    auto& vec = pair.second;
-        for (auto it = bits.begin(); it != bits.end(); ++it) {
-            auto bit = *it;
-            if (bit->isRemoved()) {
-                bits_spawned[bit->getType()]--;
-                bit->removeFromParent();
+    for (auto it = bits.begin(); it != bits.end(); ++it) {
+        auto bit = *it;
+        if (bit->isRemoved()) {
+            bits_spawned[bit->getType()]--;
+            bit->removeFromParent();
 
-                auto pos = bit->getPosition();
-                int row = pos.x / GRID_SIZE;
-                int col = pos.y / GRID_SIZE;
-                grid.at(row).at(col).eraseObject(bit);
+            auto pos = bit->getPosition();
+            int row = pos.x / GRID_SIZE;
+            int col = pos.y / GRID_SIZE;
+            grid.at(row).at(col).eraseObject(bit);
 
-                it = bits.erase(it);
-                if (it == bits.end()) break;
+            it = bits.erase(it);
+            if (it == bits.end()) break;
+        }
+        else {
+            // Hide off-camera bits
+            if (cameraContains(bit->getPosition())) {
+                bit->setVisible(true);
             }
             else {
-                // Hide off-camera bits
-                if (cameraContains(bit->getPosition())) {
-                    bit->setVisible(true);
-                }
-                else {
-                    bit->setVisible(false);
-                }
+                bit->setVisible(false);
             }
         }
-    //}
+    }
 }
 
 void World::updateFleet(float delta) {
@@ -118,7 +171,7 @@ void World::updateFleet(float delta) {
                 else {
                     ship->setPosition(ships.at(0)->getPosition());
                 }
-                
+
                 ships.pushBack(ship);
                 addChild(ship, 99);
 
@@ -134,7 +187,7 @@ void World::updateFleet(float delta) {
         // Ships don't exist in the world, so spawn them
         if (ships.empty()) {
             addShips(ships, streaks, count);
-            if (squadronID == 0) offsetCameraForPanelIsVisible(false);
+            if (squadronID == 0) offsetCameraForPanelIsVisible(true);
         }
         else if (ships.size() < count) {
             // Need more ships, add to world
@@ -173,7 +226,7 @@ void World::updateBits(float delta) {
             info.timer = 0;
         }
 
-        while (bits_spawned[type] < Player::bit_info[type].spawned) {
+        if (bits_spawned[type] < Player::bit_info[type].spawned) {
             addBit(type);
         }
     }
@@ -198,16 +251,18 @@ void World::offsetCameraForPanelIsVisible(bool visible) {
     if (fleet[0].first.empty()) return;
     auto ship = fleet[0].first.at(0);
     auto camera = getChildByName("camera");
-    
-    int offsetAmount = 0;
+
     stopAllActions();
-    if (!visible) {
-        offsetAmount = 350;
+    if (visible) {
+        cameraOffset = 350;
+    }
+    else {
+        cameraOffset = 0;
     }
 
-    auto follow = Follow::createWithOffset(camera, 0, offsetAmount,
-        Rect(-WORLD_OFFSET, -(730 + WORLD_OFFSET),
-            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + 730 + WORLD_OFFSET * 2));
+    auto follow = Follow::createWithOffset(camera, 0, cameraOffset,
+        Rect(-WORLD_OFFSET, -WORLD_OFFSET - 730,
+            WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (730 + WORLD_OFFSET) * 2));
     runAction(follow);
 }
 
@@ -218,32 +273,54 @@ bool World::cameraContains(cocos2d::Vec2 point)
 }
 
 void World::createBackground() {
-    // Create Background
-    auto drawNode = DrawNode::create();
-    drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -730 - WORLD_OFFSET),
-        Size(WORLD_WIDTH + WORLD_OFFSET, WORLD_HEIGHT + 730 + WORLD_OFFSET), Color4F(WORLD_COLOR));
-    addChild(drawNode, 0);
+    auto parallax = ParallaxNode::create();
+    parallax->setPositionNormalized(VEC_CENTER);
+    parallax->setAnchorPoint(Vec2(0.5f, 0.5f));
+    parallax->setIgnoreAnchorPointForPosition(false);
+    addChild(parallax, 0, "parallax");
 
-    // Create grid
-    drawNode->setLineWidth(1);
-    int numCols = WORLD_WIDTH / GRID_SIZE;
-    int numRows = WORLD_HEIGHT / GRID_SIZE;
-    for (int c = 0; c <= numCols; c++) {
-        Vec2 o = Vec2(c * GRID_SIZE, 0);
-        Vec2 d = Vec2(c * GRID_SIZE, getContentSize().height);
-        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.2f));
-        for (int i = 0; i <= numCols; i++) {
-            auto nodeSize = 4;
-            drawNode->drawSolidRect(o + Vec2(0 - nodeSize, GRID_SIZE * i - nodeSize),
-                o + Vec2(0 + nodeSize, GRID_SIZE * i + nodeSize),
-                Color4F(1, 1, 1, 0.2f));//drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 4, Color4F(1, 1, 1, 0.14f));
+    // Create Background and Grid
+    {
+        auto drawNode = DrawNode::create(1);
+        drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -WORLD_OFFSET - 730), Vec2(WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (WORLD_OFFSET + 730) * 2), Color4F(WORLD_COLOR));
+
+        drawNode->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
+        drawNode->setAnchorPoint(Vec2(0.5f, 0.5f));
+        Color4F lineColor(1, 1, 1, 0.2f);
+        for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / VISUAL_GRID_RESOLUTION) {
+            Vec2 o = Vec2(x, 0);
+            Vec2 d = Vec2(x, getContentSize().height);
+            drawNode->drawLine(o, d, lineColor);
+
+            for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / VISUAL_GRID_RESOLUTION) {
+                auto nodeSize = 4;
+                drawNode->drawSolidRect(Vec2(x - nodeSize, y - nodeSize),
+                    Vec2(x + nodeSize, y + nodeSize), lineColor);//drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 4, Color4F(1, 1, 1, 0.14f));
+            }
         }
+        for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / VISUAL_GRID_RESOLUTION) {
+            Vec2 o(0, y);
+            Vec2 d(getContentSize().width, y);
+            drawNode->drawLine(o, d, lineColor);
+        }
+        drawNode->setName("layer0");
+        parallax->addChild(drawNode, -99, Vec2(1, 1), Vec2(0, 0));
     }
-    for (int r = 0; r <= numRows; r++) {
-        Vec2 o(0, r * GRID_SIZE);
-        Vec2 d(getContentSize().width, r * GRID_SIZE);
-        drawNode->drawLine(o, d, Color4F(1, 1, 1, 0.2f));
-    }
+
+    // Add parallax layers
+    auto addParallaxLayer = [=](const std::string& name, int z, float scale) {
+        auto layer = Layer::create();
+        layer->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
+        layer->setAnchorPoint(Vec2(0.5f, 0.5f));
+        layer->setIgnoreAnchorPointForPosition(false);
+        layer->setName(name);
+        parallax->addChild(layer, z, Vec2(scale, scale),
+            Vec2(GAME_WIDTH * 0.5f * (1 - scale), GAME_HEIGHT * 0.5f * (1 - scale)));
+    };
+    addParallaxLayer("layer1", -1, 0.96f);
+    addParallaxLayer("layer2", -2, 0.9f);
+    addParallaxLayer("layer3", -3, 0.84f);
+    addParallaxLayer("layer4", -4, 0.78f);
 }
 
 void World::createInput() {
@@ -282,6 +359,23 @@ void World::createCamera()
 {
     auto camera = Node::create();
     addChild(camera, 0, "camera");
+    cameraOffset = 350;
+}
+
+void World::initBits()
+{
+    for (int i = 0; i < 7; i++) {
+        bits_spawned[i] = 0;
+    }
+
+    for (int i = 0; i < BitType::All; i++) {
+        auto type = BitType(i);
+        auto& info = Player::bit_info[type];
+        if (info.level == 0) continue;
+        while (bits_spawned[type] < Player::bit_info[type].spawned) {
+            addBit(type);
+        }
+    }
 }
 
 void World::debugShip()

@@ -36,11 +36,15 @@ private:
     Grid grid;
     int bits_spawned[7];
 
+    float cameraOffset;
+
     void createBackground();
     void createInput();
     void createGrid();
     void createCamera();
+    void initBits();
     
+    void updateBackground();
     void updateCamera();
     void updateGrid();
     void updateFleet(float delta);

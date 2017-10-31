@@ -146,6 +146,7 @@ void Generator::addSpawnCapacity() {
 
 void Generator::addBuyButton() {
     auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
+    buy_button->setCost(Player::bit_info[id].costString);
     buy_button->setColor(Color3B(UI_COLOR_1));
     buy_button->setHeaderColor(Player::bit_info[id].color);
     buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
@@ -295,10 +296,11 @@ void Generator::updateSpawnBar()
     auto timer = getChildByName<ui::Text*>("spawn_timer");
     auto time_remaining = info.spawnTime - info.timer;
     if (time_remaining <= 60) {
-        if (time_remaining <= 0.125) time_remaining = 0; // Stop annoying switching between 0.0s and 0.1s
+        //if (time_remaining <= 0.125) time_remaining = 0; // Stop annoying switching between 0.0s and 0.1s
         ss << std::fixed << std::setprecision(1) << time_remaining << "s";
     }
     else {
+        // Format as minutes
         int minutes = time_remaining / 60;
         int seconds = (time_remaining / 60.0f - minutes) * 60;
         ss << minutes << ":" << std::setprecision(2);
@@ -327,40 +329,44 @@ void Generator::updateInfo()
 
 void Generator::updateBuyButton()
 {
-    auto info = Player::bit_info[id];
+    auto buy_button = getChildByName<PurchaseButton*>("buy_button");
+    auto& info = Player::bit_info[id];
     std::stringstream ss;
 
-    // Set Button Text
-    auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    buy_button->setCost(info.costString);
-    if (info.cost < BIT_MAX) {
-        auto amount = Player::getBuyAmount(id);
-        if (info.level == 0) {
-            ss << "Unlock";
-        }
-        else {
-            ss << "Level Up";
-            if (amount > 1) {
-                ss << " (" << amount << ")";
-            }
-        }
-        buy_button->setHeader(ss.str());
+    // Constantly update cost string if we're on Max
+    if (Player::buy_mode == BuyMode::Max) {
+        info.costString = Util::getFormattedDouble(Player::calculateCost(id));
     }
+    buy_button->setCost(info.costString);
 
-    // Buy Button Opacity
+    // Set Header
+    auto amount = Player::getBuyAmount(id);
+    if (info.level == 0) {
+        ss << "Unlock";
+    }
+    else {
+        ss << "Level Up";
+        if (amount > 1) {
+            ss << " (" << amount << ")";
+        }
+    }
+    buy_button->setHeader(ss.str());
+
+    // Hide next-next tier
     bool previousTierPurchased = (id == BitType::Green) || Player::bit_info[BitType(id - 1)].level > 0;
     if (!previousTierPurchased) {
         if (getOpacity() > 0) setOpacity(0);
         buy_button->setTouchEnabled(false);
     }
     else {
+        buy_button->setTouchEnabled(true);
+
         // Show the next tier, faded out
         if (info.level == 0 && Player::bits < info.cost) {
             if (getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
                 setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
         }
         else {
-            buy_button->setTouchEnabled(true);
             if (getOpacity() != 255) setOpacity(255);
             if (Player::bits < info.cost) {
                 if (buy_button->getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)

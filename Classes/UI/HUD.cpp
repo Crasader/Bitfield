@@ -154,10 +154,10 @@ void HUD::setPanel(PanelID id) {
         auto panel = getChildByTag(id);
         panel->setVisible(!panel->isVisible());
         if (panel->isVisible()) {
-            world->offsetCameraForPanelIsVisible(false);
+            world->offsetCameraForPanelIsVisible(true);
         }
         else {
-            world->offsetCameraForPanelIsVisible(true);
+            world->offsetCameraForPanelIsVisible(false);
         }
     }
     else {
@@ -166,7 +166,7 @@ void HUD::setPanel(PanelID id) {
         currentPanel = id;
         oldPanel->setVisible(false);
         newPanel->setVisible(true);
-        world->offsetCameraForPanelIsVisible(false);
+        world->offsetCameraForPanelIsVisible(true);
     }
 
     // Change appearance of selected and unselected tabs

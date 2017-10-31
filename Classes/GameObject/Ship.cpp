@@ -395,7 +395,7 @@ void Ship::addValuePopup(Bit* bit)
     auto world = getParent();
 
     //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
-    auto popup = Label::createWithTTF(Player::bit_info[bit->getType()].valueString, FONT_DEFAULT, 40);
+    auto popup = Label::createWithTTF(Player::bit_info[bit->getType()].valueString, FONT_DEFAULT, 52);
     auto c = Color3B(Player::bit_info[bit->getType()].color);
     popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
     popup->setPosition(bit->getPosition());

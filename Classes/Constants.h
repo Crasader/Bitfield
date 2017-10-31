@@ -9,9 +9,9 @@
 //---- DEVELOPER
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
-static const bool USE_SAVE = true;
+static const bool USE_SAVE = false;
 static const bool DEBUG_SHIP = false;
-static const bool SHOW_FPS = false;
+static const bool SHOW_FPS = true;
 
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
@@ -27,11 +27,12 @@ static const std::string BIT_STRINGS[] = {
 };
 
 //---- WORLD
-static const int WORLD_WIDTH = 10000;
-static const int WORLD_HEIGHT = 10000;
+static const int WORLD_WIDTH = 12000;
+static const int WORLD_HEIGHT = 12000;
 static const int WORLD_OFFSET = GAME_WIDTH / 2;
 static const int GRID_RESOLUTION = 40;
 static const int GRID_SIZE = WORLD_WIDTH / GRID_RESOLUTION;
+static const int VISUAL_GRID_RESOLUTION = 40;
 static const float GRID_WIDTH = WORLD_WIDTH / GRID_SIZE;
 static const float GRID_HEIGHT = WORLD_HEIGHT / GRID_SIZE;
 static const float BIT_SCALE = 0.25f;
@@ -55,6 +56,7 @@ static const int SCROLL_HEIGHT = 591;
 static const int PANEL_Y = 98;
 static const int UI_CENTER_X = GAME_WIDTH / 2;
 static const int UI_CENTER_Y = GAME_HEIGHT / 2;
+static const cocos2d::Vec2 VEC_ZERO(0, 0);
 static const cocos2d::Vec2 VEC_CENTER(0.5f, 0.5f);
 static const cocos2d::Vec2 ANCHOR_CENTER_BOTTOM(0.5f, 0);
 static const cocos2d::Vec2 ANCHOR_BL(0, 0);
@@ -93,6 +95,13 @@ static const std::string TAB_ICONS[NUM_TABS] = {
     "sprites/ship.png",
     "sprites/ship.png",
     "sprites/diamond.png"
+};
+
+static const cocos2d::Vec2 POLYGON_VERTS[4] = {
+    cocos2d::Vec2(1, 0),
+    cocos2d::Vec2(0, 1),
+    cocos2d::Vec2(1, 2),
+    cocos2d::Vec2(2, 1)
 };
 
 #endif // __CONSTANTS_H__
