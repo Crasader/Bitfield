@@ -19,14 +19,14 @@ public:
     virtual void handleCollisions();
     void applyForce(cocos2d::Vec2 force, float scale = 1);
 
-    cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowDown = false);
+    cocos2d::Vec2 seek(cocos2d::Vec2 target);
     cocos2d::Vec2 align();
     cocos2d::Vec2 cohesion();
     cocos2d::Vec2 separate();
     cocos2d::Vec2 wander();
     cocos2d::Vec2 seekBits();
-    cocos2d::Vec2 stayWithin();
-    cocos2d::Vec2 stayGrouped();
+    cocos2d::Vec2 avoidWalls();
+    cocos2d::Vec2 followLeader();
 
     void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
     void setBits(Grid* bits);
@@ -38,7 +38,7 @@ public:
     const cocos2d::Vec2& getAcceleration();
     Bit* getTargetBit();
     const std::string& getType();
-    cocos2d::Vec2 getCenterOfSquadron(const cocos2d::Vector<Ship*>& neighbours);
+    cocos2d::Vec2 getCenterOfSquadron();
 
     cocos2d::Vec2 velocity;
     cocos2d::Vec2 acceleration;

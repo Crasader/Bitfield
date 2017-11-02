@@ -26,8 +26,14 @@ public:
     virtual void update(float delta);
 
     void addBit(BitType type);
+    void addGridSquare(cocos2d::Vec2 pos);
+
     void offsetCameraForPanelIsVisible(bool visible);
     bool cameraContains(cocos2d::Vec2 point);
+
+    static bool worldContains(cocos2d::Vec2 point);
+    static cocos2d::Vec2 getCellInGrid(cocos2d::Vec2 pos);
+    static cocos2d::Vec2 getPositionInGrid(cocos2d::Vec2 pos);
 
 private:
     Fleet fleet;

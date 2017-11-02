@@ -162,8 +162,8 @@ void HUD::setPanel(PanelID id) {
     auto actionShow = Sequence::create(
         Show::create(),
         Spawn::create(
-            EaseBackOut::create(MoveTo::create(0.35f, Vec2(UI_CENTER_X, 730))),
-            EaseSineIn::create(FadeIn::create(0.1f)),
+            EaseBackOut::create(MoveTo::create(0.25f, Vec2(UI_CENTER_X, 730))),
+            EaseSineIn::create(FadeIn::create(0.15f)),
             nullptr
         ),
         nullptr
@@ -172,7 +172,7 @@ void HUD::setPanel(PanelID id) {
     auto actionHide = Sequence::create(
         Spawn::create(
             EaseSineIn::create(MoveTo::create(0.25f, Vec2(UI_CENTER_X, 0))),
-            EaseSineIn::create(FadeOut::create(0.1f)),
+            EaseSineIn::create(FadeOut::create(0.15f)),
             nullptr
         ),
         Hide::create(),

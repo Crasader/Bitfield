@@ -1,11 +1,12 @@
 #include "World.h"
 
 #include "Util.h"
-#include "..\Constants.h"
-#include "..\Scene\GameScene.h"
-#include "..\GameObject\SquadronFactory.h"
-#include "..\GameObject\Bit.h"
-#include "..\GameObject\Ship.h"
+#include "Input.h"
+#include "Constants.h"
+#include "Scene\GameScene.h"
+#include "GameObject\SquadronFactory.h"
+#include "GameObject\Bit.h"
+#include "GameObject\Ship.h"
 #include "ui\UIText.h"
 
 USING_NS_CC;
@@ -24,10 +25,9 @@ World* World::create() {
 
 void World::onEnter() {
     Layer::onEnter();
-
     scheduleUpdate();
-    setCascadeOpacityEnabled(true);
     setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
+    setCascadeOpacityEnabled(true);
 
     createBackground();
     createInput();
@@ -43,12 +43,6 @@ void World::onExit() {
 
 void World::update(float delta) {
     Layer::update(delta);
-
-    // Touch and Hold event
-    if (Util::touch_down) {
-        Util::touch_location = Util::capVector(Util::touch_location_original - getPosition(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    }
-
     updateBackground();
     updateGrid();
     updateFleet(delta);
@@ -59,8 +53,6 @@ void World::update(float delta) {
 void World::updateBackground()
 {
     auto parallax = getChildByName("parallax");
-
-    //std::function<void(Node*, Vec2, int, Color4F, float)> spawnPoly;
     auto spawnPoly = [&](Node* layer, Vec2 pos, int size, Color4F color, float a) {
         auto poly = DrawNode::create();
         poly->drawSolidPoly(POLYGON_VERTS, 4, color);
@@ -76,7 +68,7 @@ void World::updateBackground()
                 EaseExponentialInOut::create(FadeTo::create(2.f, 255 * a)),
                 nullptr
             ),
-            DelayTime::create(0.75f),
+            DelayTime::create(1.f),
             Spawn::create(
                 EaseExponentialInOut::create(ScaleTo::create(1.f, 0)),
                 EaseExponentialInOut::create(FadeOut::create(1.f)),
@@ -106,10 +98,10 @@ void World::updateBackground()
         }
     };
 
-    addPolygons("layer1", 4, 0.9f, 150, 50, 0.35f);
-    addPolygons("layer2", 6, 0.88f, 75, 25, 0.3f);
-    addPolygons("layer3", 8, 0.86f, 25, 25, 0.25f);
-    addPolygons("layer4", 10, 0.84f, 10, 15, 0.2f);
+    addPolygons("layer1", 6, 0.9f, 150, 40, 0.55f);
+    addPolygons("layer2", 8, 0.88f, 75, 45, 0.5f);
+    addPolygons("layer3", 10, 0.86f, 35, 15, 0.45f);
+    addPolygons("layer4", 14, 0.86f, 10, 10, 0.4f);
 }
 
 void World::updateCamera()
@@ -119,7 +111,6 @@ void World::updateCamera()
     auto camera = getChildByName("camera");
     auto cameraOffset = getChildByName("cameraOffset");
     camera->setPosition(ship->getPosition() - cameraOffset->getPosition());
-    cocos2d::log("%.2f", cameraOffset->getPositionY());
 }
 
 void World::updateGrid()
@@ -179,7 +170,7 @@ void World::updateFleet(float delta) {
 
                 // Also add streak
                 auto colorIndex = shipID % 7;
-                auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), SPRITE_STREAK);
+                auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
@@ -189,7 +180,6 @@ void World::updateFleet(float delta) {
         // Ships don't exist in the world, so spawn them
         if (ships.empty()) {
             addShips(ships, streaks, count);
-            //if (squadronID == 0) offsetCameraForPanelIsVisible(true);
         }
         else if (ships.size() < count) {
             // Need more ships, add to world
@@ -214,7 +204,7 @@ void World::updateBits(float delta) {
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
         auto& info = Player::bit_info[type];
-        if (info.level < 1 /*|| info.spawned == info.capacity*/) continue;
+        if (info.level < 1) continue;
 
         info.timer += delta;
         if (info.timer >= info.spawnTime) {
@@ -222,7 +212,6 @@ void World::updateBits(float delta) {
                 info.spawned++;
             }
             else {
-                // Keep?
                 Player::addBits(Player::calculateValue(type) / 2.0f);
             }
             info.timer = 0;
@@ -249,10 +238,31 @@ void World::addBit(BitType type) {
     grid.at(row).at(col).pushBack(bit);
 }
 
+static int num_squares = 0;
+void World::addGridSquare(cocos2d::Vec2 pos)
+{
+    if (!worldContains(pos) || num_squares > 10) return;
+
+    auto square = DrawNode::create();
+    square->drawSolidRect(Vec2(0, 0), Vec2(GRID_SIZE, GRID_SIZE), Color4F::WHITE);
+    square->setPosition(getPositionInGrid(pos));
+    square->setOpacity(255 * 0.2f);
+    square->runAction(Sequence::create(
+        EaseSineInOut::create(FadeOut::create(0.5f)),
+        RemoveSelf::create(),
+        CallFunc::create([&]() {
+            num_squares--;
+        }),
+        nullptr
+        ));
+    addChild(square);
+    num_squares++;
+}
+
 void World::offsetCameraForPanelIsVisible(bool visible) {
     auto cameraOffset = getChildByName("cameraOffset");
     if (visible) {
-        cameraOffset->runAction(EaseSineOut::create(MoveTo::create(0.3f, Vec2(0, 350))));
+        cameraOffset->runAction(EaseBackOut::create(MoveTo::create(0.3f, Vec2(0, 350))));
     }
     else {
         cameraOffset->runAction(EaseSineOut::create(MoveTo::create(0.3f, VEC_ZERO)));
@@ -263,6 +273,28 @@ bool World::cameraContains(cocos2d::Vec2 point)
 {
     auto rect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
     return (rect.containsPoint(point));
+}
+
+bool World::worldContains(cocos2d::Vec2 point)
+{
+    return point.x > 0
+        && point.x < WORLD_WIDTH
+        && point.y > 0
+        && point.y < WORLD_HEIGHT;
+}
+
+cocos2d::Vec2 World::getCellInGrid(cocos2d::Vec2 pos)
+{
+    int gridX = pos.x / GRID_SIZE;
+    int gridY = pos.y / GRID_SIZE;
+    return Vec2(gridX, gridY);
+}
+
+cocos2d::Vec2 World::getPositionInGrid(cocos2d::Vec2 pos)
+{
+    auto gridPos = getCellInGrid(pos);
+    gridPos.scale(GRID_SIZE);
+    return gridPos;
 }
 
 void World::createBackground() {
@@ -282,18 +314,18 @@ void World::createBackground() {
         drawNode->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
         drawNode->setAnchorPoint(Vec2(0.5f, 0.5f));
         Color4F lineColor(1, 1, 1, 0.2f);
-        for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / VISUAL_GRID_RESOLUTION) {
+        for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / GRID_RESOLUTION) {
             Vec2 o = Vec2(x, 0);
             Vec2 d = Vec2(x, getContentSize().height);
             drawNode->drawLine(o, d, lineColor);
 
-            for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / VISUAL_GRID_RESOLUTION) {
+            for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
                 auto nodeSize = 4;
                 drawNode->drawSolidRect(Vec2(x - nodeSize, y - nodeSize),
-                    Vec2(x + nodeSize, y + nodeSize), lineColor);//drawSolidCircle(o + Vec2(0, GRID_SIZE * i), 2, 0, 4, Color4F(1, 1, 1, 0.14f));
+                    Vec2(x + nodeSize, y + nodeSize), lineColor);
             }
         }
-        for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / VISUAL_GRID_RESOLUTION) {
+        for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
             Vec2 o(0, y);
             Vec2 d(getContentSize().width, y);
             drawNode->drawLine(o, d, lineColor);
@@ -321,21 +353,20 @@ void World::createBackground() {
 void World::createInput() {
     // Touch
     auto touch = EventListenerTouchOneByOne::create();
-    touch->onTouchBegan = [this](Touch* touch, Event* event) {
-        Util::touch_down = true;
-        Util::touch_location = Util::capVector(touch->getLocation(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        Util::touch_location_original = touch->getLocation();
+    touch->onTouchBegan = [=](Touch* touch, Event* event) {
         return true;
     };
-    touch->onTouchMoved = [this](Touch* touch, Event* event) {
-        Util::touch_location = Util::capVector(touch->getLocation(), 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        Util::touch_location_original = touch->getLocation();
+    touch->onTouchMoved = [=](Touch* touch, Event* event) {
+        return true;
     };
-    touch->onTouchCancelled = [](Touch* touch, Event* event) {
-        Util::touch_down = false;
+    touch->onTouchCancelled = [=](Touch* touch, Event* event) {
+        return true;
     };
     touch->onTouchEnded = [=](Touch* touch, Event* event) {
-        Util::touch_down = false;
+        if (Input::touch_time < Input::TAP_TIME) {
+            addGridSquare(touch->getLocation() - getPosition());
+        }
+        return true;
     };
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
 }
@@ -368,13 +399,10 @@ void World::createCamera()
 
 void World::initBits()
 {
-    for (int i = 0; i < 7; i++) {
-        bits_spawned[i] = 0;
-    }
-
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
         auto& info = Player::bit_info[type];
+        bits_spawned[i] = 0;
         if (info.level == 0) continue;
         while (bits_spawned[type] < Player::bit_info[type].spawned) {
             addBit(type);

@@ -16,7 +16,10 @@ public:
     virtual void update(float delta) override;
 
 private:
+    void updateInput(float delta);
+
     // Initialization
+    void createInput();
     void createWorld();
     void createHUD();
 };

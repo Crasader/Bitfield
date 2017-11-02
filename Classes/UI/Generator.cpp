@@ -54,7 +54,7 @@ void Generator::update(float delta) {
 }
 
 void Generator::addBackground() {
-    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);// UI_COLOR_2);
     addChild(background);
 }
 
@@ -339,7 +339,13 @@ void Generator::updateBuyButton()
         info.cost = cost;
         info.costString = Util::getFormattedDouble(cost);
     }
-    buy_button->setCost(info.costString);
+
+    if (info.cost >= BIT_MAX) {
+        buy_button->setCost("N/A");
+    }
+    else {
+        buy_button->setCost(info.costString);
+    }
 
     // Set Header
     auto amount = Player::getBuyAmount(id);

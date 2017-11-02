@@ -177,8 +177,8 @@ void Player::loadSquadrons() {
         const auto& item = category[i];
         auto type = item["type"].GetString();
 
-        // Load defaults and overwrite any differences
-        SquadronInfo info = squadron_defaults["Default"];
+        // Load in the info
+        SquadronInfo info = squadron_defaults[type];
         for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
             auto key = it->name.GetString();
             const auto& value = it->value;
@@ -191,6 +191,29 @@ void Player::loadSquadrons() {
             }
             else if (value.IsDouble()) {
                 info.doubles[key] = value.GetDouble();
+            }
+        }
+
+        // Fill in any gaps with defaults
+        SquadronInfo defaults = squadron_defaults["Default"];
+        for (auto& pair : defaults.strings) {
+            auto key = pair.first;
+            if (info.strings.find(key) == info.strings.end()) {
+                info.strings[key] = defaults.strings[key];
+            }
+        }
+
+        for (auto& pair : defaults.doubles) {
+            auto key = pair.first;
+            if (info.doubles.find(key) == info.doubles.end()) {
+                info.doubles[key] = defaults.doubles[key];
+            }
+        }
+
+        for (auto& pair : defaults.ints) {
+            auto key = pair.first;
+            if (info.ints.find(key) == info.ints.end()) {
+                info.ints[key] = defaults.ints[key];
             }
         }
 
@@ -357,7 +380,7 @@ double Player::calculateCost(BitType type) {
 }
 double Player::calculateValue(BitType type) {
     auto info = bit_info[type];
-    return std::min(std::max(1, info.level) * info.baseValue * info.valueMultiplier * Player::all_multiplier, BIT_MAX);
+    return std::min(std::max(1, info.level) * info.baseValue * info.valueMultiplier * Player::all_multiplier, BIT_INF);
 }
 int Player::getBuyAmount(BitType type) {
     auto info = bit_info[type];
