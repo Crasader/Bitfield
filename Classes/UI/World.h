@@ -19,10 +19,7 @@ class World : public cocos2d::Layer
 {
 public:
     static World* create();
-
-    virtual void onEnter() override;
-    virtual void onExit() override;
-
+    virtual bool init() override;
     virtual void update(float delta);
 
     void addBit(BitType type);
@@ -45,9 +42,12 @@ private:
     float cameraOffset;
 
     void createBackground();
+    void createBackgroundGrid();
     void createInput();
     void createGrid();
     void createCamera();
+    void createPolygon(const std::string& layerName, cocos2d::Vec2 pos,
+        int limit, int sizeMin, int sizeDelta, float alpha, float spread);
     void initBits();
     
     void updateBackground();

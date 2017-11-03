@@ -33,7 +33,7 @@ bool Generator::init() {
     setCascadeOpacityEnabled(true);
     setContentSize(Size(984, 134));
 
-    addBackground();
+    createBackground();
     addIcon();
     addLevelBar();
     addName();
@@ -53,8 +53,9 @@ void Generator::update(float delta) {
     updateBuyButton();
 }
 
-void Generator::addBackground() {
+void Generator::createBackground() {
     auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);// UI_COLOR_2);
+    background->setOpacity(OPACITY_UI);
     addChild(background);
 }
 
@@ -150,34 +151,24 @@ void Generator::addBuyButton() {
     buy_button->setColor(Color3B(UI_COLOR_1));
     buy_button->setHeaderColor(Player::bit_info[id].color);
     buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
-
-    buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
-        if (type == ui::Widget::TouchEventType::BEGAN) {
-            buy_button->setScale(1.05f);
-        }
-        if (type == ui::Widget::TouchEventType::CANCELED) {
-            buy_button->setScale(1.0f);
-        }
-        if (type == ui::Widget::TouchEventType::ENDED) {
-            buy_button->setScale(1.0f);
-            auto oldLevel = Player::bit_info[id].level;
-            auto nextTier = Player::getNextTier(id);
-            auto didPurchase = Player::purchaseBitUpgrade(id);
-            if (didPurchase) {
-                if (oldLevel == 0 && id >= BitType::Yellow && id < BitType::Indigo) {
-                    // Purchased new resource, expand scrollview
-                    auto scrollView = (ui::ScrollView*)getParent()->getParent();
-                    auto oldSize = scrollView->getInnerContainerSize();
-                    auto newSize = Size(oldSize.width, oldSize.height + 150);
-                    scrollView->setInnerContainerSize(newSize);
-                    scrollView->jumpToBottom();
-                }
-                if (Player::bit_info[id].level >= nextTier) {
-                    addLevelUp();
-                }
+    buy_button->onPurchase = [=]() {
+        auto oldLevel = Player::bit_info[id].level;
+        auto nextTier = Player::getNextTier(id);
+        auto didPurchase = Player::purchaseBitUpgrade(id);
+        if (didPurchase) {
+            if (oldLevel == 0 && id >= BitType::Yellow && id < BitType::Indigo) {
+                // Purchased new resource, expand scrollview
+                auto scrollView = (ui::ScrollView*)getParent()->getParent();
+                auto oldSize = scrollView->getInnerContainerSize();
+                auto newSize = Size(oldSize.width, oldSize.height + 150);
+                scrollView->setInnerContainerSize(newSize);
+                scrollView->jumpToBottom();
+            }
+            if (Player::bit_info[id].level >= nextTier) {
+                addLevelUp();
             }
         }
-    });
+    };
 
     addChild(buy_button, 0, "buy_button");
 }

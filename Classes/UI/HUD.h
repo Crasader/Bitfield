@@ -16,20 +16,26 @@ public:
     virtual bool init();
     void setWorld(World* world);
 
-    virtual void onEnter() override;
-    virtual void onExit() override;
-
     virtual void update(float delta);
+    
+    void addPanel(cocos2d::Node* panel, PanelID id);
+    void showPanel(PanelID id);
+    void hidePanel(PanelID id);
+    void togglePanel(PanelID id);
 
-    void setPanel(PanelID id);
+    void unlockFleet();
+
+    cocos2d::Node* getTab(PanelID id);
 
 private:
     World* world;
-    PanelID currentPanel;
 
-    void addBitCounter();
-    void addPanels();
-    void addTabs();
+    void createCounter();
+    void createPanels();
+    void createTabs();
+    void createEventListener();
+
+    void updateCounter();
 };
 
 #endif // __HUD_H__

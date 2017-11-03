@@ -16,14 +16,13 @@ bool SplashScene::init() {
     }
     scheduleUpdate();
 
-    Player::load();
     createBackground();
     createLabels();
     return true;
 }
 
 void SplashScene::update(float delta) {
-    const float LOAD_TIME = 1.0f;
+    const float LOAD_TIME = 1.2f;
 
     if (transitioning) return;
 
@@ -31,9 +30,12 @@ void SplashScene::update(float delta) {
     if (totalTime >= LOAD_TIME) {
         totalTime = LOAD_TIME;
 
-        // Fade background
-        auto drawNode = getChildByName<DrawNode*>("drawNode");
-        drawNode->runAction(FadeOut::create(1.0f));
+        Player::load();
+        auto nextScene = GameScene::create();
+
+        //// Fade background
+        //auto drawNode = getChildByName<DrawNode*>("drawNode");
+        //drawNode->runAction(FadeOut::create(1.0f));
 
         // Fade out each letter
         auto title = getChildByName<Label*>("title");
@@ -43,8 +45,7 @@ void SplashScene::update(float delta) {
             letter->runAction(actions);
         }
 
-        auto nextScene = GameScene::create();
-        Director::getInstance()->replaceScene(TransitionFade::create(1, nextScene));
+        Director::getInstance()->replaceScene(TransitionFade::create(1.f, nextScene));
         transitioning = true;
     }
 }
@@ -56,6 +57,8 @@ void SplashScene::createBackground() {
     // Create solid rect as background, fade in
     auto drawNode = DrawNode::create();
     drawNode->drawSolidRect(origin, Vec2(visibleSize.width, visibleSize.height), Color4F(WORLD_COLOR));
+    drawNode->setOpacity(0);
+    drawNode->runAction(EaseSineInOut::create(FadeIn::create(0.25f)));
     addChild(drawNode, 0, "drawNode");
 }
 
@@ -73,7 +76,7 @@ void SplashScene::createLabels() {
     for (int i = 0; i < title->getStringLength(); i++) {
         auto letter = title->getLetter(i);
         letter->setOpacity(0);
-        auto actions = Sequence::createWithTwoActions(DelayTime::create(0.05f * i), FadeIn::create(0.15f));
+        auto actions = Sequence::createWithTwoActions(DelayTime::create(0.25f + 0.05f * i), FadeIn::create(0.15f));
         letter->runAction(actions);
     }
 }

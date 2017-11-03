@@ -12,5 +12,8 @@ public:
     static cocos2d::Vec2 touch_start;
     static cocos2d::Vec2 touch_end;
     static float touch_time;
+
+    static cocos2d::EventListenerTouchOneByOne* createTouchListener();
+    static cocos2d::EventListenerTouchOneByOne* createTouchUpdater();
 };
 

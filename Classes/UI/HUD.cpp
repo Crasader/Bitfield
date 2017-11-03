@@ -39,6 +39,12 @@ bool HUD::init() {
     if (!Layer::init()) {
         return false;
     }
+    scheduleUpdate();
+
+    createCounter();
+    createPanels();
+    createTabs();
+    createEventListener();
 
     return true;
 }
@@ -47,36 +53,107 @@ void HUD::setWorld(World* world) {
     this->world = world;
 }
 
-void HUD::onEnter() {
-    Layer::onEnter();
-    scheduleUpdate();
-
-    addBitCounter();
-    addPanels();
-    addTabs();
-    
-    currentPanel = PanelID::Bits;
-    setPanel(PanelID::Bits);
-}
-
-void HUD::onExit() {
-    Layer::onExit();
-    unscheduleUpdate();
-}
-
 void HUD::update(float delta) {
     Layer::update(delta);
-
-    // Update Bit Counter
-    auto bit_counter_layer = getChildByName("bit_counter_layer");
-    auto icon = bit_counter_layer->getChildByName("icon");
-    auto counter = bit_counter_layer->getChildByName<ui::Text*>("counter");
-    counter->setString(Util::getFormattedDouble(Player::bits));
-    bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
-        counter->getContentSize().height));
+    updateCounter();
 }
 
-void HUD::addBitCounter() {
+void HUD::addPanel(cocos2d::Node* panel, PanelID id)
+{
+    auto clip = ClippingRectangleNode::create(Rect(0, 98, GAME_WIDTH, GAME_HEIGHT));
+    clip->setContentSize(Size(GAME_WIDTH, GAME_HEIGHT));
+    clip->setPosition(Vec2(0, 0));
+
+    panel->setAnchorPoint(Vec2(0.5f, 1));
+    panel->setPosition(Vec2(UI_CENTER_X, 98));
+    panel->setVisible(false);
+
+    clip->addChild(panel, 0, "panel");
+    addChild(clip, 0, id);
+}
+
+void HUD::showPanel(PanelID id) {
+    auto panel = getChildByTag(id)->getChildByName("panel");
+    //if (panel->getNumberOfRunningActions() > 0 || panel->isVisible()) return;
+
+    // Hide other panels
+    for (int i = 0; i < 5; i++) {
+        if (i == id || i > 1) continue;
+        hidePanel(PanelID(i));
+    }
+
+    // Show this one
+    panel->runAction(Sequence::create(
+        Show::create(),
+        Spawn::create(
+            EaseBackOut::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, 730))),
+            EaseSineIn::create(FadeIn::create(0.1f)),
+            nullptr
+        ),
+        nullptr
+    ));
+
+    world->offsetCameraForPanelIsVisible(true);
+}
+
+void HUD::hidePanel(PanelID id)
+{
+    auto panel = getChildByTag(id)->getChildByName("panel");
+    //if (panel->getNumberOfRunningActions() > 0 || !panel->isVisible()) return;
+
+    panel->runAction(Sequence::create(
+        Spawn::create(
+            EaseSineIn::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, 98))),
+            EaseSineIn::create(FadeOut::create(0.1f)),
+            nullptr
+        ),
+        Hide::create(),
+        nullptr
+    ));
+
+    world->offsetCameraForPanelIsVisible(false);
+}
+
+void HUD::togglePanel(PanelID id)
+{
+    auto panel = getChildByTag(id)->getChildByName("panel");
+    if (panel->getNumberOfRunningActions() > 0) return;
+    if (panel->isVisible()) {
+        hidePanel(id);
+    }
+    else {
+        showPanel(id);
+    }
+}
+
+void HUD::unlockFleet()
+{
+    auto clip = getChildByTag(PanelID::Squadron);
+    auto panel = clip->getChildByName("panel");
+    panel->runAction(Sequence::create(
+        Spawn::create(
+            EaseSineIn::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, 98))),
+            EaseSineIn::create(FadeOut::create(0.1f)),
+            nullptr
+        ),
+        RemoveSelf::create(false),
+        CallFunc::create([=]() {
+            clip->removeFromParentAndCleanup(true);
+            addPanel(FleetPanel::create(), PanelID::Squadron);
+            showPanel(PanelID::Squadron);
+        }),
+        nullptr
+    ));
+}
+
+cocos2d::Node* HUD::getTab(PanelID id)
+{
+    auto tab_layer = getChildByName("tab_layer");
+    auto tab_button = tab_layer->getChildByTag(id);
+    return tab_button;
+}
+
+void HUD::createCounter() {
     auto bit_counter_layer = ui::HBox::create(Size(400, 90));
     bit_counter_layer->setAnchorPoint(Vec2(0.5f, 0.5f));
     bit_counter_layer->setPosition(Vec2(GAME_WIDTH * 0.5f, GAME_HEIGHT * 0.92f));
@@ -93,43 +170,27 @@ void HUD::addBitCounter() {
     bit_counter_layer->addChild(counter, 0, "counter");
 }
 
-void HUD::addPanels()
+void HUD::createPanels()
 {
-    auto addCentered = [=](cocos2d::Node* node, PanelID id) {
-        auto clip = ClippingRectangleNode::create(Rect(0, 98, GAME_WIDTH, GAME_HEIGHT));
-        clip->setContentSize(Size(GAME_WIDTH, GAME_HEIGHT));
-        clip->setPosition(Vec2(0, 0));
-
-        node->setAnchorPoint(Vec2(0.5f, 1));
-        node->setPosition(Vec2(UI_CENTER_X, 0));
-        node->setVisible(false);
-        clip->addChild(node, 0, "panel");
-        addChild(clip, 0, id);
-    };
-
-    addCentered(BitsPanel::create(), PanelID::Bits);
-    if (Player::squadrons[0].ints["count"] < 7)
-        addCentered(SquadronPanel::create(), PanelID::Squadron);
+    addPanel(BitsPanel::create(), PanelID::Bits);
+    if (Player::squadrons[0].ints["count"] < 7) // TODO: faulty condition
+        addPanel(SquadronPanel::create(), PanelID::Squadron);
     else
-        addCentered(FleetPanel::create(), PanelID::Squadron);
+        addPanel(FleetPanel::create(), PanelID::Squadron);
 }
 
-void HUD::addTabs() {
+void HUD::createTabs() {
     auto tab_layer = Layer::create();
     addChild(tab_layer, 0, "tab_layer");
 
     // Create tab buttons
     for (int i = 0; i < 5; i++) {
-        auto tab_button = ui::Button::create(UI_ROUNDED_RECT);
-        tab_button->setScale9Enabled(true);
-        tab_button->setContentSize(Size(200, 82));
-        tab_button->setColor(Color3B(UI_COLOR_1));
-        tab_button->setCascadeOpacityEnabled(true);
-        tab_button->setAnchorPoint(Vec2(0, 0));
+        auto tab_button = Util::createRoundedButton(UI_ROUNDED_RECT, Size(200, 82), UI_COLOR_1);
         tab_button->setPosition(Vec2(16 + 212 * i, 8));
+        tab_button->setOpacity(OPACITY_UI_TABS);
         tab_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
             if (type == ui::Widget::TouchEventType::ENDED) {
-                if (i == 0 || i == 1) setPanel(PanelID(i));
+                if (i == 0 || i == 1) togglePanel(PanelID(i));
                 if (i == 2) Player::bits = 0;
                 if (i == 3) {
                     auto sum = 0;
@@ -154,68 +215,30 @@ void HUD::addTabs() {
     }
 }
 
-void HUD::setPanel(PanelID id) {
-    auto oldPanel = getChildByTag(currentPanel)->getChildByName("panel");
-    auto newPanel = getChildByTag(id)->getChildByName("panel");
-    if (oldPanel->getNumberOfRunningActions() > 0) return;
+void HUD::createEventListener()
+{
+    // Popup Squadron Panel when we have enough money
+    auto l_first_ship = EventListenerCustom::create(EVENT_FIRST_SHIP, [=](EventCustom* event) {
+        showPanel(PanelID::Squadron);
+        getEventDispatcher()->removeCustomEventListeners(EVENT_FIRST_SHIP);
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
 
-    auto actionShow = Sequence::create(
-        Show::create(),
-        Spawn::create(
-            EaseBackOut::create(MoveTo::create(0.25f, Vec2(UI_CENTER_X, 730))),
-            EaseSineIn::create(FadeIn::create(0.15f)),
-            nullptr
-        ),
-        nullptr
-    );
+    // Hide Squadron and create Fleet
+    auto l_fleet_unlock = EventListenerCustom::create(EVENT_FLEET_UNLOCK, [=](EventCustom* event) {
+        unlockFleet();
+        getEventDispatcher()->removeCustomEventListeners(EVENT_FLEET_UNLOCK);
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
+}
 
-    auto actionHide = Sequence::create(
-        Spawn::create(
-            EaseSineIn::create(MoveTo::create(0.25f, Vec2(UI_CENTER_X, 0))),
-            EaseSineIn::create(FadeOut::create(0.15f)),
-            nullptr
-        ),
-        Hide::create(),
-        nullptr
-    );
-
-    if (currentPanel == id) {
-        // Selecting same tab
-        if (oldPanel->isVisible()) {
-            oldPanel->runAction(actionHide);
-            world->offsetCameraForPanelIsVisible(false);
-        }
-        else {
-            oldPanel->runAction(actionShow);
-            world->offsetCameraForPanelIsVisible(true);
-        }
-    }
-    else {
-        // Selecting different tab
-        currentPanel = id;
-        oldPanel->runAction(actionHide);
-        newPanel->runAction(actionShow);
-        world->offsetCameraForPanelIsVisible(true);
-    }
-
-    // Change appearance of selected and unselected tabs
-    auto tab_layer = getChildByName("tab_layer");
-    for (int i = 0; i < 5; i++) {
-        auto tab_button = tab_layer->getChildByTag<ui::Button*>(i);
-
-        ///////////
-        if (i > 1) {
-            tab_button->setOpacity(255 * 0.5f);
-            continue;
-        }
-        ////////////////////
-
-        auto panel = getChildByTag(i)->getChildByName("panel");
-        if (currentPanel == i) {
-            tab_button->setOpacity(255);
-        }
-        else {
-            tab_button->setOpacity(255 * 0.5f);
-        }
-    }
+void HUD::updateCounter()
+{
+    // Update Bit Counter
+    auto bit_counter_layer = getChildByName("bit_counter_layer");
+    auto icon = bit_counter_layer->getChildByName("icon");
+    auto counter = bit_counter_layer->getChildByName<ui::Text*>("counter");
+    counter->setString(Util::getFormattedDouble(Player::bits));
+    bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
+        counter->getContentSize().height));
 }

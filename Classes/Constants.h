@@ -6,12 +6,14 @@
 #include <string>
 #include <vector>
 
+
 //---- DEVELOPER
+#define SHOW_FPS false
+
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
 static const bool USE_SAVE = false;
 static const bool DEBUG_SHIP = false;
-static const bool SHOW_FPS = false;
 
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
@@ -37,9 +39,9 @@ static const float GRID_HEIGHT = WORLD_HEIGHT / GRID_SIZE;
 
 static const float BIT_SCALE = 0.25f;
 
-static const std::string SPRITE_SHIP = "sprites/ship.png";
 static const std::string SPRITE_BIT = "sprites/bit.png";
 static const std::string SPRITE_DIAMOND = "sprites/diamond.png";
+static const std::string SPRITE_STREAK = "sprites/streak.png";
 static const cocos2d::Color4B SHIP_COLOR(225, 255, 255, 255);
 
 //---- BIT COUNTER
@@ -49,8 +51,6 @@ const double BIT_MAX = 9.9999f * pow(10, 278);
 const double BIT_INF = 1.00f * pow(10, 279);
 
 //---- UI
-static const int PANEL_WIDTH = 1048;
-static const int PANEL_HEIGHT = 632;
 static const int SCROLL_WIDTH = 984;
 static const int SCROLL_HEIGHT = 591;
 static const int PANEL_Y = 98;
@@ -70,23 +70,33 @@ static const int BUY_BUTTON_LEVELS_SIZE = 36;
 static const int LEVEL_UP_SIZE = 36;
 static const float BUY_BUTTON_FADE_PERCENT = 0.5f;
 
-static const cocos2d::Color4B WORLD_COLOR(38, 40, 49, 255);
-static const cocos2d::Color4B UI_COLOR_1(28, 29, 35, 255);
-static const cocos2d::Color4B UI_COLOR_2(38, 40, 49, 255);
-static const cocos2d::Color4B UI_COLOR_3(24, 26, 40, 255);
+static const cocos2d::Color4B WORLD_COLOR(38, 40, 51, 255);
+static const cocos2d::Color4F GRID_COLOR(1, 1, 1, 0.2f);
+static const cocos2d::Color4B UI_COLOR_1(28, 29, 37, 255);
+static const cocos2d::Color4B UI_COLOR_2(38, 40, 51, 255);
+static const cocos2d::Color4B UI_COLOR_3(24, 25, 33, 255);
 static const cocos2d::Color4B UI_COLOR_BLUE(79, 137, 196, 255);
 static const cocos2d::Color4B UI_COLOR_RED(197, 114, 114, 255);
 static const cocos2d::Color4B UI_COLOR_WHITE(245, 245, 245, 255);
+static const float OPACITY_FULL = 255;
+static const float OPACITY_HALF = 255 * 0.5f;
+static const float OPACITY_UI = 255 * 0.95f;
+static const float OPACITY_UI_TABS = 255 * 0.8f;
 
+static const std::string UI_ICON_SHIP = "sprites/ship.png";
 static const std::string SPRITE_BLANK = "sprites/blank.png";
-static const std::string SPRITE_CIRCLE = "sprites/circle.png";
-static const std::string SPRITE_SILHOUETTE = "sprites/ship_silhouette.png";
-static const std::string SPRITE_STREAK = "sprites/streak.png";
+static const std::string UI_ICON_CIRCLE = "sprites/circle.png";
+static const std::string UI_ICON_SILHOUETTE = "sprites/ship_silhouette.png";
 static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
 static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";
 static const std::string UI_ICON_CAPACITY = "ui/icon_bit_t1.png";
-static const std::string UI_ICON_SHIP = SPRITE_SHIP;
+
+static const cocos2d::Size UI_SIZE_PANEL(1048, 632);
+static const cocos2d::Size UI_SIZE_PANEL_TABS(1048, 648);
+static const cocos2d::Size UI_SIZE_FLEET_SLOT(128, 144);
+static const cocos2d::Size UI_SIZE_FLEET_PANEL(1010, 296);
+static const cocos2d::Size UI_SIZE_FLEET_BUTTON(495, 128);
 
 static const int NUM_TABS = 5;
 static const std::string TAB_ICONS[NUM_TABS] = {
@@ -103,5 +113,8 @@ static const cocos2d::Vec2 POLYGON_VERTS[4] = {
     cocos2d::Vec2(1, 2),
     cocos2d::Vec2(2, 1)
 };
+
+static const std::string EVENT_FIRST_SHIP = "EVENT_FIRST_SHIP";
+static const std::string EVENT_FLEET_UNLOCK = "EVENT_FLEET_UNLOCK";
 
 #endif // __CONSTANTS_H__

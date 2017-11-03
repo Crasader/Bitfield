@@ -23,8 +23,9 @@ World* World::create() {
     }
 }
 
-void World::onEnter() {
-    Layer::onEnter();
+bool World::init()
+{
+    if (!Layer::init()) return false;
     scheduleUpdate();
     setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
     setCascadeOpacityEnabled(true);
@@ -34,11 +35,8 @@ void World::onEnter() {
     createGrid();
     createCamera();
     initBits();
-}
 
-void World::onExit() {
-    Layer::onExit();
-    unscheduleUpdate();
+    return true;
 }
 
 void World::update(float delta) {
@@ -50,58 +48,55 @@ void World::update(float delta) {
     updateCamera();
 }
 
+void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int sizeMin,
+    int sizeDelta, float alpha, float spread) {
+    auto parallax = getChildByName("parallax");
+    auto layer = parallax->getChildByName(layerName);
+    if (layer->getChildrenCount() >= limit || rand_0_1() > 0.8f) return;
+
+    auto randPos = Vec2(pos.x / WORLD_WIDTH - spread / 2 + rand_0_1() * spread,
+        pos.y / WORLD_HEIGHT - spread / 2 + rand_0_1() * spread);
+    auto color = Color4F(Player::bit_info[BitType(cocos2d::random() % 7)].color);
+    auto size = sizeMin + rand_0_1() * sizeDelta;
+
+    // Create a polygon
+    auto poly = DrawNode::create();
+    poly->drawSolidPoly(POLYGON_VERTS, 4, color);
+    poly->setContentSize(Size(2, 2));
+    poly->setAnchorPoint(VEC_CENTER);
+    poly->setPositionNormalized(randPos);
+    poly->setOpacity(0);
+    poly->setScale(0);
+
+    poly->runAction(Sequence::create(
+        Spawn::create(
+            EaseExponentialInOut::create(ScaleTo::create(2.f, size)),
+            EaseExponentialInOut::create(FadeTo::create(2.f, 255 * alpha)),
+            nullptr
+        ),
+        DelayTime::create(0.8f + rand_0_1() * 0.4f),
+        Spawn::create(
+            EaseExponentialInOut::create(ScaleTo::create(1.f, 0)),
+            EaseExponentialInOut::create(FadeOut::create(1.f)),
+            nullptr
+        ),
+        RemoveSelf::create(),
+        nullptr
+    ));
+    layer->addChild(poly);
+}
+
 void World::updateBackground()
 {
-    auto parallax = getChildByName("parallax");
-    auto spawnPoly = [&](Node* layer, Vec2 pos, int size, Color4F color, float a) {
-        auto poly = DrawNode::create();
-        poly->drawSolidPoly(POLYGON_VERTS, 4, color);
-        poly->setContentSize(Size(2, 2));
-        poly->setAnchorPoint(VEC_CENTER);
-        poly->setPositionNormalized(pos);
-        poly->setOpacity(0);
-        poly->setScale(0);
-
-        poly->runAction(Sequence::create(
-            Spawn::create(
-                EaseExponentialInOut::create(ScaleTo::create(2.f, size)),
-                EaseExponentialInOut::create(FadeTo::create(2.f, 255 * a)),
-                nullptr
-            ),
-            DelayTime::create(1.f),
-            Spawn::create(
-                EaseExponentialInOut::create(ScaleTo::create(1.f, 0)),
-                EaseExponentialInOut::create(FadeOut::create(1.f)),
-                nullptr
-            ),
-            RemoveSelf::create(),
-            nullptr
-        ));
-        layer->addChild(poly);
-    };
-
     Ship* ship = nullptr;
     if (!fleet.empty() && !fleet.at(0).first.empty())
         ship = fleet.at(0).first.at(0);
     if (!ship) return;
 
-    auto addPolygons = [=](const std::string& name, int limit,
-        float chance, int sizeMin, int sizeDelta, float alpha)
-    {
-        auto layer = parallax->getChildByName(name);
-        if (layer->getChildrenCount() < limit && rand_0_1() > chance) {
-            auto pos = Vec2(ship->getPosition().x / WORLD_WIDTH - 0.075f + rand_0_1() * 0.15f,
-                ship->getPosition().y / WORLD_HEIGHT - 0.075f + rand_0_1() * 0.15f);
-            auto color = Color4F(Player::bit_info[BitType(cocos2d::random() % 7)].color);
-            auto size = sizeMin + rand_0_1() * sizeDelta;
-            spawnPoly(layer, pos, size, color, alpha);
-        }
-    };
-
-    addPolygons("layer1", 6, 0.9f, 150, 40, 0.55f);
-    addPolygons("layer2", 8, 0.88f, 75, 45, 0.5f);
-    addPolygons("layer3", 10, 0.86f, 35, 15, 0.45f);
-    addPolygons("layer4", 14, 0.86f, 10, 10, 0.4f);
+    createPolygon("layer1", ship->getPosition(), 10, 150, 40, 0.4f, 0.3f);
+    createPolygon("layer2", ship->getPosition(), 10, 75, 45, 0.35f, 0.25f);
+    createPolygon("layer3", ship->getPosition(), 10, 35, 15, 0.25f, 0.2f);
+    createPolygon("layer4", ship->getPosition(), 10, 10, 10, 0.2f, 0.15f);
 }
 
 void World::updateCamera()
@@ -158,8 +153,11 @@ void World::updateFleet(float delta) {
                 ship->setBits(&grid);
                 ship->setBoundary(Rect(Vec2(0, 0), getContentSize()));
 
-                if (ships.empty()) {
-                    ship->setPosition(Vec2(WORLD_WIDTH / 2, WORLD_HEIGHT / 2));
+                if (squadronID == 0 && shipID == 0) {
+                    ship->setPosition(Vec2(WORLD_WIDTH * 0.5f, WORLD_HEIGHT * 0.5f));
+                }
+                else if (ships.empty()) {
+                    ship->setPosition(Vec2(rand_0_1() * WORLD_WIDTH, rand_0_1() * WORLD_HEIGHT));
                 }
                 else {
                     ship->setPosition(ships.at(0)->getPosition());
@@ -261,6 +259,7 @@ void World::addGridSquare(cocos2d::Vec2 pos)
 
 void World::offsetCameraForPanelIsVisible(bool visible) {
     auto cameraOffset = getChildByName("cameraOffset");
+    cameraOffset->stopAllActions();
     if (visible) {
         cameraOffset->runAction(EaseBackOut::create(MoveTo::create(0.3f, Vec2(0, 350))));
     }
@@ -304,38 +303,8 @@ void World::createBackground() {
     parallax->setIgnoreAnchorPointForPosition(false);
     addChild(parallax, 0, "parallax");
 
-    // Create Background and Grid
-    {
-        auto drawNode = DrawNode::create(1);
-        drawNode->drawSolidRect(Vec2(-WORLD_OFFSET, -WORLD_OFFSET - 730),
-            Vec2(WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (WORLD_OFFSET + 730) * 2),
-            Color4F(WORLD_COLOR));
-
-        drawNode->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
-        drawNode->setAnchorPoint(Vec2(0.5f, 0.5f));
-        Color4F lineColor(1, 1, 1, 0.2f);
-        for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / GRID_RESOLUTION) {
-            Vec2 o = Vec2(x, 0);
-            Vec2 d = Vec2(x, getContentSize().height);
-            drawNode->drawLine(o, d, lineColor);
-
-            for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
-                auto nodeSize = 4;
-                drawNode->drawSolidRect(Vec2(x - nodeSize, y - nodeSize),
-                    Vec2(x + nodeSize, y + nodeSize), lineColor);
-            }
-        }
-        for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
-            Vec2 o(0, y);
-            Vec2 d(getContentSize().width, y);
-            drawNode->drawLine(o, d, lineColor);
-        }
-        drawNode->setName("layer0");
-        parallax->addChild(drawNode, -5, Vec2(1, 1), Vec2(0, 0));
-    }
-
     // Add parallax layers
-    auto addParallaxLayer = [=](const std::string& name, int z, float scale) {
+    auto addLayer = [=](const std::string& name, int z, float scale) {
         auto layer = Layer::create();
         layer->setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
         layer->setAnchorPoint(Vec2(0.5f, 0.5f));
@@ -344,24 +313,76 @@ void World::createBackground() {
         parallax->addChild(layer, z, Vec2(scale, scale),
             Vec2(GAME_WIDTH * 0.5f * (1 - scale), GAME_HEIGHT * 0.5f * (1 - scale)));
     };
-    addParallaxLayer("layer1", -1, 0.96f);
-    addParallaxLayer("layer2", -2, 0.9f);
-    addParallaxLayer("layer3", -3, 0.84f);
-    addParallaxLayer("layer4", -4, 0.78f);
+
+    addLayer("layer0", -99, 1);
+    addLayer("layer1", -1, 0.96f);
+    addLayer("layer2", -2, 0.9f);
+    addLayer("layer3", -3, 0.84f);
+    addLayer("layer4", -4, 0.78f);
+
+    createBackgroundGrid();
+}
+
+void World::createBackgroundGrid()
+{
+    auto parallax = getChildByName("parallax");
+    auto layer = parallax->getChildByName("layer0");
+
+    // Background
+    auto backgroundColor = DrawNode::create();
+    backgroundColor->drawSolidRect(Vec2(-WORLD_OFFSET, -WORLD_OFFSET - 730),
+        Vec2(WORLD_WIDTH + WORLD_OFFSET * 2, WORLD_HEIGHT + (WORLD_OFFSET + 730) * 2),
+        Color4F(WORLD_COLOR));
+    layer->addChild(backgroundColor);
+
+    // Vertical Lines
+    auto verticalLines = DrawNode::create(1);
+    for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / GRID_RESOLUTION) {
+        Vec2 o = Vec2(x, 0);
+        Vec2 d = Vec2(x, -getContentSize().height);
+        verticalLines->drawLine(o, d, GRID_COLOR);
+    }
+    verticalLines->setPositionY(getContentSize().height);
+    verticalLines->setScaleY(0.35f);
+    verticalLines->runAction(EaseSineInOut::create(ScaleTo::create(5.5f, 1)));
+    layer->addChild(verticalLines);
+
+    // Horizontal Lines
+    auto horizontalLines = DrawNode::create(1);
+    for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
+        Vec2 o(0, y);
+        Vec2 d(getContentSize().width, y);
+        horizontalLines->drawLine(o, d, GRID_COLOR);
+    }
+    horizontalLines->setScaleX(0.4f);
+    horizontalLines->runAction(EaseSineInOut::create(ScaleTo::create(5.5f, 1)));
+    layer->addChild(horizontalLines);
+
+    // Grid Dots
+    auto dots = DrawNode::create(1);
+    for (int x = 0; x <= WORLD_WIDTH; x += WORLD_WIDTH / GRID_RESOLUTION) {
+        Vec2 o = Vec2(x, 0);
+        Vec2 d = Vec2(x, getContentSize().height);
+
+        // Dots along the lines
+        for (int y = 0; y <= WORLD_HEIGHT; y += WORLD_HEIGHT / GRID_RESOLUTION) {
+            auto nodeSize = 4;
+            dots->drawSolidRect(Vec2(x - nodeSize, y - nodeSize),
+                Vec2(x + nodeSize, y + nodeSize), GRID_COLOR);
+        }
+    }
+    dots->setOpacity(0);
+    dots->runAction(Sequence::create(
+        DelayTime::create(1.5f),
+        EaseSineInOut::create(FadeIn::create(0.5f)),
+        nullptr
+    ));
+    layer->addChild(dots);
 }
 
 void World::createInput() {
     // Touch
-    auto touch = EventListenerTouchOneByOne::create();
-    touch->onTouchBegan = [=](Touch* touch, Event* event) {
-        return true;
-    };
-    touch->onTouchMoved = [=](Touch* touch, Event* event) {
-        return true;
-    };
-    touch->onTouchCancelled = [=](Touch* touch, Event* event) {
-        return true;
-    };
+    auto touch = Input::createTouchListener();
     touch->onTouchEnded = [=](Touch* touch, Event* event) {
         if (Input::touch_time < Input::TAP_TIME) {
             addGridSquare(touch->getLocation() - getPosition());

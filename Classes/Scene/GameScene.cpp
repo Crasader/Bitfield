@@ -36,30 +36,9 @@ void GameScene::updateInput(float delta)
 
 void GameScene::createInput()
 {
-    // Touch
-    auto touch = EventListenerTouchOneByOne::create();
-    touch->onTouchBegan = [this](Touch* touch, Event* event) {
-        //cocos2d::log("Touch Position: %.2f, %.2f", touch->getLocation().x, touch->getLocation().y);
-        Input::touch_down = true;
-        Input::touch_pos = touch->getLocation();
-        Input::touch_start = touch->getLocation();
-        Input::touch_time = 0;
-        return true;
-    };
-    touch->onTouchMoved = [this](Touch* touch, Event* event) {
-        Input::touch_pos = touch->getLocation();
-        return true;
-    };
-    touch->onTouchCancelled = [](Touch* touch, Event* event) {
-        Input::touch_down = false;
-        return true;
-    };
-    touch->onTouchEnded = [=](Touch* touch, Event* event) {
-        Input::touch_down = false;
-        Input::touch_end = touch->getLocation();
-        return true;
-    };
-    getEventDispatcher()->addEventListenerWithSceneGraphPriority(touch, this);
+    // Update Input
+    auto updater = Input::createTouchUpdater();
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(updater, this);
 
     // Handle Exit
     auto keyboard = EventListenerKeyboard::create();

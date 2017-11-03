@@ -24,6 +24,8 @@ bool PurchaseButton::init(const std::string& path, cocos2d::Size size, IconType 
     setContentSize(size);
     setCascadeOpacityEnabled(true);
     setZoomScale(0);
+    //this->setTouchEnabled(true);
+    onPurchase = []() {};
 
     addHeaderBackground();
     addHeader();
@@ -59,6 +61,25 @@ void PurchaseButton::setCost(const std::string& cost)
     auto labelSize = label->getContentSize();
     hbox->setContentSize(Size(iconSize.width + labelSize.width,
         std::max(iconSize.height, labelSize.height)));
+}
+
+bool PurchaseButton::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event * event)
+{
+    if (!Button::onTouchBegan(touch, event)) return false;
+    setScale(1.05f);
+    return true;
+}
+
+void PurchaseButton::onTouchEnded(cocos2d::Touch * touch, cocos2d::Event * event)
+{
+    Button::onTouchEnded(touch, event);
+    setScale(1.0f);
+    onPurchase();
+}
+
+void PurchaseButton::onTouchCancelled(cocos2d::Touch * touch, cocos2d::Event * event)
+{
+    setScale(1.0f);
 }
 
 void PurchaseButton::addHeaderBackground()

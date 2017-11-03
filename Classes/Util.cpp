@@ -115,7 +115,7 @@ std::string Util::getSuffix(int exponent) {
     }
 }
 
-void Util::capVector(cocos2d::Vec2& v, double minX, double minY, double maxX, double maxY)
+void Util::capVector(cocos2d::Vec2& v, double minX, double maxX, double minY,  double maxY)
 {
     auto ret = v;
     if (ret.x < minX) ret.x = minX;
@@ -126,15 +126,7 @@ void Util::capVector(cocos2d::Vec2& v, double minX, double minY, double maxX, do
 
 void Util::capVector(cocos2d::Vec2& v, cocos2d::Rect rect)
 {
-    auto minX = rect.getMinX();
-    auto maxX = rect.getMaxX();
-    auto minY = rect.getMinY();
-    auto maxY = rect.getMaxY();
-
-    if (v.x < minX) v.x = minX;
-    if (v.x > maxX) v.x = maxX;
-    if (v.y < minY) v.y = minY;
-    if (v.y > maxY) v.y = maxY;
+    capVector(v, rect.getMinX(), rect.getMaxX(), rect.getMinY(), rect.getMaxY());
 }
 
 cocos2d::Node* Util::createIconLabel(int iconType, double amount, double size) {

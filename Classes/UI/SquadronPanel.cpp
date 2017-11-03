@@ -23,10 +23,10 @@ SquadronPanel* SquadronPanel::create() {
 bool SquadronPanel::init()
 {
     if (!Node::init()) return false;
-    setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT));
+    setContentSize(UI_SIZE_PANEL);
     setCascadeOpacityEnabled(true);
 
-    addBackground();
+    createBackground();
     addPurchaseButton();
     addSilhouettes();
 
@@ -40,9 +40,11 @@ void SquadronPanel::update(float delta)
     updatePurchaseButton();
 }
 
-void SquadronPanel::addBackground()
+void SquadronPanel::createBackground()
 {
     auto background = Util::createRoundedRect(UI_ROUNDED_RECT, getContentSize(), UI_COLOR_1);
+    background->setSwallowTouches(true);
+    background->setOpacity(OPACITY_UI);
     addChild(background, 0, "background");
 }
 
@@ -78,13 +80,13 @@ void SquadronPanel::addPurchaseButton()
                 //Player::unlockFleetPanel();
                 if (Player::bits >= cost) {
                     Player::bits -= cost;
-                    Player::squadron_slots++;
+                    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(EVENT_FLEET_UNLOCK);
                 }
             }
         }
     });
 
-    background->addChild(purchase_button, 3, "purchase_button");
+    addChild(purchase_button, 3, "purchase_button");
 }
 
 void SquadronPanel::addSilhouettes()
@@ -93,7 +95,7 @@ void SquadronPanel::addSilhouettes()
     auto purchase_button = background->getChildByName("purchase_button");
 
     auto addSilhouette = [=](Vec2 pos) {
-        auto silhouette = Sprite::create(SPRITE_SILHOUETTE);
+        auto silhouette = Sprite::create(UI_ICON_SILHOUETTE);
         silhouette->setScale(1.5f);
         silhouette->setPosition(pos);
         positions.emplace_back(pos);
@@ -120,7 +122,7 @@ void SquadronPanel::addFilledShip()
 {
     auto background = getChildByName("background");
 
-    auto filledShip = Sprite::create(SPRITE_SHIP);
+    auto filledShip = Sprite::create(UI_ICON_SHIP);
     filledShip->setScale(1.5f);
     filledShip->setPosition(positions.front());
 

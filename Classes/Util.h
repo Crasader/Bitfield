@@ -21,7 +21,7 @@ public:
     static std::string getFormattedDouble(double bits);
     static std::string getSuffix(int exponent);
 
-    static void capVector(cocos2d::Vec2& v, double minX, double minY, double maxX, double maxY);
+    static void capVector(cocos2d::Vec2& v, double minX, double maxX, double minY, double maxY);
     static void capVector(cocos2d::Vec2& v, cocos2d::Rect rect);
 };
 

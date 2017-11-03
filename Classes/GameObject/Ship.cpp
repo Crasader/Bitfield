@@ -38,6 +38,9 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     acceleration = Vec2(0, 0);
     this->squadronID = squadronID;
     this->shipID = shipID;
+
+    // TODO: Write up a different way for ships to catch up to leader
+    if (shipID > 0) max_speed += 0.75f;
 }
 
 Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
@@ -89,11 +92,10 @@ void Ship::calculateForces(float delta) {
         // Stay with leader if too far
         if (shipID > 0) {
             auto leader = neighbours->at(0);
-            if (getPosition().distance(leader->getPosition()) > 400) {
+            if (getPosition().distance(leader->getPosition()) > 350) {
                 auto stayGroupedForce = followLeader();
-                auto center = getCenterOfSquadron();
-                auto toCenter = center - getPosition();
-                wander_theta = CC_RADIANS_TO_DEGREES(toCenter.getAngle());
+                auto toLeader = leader->getPosition() -getPosition();
+                wander_theta = CC_RADIANS_TO_DEGREES(toLeader.getAngle());
                 applyForce(stayGroupedForce, w_stay_grouped);
                 return;
             }
@@ -123,8 +125,8 @@ void Ship::handleCollisions()
     int row = pos.x / GRID_SIZE;
     int col = pos.y / GRID_SIZE;
 
-    for (int r = row - 1; r < row + 1; r++) {
-        for (int c = col - 1; c < col + 1; c++) {
+    for (int r = row - 1; r <= row + 1; r++) {
+        for (int c = col - 1; c <= col + 1; c++) {
             if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
@@ -283,7 +285,7 @@ bool Ship::canSee(cocos2d::Node* target) {
     auto heading = getVelocity().getNormalized();
     auto toTarget = (target->getPosition() - getPosition()).getNormalized();
     auto angle = CC_RADIANS_TO_DEGREES(Vec2::angle(heading, toTarget));
-    return (angle >= 0 && angle <= 180);
+    return (angle >= 0 && angle <= 135);
 }
 
 bool Ship::inRange(cocos2d::Node* target) {
@@ -325,18 +327,16 @@ Bit* Ship::getTargetBit()
     int row = pos.x / GRID_SIZE;
     int col = pos.y / GRID_SIZE;
 
-    for (int r = row - 1; r < row + 1; r++) {
-        for (int c = col - 1; c < col + 1; c++) {
+    for (int r = row - 1; r <= row + 1; r++) {
+        for (int c = col - 1; c <= col + 1; c++) {
             if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     // Clear out of range targets
-                    if (bit->isTargettedBy(this) && !canSee(bit)) {
-                        bit->setShip(nullptr);
-                    }
+                    if (bit->isTargettedBy(this) && !canSee(bit)) bit->setShip(nullptr);
                             
-                    // If Bit is targetted by another ship or out of range or removed, ignore it
-                    if ((bit->isTargetted() && !bit->isTargettedBy(this)) || !canSee(bit)) continue;
+                    // If Bit is targetted by another ship, ignore it
+                    if (bit->isTargetted() && !bit->isTargettedBy(this) || !canSee(bit)) continue;
 
                     // Check if bit is our last target
                     if (bit->isTargettedBy(this)) {

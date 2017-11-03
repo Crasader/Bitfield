@@ -40,9 +40,7 @@ void Player::load() {
     Texture2D::setDefaultAlphaPixelFormat(Texture2D::PixelFormat::RGBA4444);
 
     loadDocument();
-
-    bits = document["bits"].GetDouble();
-    all_multiplier = document["all_multiplier"].GetDouble();
+    loadGeneral();
     loadBits();
     loadUpgrades();
     loadSquadronDefaults();
@@ -51,16 +49,30 @@ void Player::load() {
 void Player::loadDocument() {
     std::string filePath = FileUtils::getInstance()->getWritablePath() + SAVE_FILE;
     if (!USE_SAVE || !FileUtils::getInstance()->isFileExist(filePath)) {
-        cocos2d::log("Loading defaults from %s...", filePath.c_str());
         filePath = DEFAULT_FILE;
-    }
-    else {
-        cocos2d::log("Loading save from %s...", filePath.c_str());
     }
 
     auto fileData = FileUtils::getInstance()->getStringFromFile(filePath);
     document.Parse(fileData.c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
+}
+void Player::loadGeneral()
+{
+    bits = document["bits"].GetDouble();
+    all_multiplier = document["all_multiplier"].GetDouble();
+    const auto& costs = document["ship_costs"].GetArray();
+    for (int i = 0; i < 7; i++) {
+        const auto& cost = costs[i];
+        ship_costs[i] = cost.GetDouble();
+    }
+
+    //const auto& costs = document["squadron_costs"].GetArray();
+    //for (auto i = ) {
+    //    const auto& cost = costs[i];
+    //    ship_costs[i] = cost.GetDouble();
+    //}
+
+    squadron_slots = document["squadron_slots"].GetInt();
 }
 void Player::loadBits() {
     const auto& resources = document["resources"].GetArray();
@@ -162,14 +174,6 @@ void Player::loadSquadronDefaults() {
 
         squadron_defaults[info.strings["type"]] = info;
     }
-
-    const auto& costs = document["ship_costs"].GetArray();
-    for (int i = 0; i < 7; i++) {
-        const auto& cost = costs[i];
-        ship_costs[i] = cost.GetDouble();
-    }
-
-    squadron_slots = document["squadron_slots"].GetInt();
 }
 void Player::loadSquadrons() {
     const auto& category = document["squadrons"].GetArray();
@@ -224,13 +228,18 @@ void Player::loadSquadrons() {
 void Player::save() {
     if (!USE_SAVE) return;
 
-    document["bits"] = bits;
-    document["all_multiplier"] = all_multiplier;
+    saveGeneral();
     saveBits();
     saveUpgrades();
     saveSquadrons();
 
     saveDocument();
+}
+void Player::saveGeneral()
+{
+    document["bits"] = bits;
+    document["all_multiplier"] = all_multiplier;
+
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
@@ -278,13 +287,11 @@ void Player::saveDocument() {
     auto filepath = FileUtils::getInstance()->getWritablePath() + "data";
     if (!FileUtils::getInstance()->isDirectoryExist(filepath)) {
         FileUtils::getInstance()->createDirectory(filepath);
-        cocos2d::log("Created directory %s", filepath.c_str());
     }
     filepath += "/save.json";
 
     FILE *fp = fopen(filepath.c_str(), "w");
     if (!fp) {
-        cocos2d::log("Could not create file %s", filepath.c_str());
         return;
     }
 
@@ -294,8 +301,15 @@ void Player::saveDocument() {
 }
 
 //---- Bit Generators
+static void dispatch(const std::string& name) {
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name);
+}
+
 void Player::addBits(double bits) {
     Player::bits = std::min<double>(Player::bits + bits, BIT_MAX);
+    if (Player::bits > 50) {
+        dispatch(EVENT_FIRST_SHIP);
+    }
 }
 void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
