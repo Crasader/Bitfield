@@ -69,7 +69,7 @@
     <LibraryPath>D:\Programming\C++\cocos2d-x-3.15.1\prebuilt\win32;$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Programming\C++\cocos2d-x-3.15.1\prebuilt\win32;$(MSBuildProgramFiles32)\Microsoft SDKs\Windows\v7.1A\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -130,7 +130,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <Link>
       <AdditionalDependencies>libcurl.lib;%(AdditionalDependencies);$(_COCOS_LIB_WIN32_BEGIN);$(_COCOS_LIB_WIN32_END)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories);$(_COCOS_LIB_PATH_WIN32_BEGIN);$(_COCOS_LIB_PATH_WIN32_END)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Programming\C++\cocos2d-x-3.15.1\prebuilt\win32;$(OutDir);%(AdditionalLibraryDirectories);$(_COCOS_LIB_PATH_WIN32_BEGIN);$(_COCOS_LIB_PATH_WIN32_END)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -150,11 +150,14 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
     <ClCompile Include="..\Classes\GameObject\Bit.cpp" />
     <ClCompile Include="..\Classes\GameObject\Ship.cpp" />
-    <ClCompile Include="..\Classes\GameObject\Wanderer.cpp" />
+    <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
+    <ClCompile Include="..\Classes\Input.cpp" />
     <ClCompile Include="..\Classes\PlayerData\Player.cpp" />
     <ClCompile Include="..\Classes\Scene\GameScene.cpp" />
     <ClCompile Include="..\Classes\Scene\SplashScene.cpp" />
+    <ClCompile Include="..\Classes\Scene\TestScene.cpp" />
     <ClCompile Include="..\Classes\UI\BitsPanel.cpp" />
+    <ClCompile Include="..\Classes\UI\FleetPanel.cpp" />
     <ClCompile Include="..\Classes\UI\HUD.cpp" />
     <ClCompile Include="..\Classes\UI\Generator.cpp" />
     <ClCompile Include="..\Classes\UI\SquadronPanel.cpp" />
@@ -169,12 +172,15 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\Constants.h" />
     <ClInclude Include="..\Classes\GameObject\Bit.h" />
     <ClInclude Include="..\Classes\GameObject\Ship.h" />
-    <ClInclude Include="..\Classes\GameObject\Wanderer.h" />
+    <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
+    <ClInclude Include="..\Classes\Input.h" />
     <ClInclude Include="..\Classes\PlayerData\Player.h" />
     <ClInclude Include="..\Classes\Scene\GameScene.h" />
     <ClInclude Include="..\Classes\Scene\SplashScene.h" />
+    <ClInclude Include="..\Classes\Scene\TestScene.h" />
     <ClInclude Include="..\Classes\Types.h" />
     <ClInclude Include="..\Classes\UI\BitsPanel.h" />
+    <ClInclude Include="..\Classes\UI\FleetPanel.h" />
     <ClInclude Include="..\Classes\UI\HUD.h" />
     <ClInclude Include="..\Classes\UI\Generator.h" />
     <ClInclude Include="..\Classes\UI\SquadronPanel.h" />

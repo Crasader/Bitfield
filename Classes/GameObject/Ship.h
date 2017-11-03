@@ -3,38 +3,42 @@
 
 #include "cocos2d.h"
 #include "Types.h"
+#include "UI/World.h"
 
 class Bit;
+typedef std::vector< std::vector < cocos2d::Vector< Bit* > > > Grid;
 
 class Ship : public cocos2d::Sprite
 {
 public:
-    Ship(SquadronInfo info);
+    Ship(SquadronInfo info, int squadronID, int shipID);
+    static Ship* create(SquadronInfo info, int squadronID, int shipID);
+
     virtual void update(float delta) override;
-    virtual void calculateForces();
+    virtual void calculateForces(float delta);
     virtual void handleCollisions();
-
     void applyForce(cocos2d::Vec2 force, float scale = 1);
-    cocos2d::Vec2 wander();
-    cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowDown = false);
-    cocos2d::Vec2 separate(const cocos2d::Vector<Ship*>& neighbours);
-    cocos2d::Vec2 cohesion(const cocos2d::Vector<Ship*>& neighbours);
-    cocos2d::Vec2 align(const cocos2d::Vector<Ship*>& neighbours);
-    cocos2d::Vec2 seekBits(std::map< BitType, cocos2d::Vector< Bit* > >& bits);
-    cocos2d::Vec2 stayWithin(cocos2d::Rect boundary);
-    cocos2d::Vec2 stayGrouped();
 
-    bool isFront(const cocos2d::Vector<Ship*>& neighbours);
+    cocos2d::Vec2 seek(cocos2d::Vec2 target);
+    cocos2d::Vec2 align();
+    cocos2d::Vec2 cohesion();
+    cocos2d::Vec2 separate();
+    cocos2d::Vec2 wander();
+    cocos2d::Vec2 seekBits();
+    cocos2d::Vec2 avoidWalls();
+    cocos2d::Vec2 followLeader();
+
+    void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
+    void setBits(Grid* bits);
+    void setBoundary(cocos2d::Rect boundary);
+
     bool canSee(cocos2d::Node* target);
     bool inRange(cocos2d::Node* target);
     const cocos2d::Vec2& getVelocity();
     const cocos2d::Vec2& getAcceleration();
-
-    void setNeighbours(cocos2d::Vector<Ship*>* neighbours);
-    void setBits(std::map< BitType, cocos2d::Vector< Bit* > >* bits);
-    void setBoundary(cocos2d::Rect boundary);
     Bit* getTargetBit();
-    cocos2d::Vec2 getCenterOfMass(const cocos2d::Vector<Ship*>& neighbours);
+    const std::string& getType();
+    cocos2d::Vec2 getCenterOfSquadron();
 
     cocos2d::Vec2 velocity;
     cocos2d::Vec2 acceleration;
@@ -58,14 +62,19 @@ public:
     double w_avoid_wall;
     double w_stay_grouped;
 
+    int squadronID;
+    int shipID;
+
 protected:
     cocos2d::Vector<Ship*>* neighbours;
-    std::map< BitType, cocos2d::Vector< Bit* > >* bits;
+    Grid* bits;
     cocos2d::Rect boundary;
 
     std::string type;
     std::string sprite;
 
+private:
+    void addValuePopup(Bit* bit);
 };
 
 #endif // __SHIP_H__

@@ -23,7 +23,7 @@ double Player::bits = 0;
 double Player::all_multiplier = 1;
 std::map<BitType, BitInfo> Player::bit_info;
 BuyMode Player::buy_mode = BuyMode::One;
-const int Player::LEVEL_TIER[] = { 5, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
+const int Player::LEVEL_TIER[] = { 10, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
 
 //---- Upgrades
 std::map<int, Upgrade> Player::upgrades;
@@ -32,15 +32,15 @@ std::set<int> Player::upgrades_purchased;
 //---- Squadron
 std::map<std::string, SquadronInfo> Player::squadron_defaults;
 std::map<int, SquadronInfo> Player::squadrons;
-int Player::num_squadrons;
-double Player::ship_costs[6];
+int Player::squadron_slots;
+double Player::ship_costs[7];
 
 //---- PLAYER
 void Player::load() {
-    loadDocument();
+    Texture2D::setDefaultAlphaPixelFormat(Texture2D::PixelFormat::RGBA4444);
 
-    bits = document["bits"].GetDouble();
-    all_multiplier = document["all_multiplier"].GetDouble();
+    loadDocument();
+    loadGeneral();
     loadBits();
     loadUpgrades();
     loadSquadronDefaults();
@@ -49,21 +49,36 @@ void Player::load() {
 void Player::loadDocument() {
     std::string filePath = FileUtils::getInstance()->getWritablePath() + SAVE_FILE;
     if (!USE_SAVE || !FileUtils::getInstance()->isFileExist(filePath)) {
-        cocos2d::log("Loading defaults from %s...", filePath.c_str());
         filePath = DEFAULT_FILE;
-    }
-    else {
-        cocos2d::log("Loading save from %s...", filePath.c_str());
     }
 
     auto fileData = FileUtils::getInstance()->getStringFromFile(filePath);
     document.Parse(fileData.c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
 }
+void Player::loadGeneral()
+{
+    bits = document["bits"].GetDouble();
+    all_multiplier = document["all_multiplier"].GetDouble();
+    const auto& costs = document["ship_costs"].GetArray();
+    for (int i = 0; i < 7; i++) {
+        const auto& cost = costs[i];
+        ship_costs[i] = cost.GetDouble();
+    }
+
+    //const auto& costs = document["squadron_costs"].GetArray();
+    //for (auto i = ) {
+    //    const auto& cost = costs[i];
+    //    ship_costs[i] = cost.GetDouble();
+    //}
+
+    squadron_slots = document["squadron_slots"].GetInt();
+}
 void Player::loadBits() {
     const auto& resources = document["resources"].GetArray();
     for (SizeType i = 0; i < resources.Size(); i++) {
         const auto& resource = resources[i];
+        auto type = BitType(i);
 
         BitInfo info;
         info.name = resource["name"].GetString();
@@ -79,8 +94,13 @@ void Player::loadBits() {
         info.spawnTime = resource["spawnTime"].GetDouble();
         info.spawned = resource["spawned"].GetInt();
         info.capacity = resource["capacity"].GetInt();
+        bit_info[type] = info;
 
-        bit_info[BitType(i)] = info;
+        // Runtime
+        bit_info[type].cost = calculateCost(type);
+        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
+        bit_info[type].value = calculateValue(type);
+        bit_info[type].valueString = Util::getFormattedDouble(bit_info[type].value);
     }
 }
 void Player::loadUpgrades() {
@@ -154,12 +174,6 @@ void Player::loadSquadronDefaults() {
 
         squadron_defaults[info.strings["type"]] = info;
     }
-
-    const auto& costs = document["ship_costs"].GetArray();
-    for (int i = 0; i < 6; i++) {
-        const auto& cost = costs[i];
-        ship_costs[i] = cost.GetDouble();
-    }
 }
 void Player::loadSquadrons() {
     const auto& category = document["squadrons"].GetArray();
@@ -167,8 +181,8 @@ void Player::loadSquadrons() {
         const auto& item = category[i];
         auto type = item["type"].GetString();
 
-        // Load defaults and overwrite any differences
-        SquadronInfo info = squadron_defaults["Default"];
+        // Load in the info
+        SquadronInfo info = squadron_defaults[type];
         for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
             auto key = it->name.GetString();
             const auto& value = it->value;
@@ -184,6 +198,29 @@ void Player::loadSquadrons() {
             }
         }
 
+        // Fill in any gaps with defaults
+        SquadronInfo defaults = squadron_defaults["Default"];
+        for (auto& pair : defaults.strings) {
+            auto key = pair.first;
+            if (info.strings.find(key) == info.strings.end()) {
+                info.strings[key] = defaults.strings[key];
+            }
+        }
+
+        for (auto& pair : defaults.doubles) {
+            auto key = pair.first;
+            if (info.doubles.find(key) == info.doubles.end()) {
+                info.doubles[key] = defaults.doubles[key];
+            }
+        }
+
+        for (auto& pair : defaults.ints) {
+            auto key = pair.first;
+            if (info.ints.find(key) == info.ints.end()) {
+                info.ints[key] = defaults.ints[key];
+            }
+        }
+
         squadrons[i] = info;
     }
 }
@@ -191,12 +228,18 @@ void Player::loadSquadrons() {
 void Player::save() {
     if (!USE_SAVE) return;
 
-    document["bits"] = bits;
-    document["all_multiplier"] = all_multiplier;
+    saveGeneral();
     saveBits();
     saveUpgrades();
-    saveDocument();
     saveSquadrons();
+
+    saveDocument();
+}
+void Player::saveGeneral()
+{
+    document["bits"] = bits;
+    document["all_multiplier"] = all_multiplier;
+
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
@@ -221,18 +264,34 @@ void Player::saveUpgrades() {
         purchased.PushBack(id, allocator);
     }
 }
+void Player::saveSquadrons() {
+    document["squadrons"].SetArray();
+    const auto& saved_squadrons = document["squadrons"].GetArray();
+
+    Document::AllocatorType& allocator = document.GetAllocator();
+    for (auto& info : squadrons) {
+        auto obj = rapidjson::Value(rapidjson::kObjectType);
+        auto type = rapidjson::StringRef(info.second.strings["type"].c_str());
+        obj.AddMember("type", type, allocator);
+        // TODO: just save all key value pairs you dummy
+        // actually wait a lot of them we dont need..
+        if (info.second.strings["type"] == "Default") {
+            obj.AddMember("count", info.second.ints["count"], allocator);
+        }
+
+        saved_squadrons.PushBack(obj, allocator);
+    }
+}
 void Player::saveDocument() {
     std::ofstream outputFile;
     auto filepath = FileUtils::getInstance()->getWritablePath() + "data";
     if (!FileUtils::getInstance()->isDirectoryExist(filepath)) {
         FileUtils::getInstance()->createDirectory(filepath);
-        cocos2d::log("Created directory %s", filepath.c_str());
     }
     filepath += "/save.json";
 
     FILE *fp = fopen(filepath.c_str(), "w");
     if (!fp) {
-        cocos2d::log("Could not create file %s", filepath.c_str());
         return;
     }
 
@@ -240,13 +299,17 @@ void Player::saveDocument() {
     fputs(jsonObjectData.c_str(), fp);
     fclose(fp);
 }
-void Player::saveSquadrons() {
-
-}
 
 //---- Bit Generators
+static void dispatch(const std::string& name) {
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name);
+}
+
 void Player::addBits(double bits) {
     Player::bits = std::min<double>(Player::bits + bits, BIT_MAX);
+    if (Player::bits > 50) {
+        dispatch(EVENT_FIRST_SHIP);
+    }
 }
 void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
@@ -259,6 +322,7 @@ bool Player::purchaseBitUpgrade(BitType type) {
     int amount = getBuyAmount(type);
     subBits(price);
 
+    // Apply effects
     while (amount > 0) {
         info.level++;
         if (info.level == LEVEL_TIER[0]) {
@@ -275,6 +339,13 @@ bool Player::purchaseBitUpgrade(BitType type) {
         }
         amount--;
     }
+
+    // Update runtime values
+    info.cost = calculateCost(type);
+    info.costString = Util::getFormattedDouble(info.cost);
+    info.value = calculateValue(type);
+    info.valueString = Util::getFormattedDouble(info.value);
+
     return true;
 }
 int Player::getTier(BitType type) {
@@ -308,23 +379,22 @@ int Player::getNextTier(BitType type) {
     }
 }
 double Player::calculateCost(BitType type) {
-    int amount = getBuyAmount(type);
+    int buyAmount = getBuyAmount(type);
     auto info = bit_info[type];
-
     if (info.level == 0) {
         return info.baseCost;
     }
 
-    double ret = 0;
-    for (int i = 0; i < amount; i++) {
-        ret += info.baseCost * (pow(info.costMultiplier, info.level));
-        info.level++;
-    }
-    return std::min(ret, BIT_INF);
+    double b = info.baseCost;
+    double r = info.costMultiplier;
+    double k = info.level;
+
+    double cost = b * (pow(r, k) * (pow(r, buyAmount) - 1)) / (r - 1);
+    return std::min(cost, BIT_INF);
 }
 double Player::calculateValue(BitType type) {
     auto info = bit_info[type];
-    return std::min(std::max(1, info.level) * info.baseValue * info.valueMultiplier * Player::all_multiplier, BIT_MAX);
+    return std::min(std::max(1, info.level) * info.baseValue * info.valueMultiplier * Player::all_multiplier, BIT_INF);
 }
 int Player::getBuyAmount(BitType type) {
     auto info = bit_info[type];
@@ -334,27 +404,27 @@ int Player::getBuyAmount(BitType type) {
     switch (buy_mode) {
     case BuyMode::One: amount = 1; break;
     case BuyMode::Ten: amount = 10; break;
-    case BuyMode::Hundred: amount = 100; break;
+    case BuyMode::Fifty: amount = 50; break;
     case BuyMode::Max: amount = calculateMaxLevels(info.level, info.baseCost, info.costMultiplier); break;
     default: break;
     }
     return amount;
 }
 int Player::calculateMaxLevels(int level, double baseCost, double multiplier) {
-    int max_levels = 0;
-    double cost = 0;
-    
-    do {
-        max_levels++;
-        cost += baseCost * pow(multiplier, level);
-        level++;
-    } while ((cost + baseCost * pow(multiplier, level)) <= Player::bits);
-    
-    return max_levels;
+    // https://www.gamasutra.com/blogs/AnthonyPecorella/20161013/282422/The_Math_of_Idle_Games_Part_I.php
+    double numerator = bits * (multiplier - 1);
+    double denom = baseCost * pow(multiplier, level);
+    return std::min(double(9999), std::max(double(1), floor(log(numerator / denom + 1) / log(multiplier))));
 }
 void Player::toggleBuyMode() {
     int mode = ((int)buy_mode + 1) % (int)BuyMode::Count;
     buy_mode = BuyMode(mode);
+
+    for (int i = 0; i < BitType::All; i++) {
+        auto type = BitType(i);
+        bit_info[type].cost = calculateCost(type);
+        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
+    }
 }
 
 //---- Upgrades

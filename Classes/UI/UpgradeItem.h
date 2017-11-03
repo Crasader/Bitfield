@@ -18,7 +18,7 @@ public:
 private:
     int id;
 
-    void addBackground();
+    void createBackground();
     void addIcon();
     void addName();
     void addDescription();

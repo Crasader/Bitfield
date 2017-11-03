@@ -17,7 +17,13 @@ public:
     void setButtonColor(const cocos2d::Color4B& color);
     void setHeaderColor(const cocos2d::Color4B& color);
     void setHeader(const std::string& header);
-    void setCost(double amount);
+    void setCost(const std::string& cost);
+
+    virtual bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) override;
+    virtual void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) override;
+    virtual void onTouchCancelled(cocos2d::Touch* touch, cocos2d::Event* event) override;
+
+    std::function<void()> onPurchase;
 
 private:
     void addHeaderBackground();

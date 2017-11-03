@@ -6,6 +6,11 @@ USING_NS_CC;
 Bit::Bit(BitType type) {
     this->type = type;
     ship = nullptr;
+    removed = false;
+
+    setColor(Color3B(Player::bit_info[type].color));
+    setScale(BIT_SCALE);
+    setRotation(rand_0_1() * 360);
 }
 
 Bit* Bit::create(BitType type) {
@@ -17,25 +22,6 @@ Bit* Bit::create(BitType type) {
     }
     CC_SAFE_DELETE(sprite);
     return nullptr;
-}
-
-void Bit::onEnter() {
-    Sprite::onEnter();
-
-    setColor(Color3B(Player::bit_info[type].color));
-    setScale(BIT_SCALE);
-    setRotation(rand_0_1() * 360);
-
-    scheduleUpdate();
-}
-
-void Bit::onExit() {
-    Sprite::onExit();
-    unscheduleUpdate();
-}
-
-void Bit::update(float delta) {
-    Sprite::update(delta);
 }
 
 BitType Bit::getType() {
@@ -55,4 +41,14 @@ bool Bit::isTargetted() {
 void Bit::setShip(Ship* ship)
 {
     this->ship = ship;
+}
+
+bool Bit::isRemoved()
+{
+    return removed;
+}
+
+void Bit::remove()
+{
+    removed = true;
 }

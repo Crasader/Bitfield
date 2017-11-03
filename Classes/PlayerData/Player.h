@@ -41,17 +41,20 @@ public:
     // Squadron
     static std::map<std::string, SquadronInfo> squadron_defaults;
     static std::map<int, SquadronInfo> squadrons;
-    static int num_squadrons;
-    static double ship_costs[6];
+    static int squadron_slots;
+    static double ship_costs[7];
+    //static std::vector<int> squadron_costs;
     static bool buyShip();
 
 private:
     static void loadDocument();
+    static void loadGeneral();
     static void loadUpgrades();
     static void loadBits();
     static void loadSquadronDefaults();
     static void loadSquadrons();
 
+    static void saveGeneral();
     static void saveBits();
     static void saveUpgrades();
     static void saveSquadrons();

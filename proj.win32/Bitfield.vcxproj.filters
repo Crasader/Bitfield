@@ -69,8 +69,17 @@
     <ClCompile Include="..\Classes\UI\UpgradeItem.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\GameObject\Wanderer.cpp">
+    <ClCompile Include="..\Classes\UI\FleetPanel.cpp">
+      <Filter>src\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp">
       <Filter>src\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Scene\TestScene.cpp">
+      <Filter>src\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\Input.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -125,8 +134,17 @@
     <ClInclude Include="..\Classes\Types.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\GameObject\Wanderer.h">
+    <ClInclude Include="..\Classes\UI\FleetPanel.h">
+      <Filter>src\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\SquadronFactory.h">
       <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Scene\TestScene.h">
+      <Filter>src\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\Input.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

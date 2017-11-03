@@ -33,7 +33,7 @@ bool Generator::init() {
     setCascadeOpacityEnabled(true);
     setContentSize(Size(984, 134));
 
-    addBackground();
+    createBackground();
     addIcon();
     addLevelBar();
     addName();
@@ -53,8 +53,9 @@ void Generator::update(float delta) {
     updateBuyButton();
 }
 
-void Generator::addBackground() {
-    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);
+void Generator::createBackground() {
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);// UI_COLOR_2);
+    background->setOpacity(OPACITY_UI);
     addChild(background);
 }
 
@@ -146,37 +147,28 @@ void Generator::addSpawnCapacity() {
 
 void Generator::addBuyButton() {
     auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
+    buy_button->setCost(Player::bit_info[id].costString);
     buy_button->setColor(Color3B(UI_COLOR_1));
     buy_button->setHeaderColor(Player::bit_info[id].color);
     buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
-
-    buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
-        if (type == ui::Widget::TouchEventType::BEGAN) {
-            buy_button->setScale(1.05f);
-        }
-        if (type == ui::Widget::TouchEventType::CANCELED) {
-            buy_button->setScale(1.0f);
-        }
-        if (type == ui::Widget::TouchEventType::ENDED) {
-            buy_button->setScale(1.0f);
-            auto oldLevel = Player::bit_info[id].level;
-            auto nextTier = Player::getNextTier(id);
-            auto didPurchase = Player::purchaseBitUpgrade(id);
-            if (didPurchase) {
-                if (oldLevel == 0 && id >= BitType::Yellow && id < BitType::Indigo) {
-                    // Purchased new resource, expand scrollview
-                    auto scrollView = (ui::ScrollView*)getParent()->getParent();
-                    auto oldSize = scrollView->getInnerContainerSize();
-                    auto newSize = Size(oldSize.width, oldSize.height + 150);
-                    scrollView->setInnerContainerSize(newSize);
-                    scrollView->jumpToBottom();
-                }
-                if (Player::bit_info[id].level >= nextTier) {
-                    addLevelUp();
-                }
+    buy_button->onPurchase = [=]() {
+        auto oldLevel = Player::bit_info[id].level;
+        auto nextTier = Player::getNextTier(id);
+        auto didPurchase = Player::purchaseBitUpgrade(id);
+        if (didPurchase) {
+            if (oldLevel == 0 && id >= BitType::Yellow && id < BitType::Indigo) {
+                // Purchased new resource, expand scrollview
+                auto scrollView = (ui::ScrollView*)getParent()->getParent();
+                auto oldSize = scrollView->getInnerContainerSize();
+                auto newSize = Size(oldSize.width, oldSize.height + 150);
+                scrollView->setInnerContainerSize(newSize);
+                scrollView->jumpToBottom();
+            }
+            if (Player::bit_info[id].level >= nextTier) {
+                addLevelUp();
             }
         }
-    });
+    };
 
     addChild(buy_button, 0, "buy_button");
 }
@@ -289,18 +281,17 @@ void Generator::updateSpawnBar()
 
     // Value
     auto value = getChildByName<ui::Text*>("value");
-    ss << Util::getFormattedDouble(Player::calculateValue(id));
-    value->setString(ss.str());
-    ss.str("");
+    value->setString(info.valueString);
 
     // Timer
     auto timer = getChildByName<ui::Text*>("spawn_timer");
     auto time_remaining = info.spawnTime - info.timer;
     if (time_remaining <= 60) {
-        if (time_remaining <= 0.125) time_remaining = 0; // Stop annoying switching between 0.0s and 0.1s
+        //if (time_remaining <= 0.125) time_remaining = 0; // Stop annoying switching between 0.0s and 0.1s
         ss << std::fixed << std::setprecision(1) << time_remaining << "s";
     }
     else {
+        // Format as minutes
         int minutes = time_remaining / 60;
         int seconds = (time_remaining / 60.0f - minutes) * 60;
         ss << minutes << ":" << std::setprecision(2);
@@ -329,46 +320,60 @@ void Generator::updateInfo()
 
 void Generator::updateBuyButton()
 {
-    auto info = Player::bit_info[id];
+    auto buy_button = getChildByName<PurchaseButton*>("buy_button");
+    auto& info = Player::bit_info[id];
     std::stringstream ss;
 
-    // Set Button Text
-    auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    auto cost = Player::calculateCost(id);
-    buy_button->setCost(cost);
-    if (cost < BIT_MAX) {
-        auto amount = Player::getBuyAmount(id);
-        if (info.level == 0) {
-            ss << "Unlock";
-        }
-        else {
-            ss << "Level Up";
-            if (amount > 1) {
-                ss << " (" << amount << ")";
-            }
-        }
-        buy_button->setHeader(ss.str());
+    // Constantly update cost string if we're on Max
+    if (Player::buy_mode == BuyMode::Max) {
+        auto cost = Player::calculateCost(id);
+        info.cost = cost;
+        info.costString = Util::getFormattedDouble(cost);
     }
 
-    // Buy Button Opacity
+    if (info.cost >= BIT_MAX) {
+        buy_button->setCost("N/A");
+    }
+    else {
+        buy_button->setCost(info.costString);
+    }
+
+    // Set Header
+    auto amount = Player::getBuyAmount(id);
+    if (info.level == 0) {
+        ss << "Unlock";
+    }
+    else {
+        ss << "Level Up";
+        if (amount > 1) {
+            ss << " (" << amount << ")";
+        }
+    }
+    buy_button->setHeader(ss.str());
+
+    // Hide next-next tier
     bool previousTierPurchased = (id == BitType::Green) || Player::bit_info[BitType(id - 1)].level > 0;
     if (!previousTierPurchased) {
-        setOpacity(0);
+        if (getOpacity() > 0) setOpacity(0);
         buy_button->setTouchEnabled(false);
     }
     else {
+        buy_button->setTouchEnabled(true);
+
         // Show the next tier, faded out
-        if (info.level == 0 && Player::bits < cost) {
-            setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+        if (info.level == 0 && Player::bits < info.cost) {
+            if (getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
+                setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
         }
         else {
-            buy_button->setTouchEnabled(true);
-            setOpacity(255);
-            if (Player::bits < cost) {
-                buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+            if (getOpacity() != 255) setOpacity(255);
+            if (Player::bits < info.cost) {
+                if (buy_button->getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
+                    buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
             }
             else {
-                buy_button->setOpacity(255);
+                if (buy_button->getOpacity() != 255)
+                    buy_button->setOpacity(255);
             }
         }
     }

@@ -17,7 +17,7 @@ private:
     BitType id;
 
     // Initialize
-    void addBackground();
+    void createBackground();
     void addLevelBar();
     void addIcon();
     void addName();

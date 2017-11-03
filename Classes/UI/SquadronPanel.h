@@ -10,7 +10,7 @@ public:
 
 private:
     // Initialize
-    void addBackground();
+    void createBackground();
     void addPurchaseButton();
     void addSilhouettes();
     void addFilledShip();

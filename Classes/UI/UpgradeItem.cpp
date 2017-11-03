@@ -32,7 +32,7 @@ bool UpgradeItem::init() {
     setCascadeOpacityEnabled(true);
 
     setContentSize(Size(984, 134));
-    addBackground();
+    createBackground();
     addIcon();
     addName();
     addDescription();
@@ -62,7 +62,7 @@ int UpgradeItem::getID() {
     return id;
 }
 
-void UpgradeItem::addBackground() {
+void UpgradeItem::createBackground() {
     auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);
     addChild(background);
 }
@@ -108,23 +108,12 @@ void UpgradeItem::addBuyButton() {
     buy_button->setHeaderColor(Player::upgrades[id].color);
     buy_button->setPosition(Vec2(704 + 264 / 2, 10 + 114 / 2));
     buy_button->setHeader("Buy");
-    buy_button->setCost(Player::upgrades[id].cost);
-
-    buy_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
-        if (type == ui::Widget::TouchEventType::BEGAN) {
-            buy_button->setScale(1.05f);
+    buy_button->setCost(Util::getFormattedDouble(Player::upgrades[id].cost));
+    buy_button->onPurchase = [=]() {
+        if (Player::purchaseUpgrade(id)) {
+            removeFromParent();
         }
-        if (type == ui::Widget::TouchEventType::CANCELED) {
-            buy_button->setScale(1.0f);
-        }
-        if (type == ui::Widget::TouchEventType::ENDED) {
-            buy_button->setScale(1.0f);
-            if (Player::purchaseUpgrade(id)) {
-                removeFromParent();
-                Player::canBuyUpgrade();
-            }
-        }
-    });
+    };
 
     addChild(buy_button, 0, "buy_button");
 }

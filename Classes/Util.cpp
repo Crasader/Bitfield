@@ -10,13 +10,13 @@
 #include <iomanip>
 #include <algorithm>
 
+#include "UI/UIHBox.h"
+#include "UI/UIText.h"
+
 USING_NS_CC;
 using namespace rapidjson;
 
 static const cocos2d::Rect CAP_INSETS(48, 48, 48, 48);
-bool Util::touch_down = false;
-cocos2d::Vec2 Util::touch_location = cocos2d::Vec2(0, 0);
-cocos2d::Vec2 Util::touch_location_original = cocos2d::Vec2(0, 0);
 
 
 ui::ImageView* Util::createRoundedRect(const std::string& path, cocos2d::Size size, cocos2d::Color4B color) {
@@ -52,18 +52,22 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
     auto fileData = FileUtils::getInstance()->getStringFromFile(path);
     Document document;
     document.Parse(fileData.c_str());
-    cocos2d::log("%s", jsonToString(document).c_str());
     CCASSERT(!document.IsNull(), "Document failed to load.");
     return document;
 }
 
 std::string Util::getFormattedDouble(double bits) {
+    if (bits > BIT_MAX) return "INF";
+
     // Store the double in scientific notation: Looks like 1.23e+09 or 1.23e+308 or inf
     std::stringstream ss;
+    if (bits < 1000 && (bits == floor(bits) || ceil(bits) == 3)) {
+        ss << std::fixed << std::setprecision(0) << bits;
+        return ss.str();
+    }
     ss << std::fixed << std::scientific << std::setprecision(4) << bits;
     auto string = ss.str();
     auto len = string.length();
-    if (len <= 3) return "INF";
 
     // Extract the number part
     double number = 0;
@@ -84,7 +88,6 @@ std::string Util::getFormattedDouble(double bits) {
         exponent += (string[9] - '0');
     }
     if (string[7] == '-') exponent *= -1;
-    if (exponent > 276) return "INF";
 
     std::stringstream outstream;
     outstream << std::setprecision(3) << std::fixed << std::setprecision(2);
@@ -100,7 +103,7 @@ std::string Util::getFormattedDouble(double bits) {
 std::string Util::getSuffix(int exponent) {
     if (exponent < 3) return "";
     else if (exponent <= 35) return SUFFIX[(exponent - 3) / 3]; // Standard suffixes up to Decillion
-    else if (exponent > 276) return "INF";
+    else if (exponent > 279) return "INF";
     else if (exponent >= 276) return "SSS";
     else if (exponent >= 273) return "SS";
     else if (exponent >= 270) return "S";
@@ -112,12 +115,45 @@ std::string Util::getSuffix(int exponent) {
     }
 }
 
-cocos2d::Vec2 Util::capVector(cocos2d::Vec2 v, double xMin, double yMin, double xMax, double yMax)
+void Util::capVector(cocos2d::Vec2& v, double minX, double maxX, double minY,  double maxY)
 {
     auto ret = v;
-    if (ret.x < xMin) ret.x = xMin;
-    if (ret.x > xMax) ret.x = xMax;
-    if (ret.y < yMin) ret.y = yMin;
-    if (ret.y > yMax) ret.y = yMax;
-    return ret;
+    if (ret.x < minX) ret.x = minX;
+    if (ret.x > maxX) ret.x = maxX;
+    if (ret.y < minY) ret.y = minY;
+    if (ret.y > maxY) ret.y = maxY;
+}
+
+void Util::capVector(cocos2d::Vec2& v, cocos2d::Rect rect)
+{
+    capVector(v, rect.getMinX(), rect.getMaxX(), rect.getMinY(), rect.getMaxY());
+}
+
+cocos2d::Node* Util::createIconLabel(int iconType, double amount, double size) {
+    // Price container
+    auto container = ui::HBox::create(Size(GAME_WIDTH, GAME_HEIGHT));
+    container->setCascadeOpacityEnabled(true);
+    container->setCascadeColorEnabled(true);
+    container->setAnchorPoint(Vec2(0.5f, 0.5f));
+    //auto param = ui::LinearLayoutParameter::create();
+    //param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
+    //container->setLayoutParameter(param);
+
+    // Price icon
+    auto iconPath = (iconType == 0) ? SPRITE_BIT : SPRITE_DIAMOND;
+    auto param = ui::LinearLayoutParameter::create();
+    param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_VERTICAL);
+    param->setMargin(ui::Margin(0, 0, -8, 0));
+    auto icon = ui::ImageView::create(iconPath);
+    icon->setScale(size / 64.0f);
+    icon->setLayoutParameter(param);
+    container->addChild(icon, 0, "icon");
+
+    // Price label
+    auto label = ui::Text::create(getFormattedDouble(amount), FONT_DEFAULT, size);
+    label->setLayoutParameter(param);
+    container->addChild(label, 0, "label");
+
+    container->setContentSize(Size(icon->getContentSize().width + label->getContentSize().width, size));
+    return container;
 }

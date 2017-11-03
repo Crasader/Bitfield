@@ -14,9 +14,10 @@ bool BitsPanel::init()
 {
     if (!Node::init()) return false;
     scheduleUpdate();
-    setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT));
+    setContentSize(Size(UI_SIZE_PANEL_TABS));
+    setCascadeOpacityEnabled(true);
     
-    addBackground();
+    createBackground();
     addTabs();
     addGeneratorLayer();
     addGenerators();
@@ -39,8 +40,8 @@ void BitsPanel::setView(View view)
     getChildByTag(view)->setVisible(true);
 
     auto tab_layer = getChildByName("tab_layer");
-    tab_layer->getChildByTag(currentView)->setOpacity(255 * 0.5f);
-    tab_layer->getChildByTag(view)->setOpacity(255);
+    tab_layer->getChildByTag(currentView)->setOpacity(OPACITY_HALF);
+    tab_layer->getChildByTag(view)->setOpacity(OPACITY_UI);
     currentView = view;
 
     auto buy_amount = getChildByName("buy_amount");
@@ -52,21 +53,18 @@ void BitsPanel::setView(View view)
     }
 }
 
-void BitsPanel::addBackground()
+void BitsPanel::createBackground()
 {
-    auto background = ui::ImageView::create(UI_ROUNDED_RECT);
-    background->setScale9Enabled(true);
-    background->setContentSize(Size(PANEL_WIDTH, PANEL_HEIGHT + 16));
-    background->setColor(Color3B(UI_COLOR_1));
-    background->setAnchorPoint(Vec2(0, 0));
-    background->setPosition(Vec2(0, 0));
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, getContentSize(), UI_COLOR_1);
+    background->setSwallowTouches(true);
+    background->setOpacity(OPACITY_UI);
     addChild(background);
 }
 
 static ui::Button* createTab(const std::string& label, float posX)
 {
     auto tab = Util::createRoundedButton(UI_ROUNDED_RECT, Size(228, 64), UI_COLOR_1);
-    tab->setPosition(Vec2(posX, PANEL_HEIGHT));
+    tab->setPosition(Vec2(posX, UI_SIZE_PANEL.height));
     tab->setZoomScale(0);
     auto tab_label = ui::Text::create(label, FONT_DEFAULT, FONT_SIZE_MEDIUM);
     tab_label->setPositionNormalized(Vec2(0.5f, 0.6f));
@@ -77,11 +75,12 @@ static ui::Button* createTab(const std::string& label, float posX)
 void BitsPanel::addTabs()
 {
     auto tab_layer = Node::create();
+    tab_layer->setCascadeOpacityEnabled(true);
     addChild(tab_layer, 0, "tab_layer");
 
     auto generators_tab = createTab("Generators", 0);
     generators_tab->setTag(View::Generators);
-    generators_tab->setOpacity(255 * 0.5f);
+    generators_tab->setOpacity(OPACITY_HALF);
     generators_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
         setView(View::Generators);
     });
@@ -89,7 +88,7 @@ void BitsPanel::addTabs()
 
     auto upgrades_tab = createTab("Upgrades", 228);
     upgrades_tab->setTag(View::Upgrades);
-    upgrades_tab->setOpacity(255 * 0.5f);
+    upgrades_tab->setOpacity(OPACITY_HALF);
     upgrades_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
         setView(View::Upgrades);
     });
@@ -148,7 +147,7 @@ void BitsPanel::addBuyAmountButton()
             switch (Player::buy_mode) {
             case BuyMode::One: label_string = "Buy x1"; break;
             case BuyMode::Ten: label_string = "Buy x10"; break;
-            case BuyMode::Hundred: label_string = "Buy x100"; break;
+            case BuyMode::Fifty: label_string = "Buy x50"; break;
             case BuyMode::Max: label_string = "Buy Max"; break;
             }
             tab_buy_amount->getChildByName<ui::Text*>("tab_label")->setString(label_string);
@@ -166,7 +165,7 @@ void BitsPanel::addUpgradeLayer()
     upgrade_layer->setLayoutType(cocos2d::ui::Layout::Type::VERTICAL);
     upgrade_layer->setDirection(ui::ScrollView::Direction::VERTICAL);
     upgrade_layer->setScrollBarPositionFromCorner(Vec2(0, 0));
-    upgrade_layer->setScrollBarOpacity(255);
+    upgrade_layer->setScrollBarOpacity(OPACITY_UI);
     upgrade_layer->setScrollBarAutoHideTime(0.7f);
     upgrade_layer->setScrollBarColor(Color3B::WHITE);
     upgrade_layer->setTag(View::Upgrades);
@@ -174,6 +173,7 @@ void BitsPanel::addUpgradeLayer()
     addChild(upgrade_layer, 0, "upgrade_layer");
 }
 
+// TODO: only add 8 upgrades then add more to the scrollview as you buy
 void BitsPanel::addUpgrades()
 {
     auto upgrade_layer = getChildByName<ui::ScrollView*>("upgrade_layer");
@@ -199,13 +199,21 @@ void BitsPanel::updateIndicator()
     auto upgrades_tab = utils::findChild(this, "upgrades_tab");
     auto upgrade_indicator = upgrades_tab->getChildByName("upgrade_indicator");
     if (upgrade_indicator == nullptr && Player::canBuyUpgrade()) {
-        upgrade_indicator = Sprite::create(SPRITE_CIRCLE);
+        upgrade_indicator = Sprite::create(UI_ICON_CIRCLE);
         upgrade_indicator->setScale(0.7f);
         upgrade_indicator->setColor(Color3B(UI_COLOR_RED));
         upgrade_indicator->setOpacity(0);
         upgrade_indicator->setPositionNormalized(Vec2(0.90f, 0.72f));
-        upgrade_indicator->runAction(RepeatForever::create(
-            Sequence::create(FadeIn::create(0.5f), DelayTime::create(0.25f), FadeOut::create(0.55f), nullptr)));
+        upgrade_indicator->runAction(
+            RepeatForever::create(
+                Sequence::create(
+                    EaseSineOut::create(FadeIn::create(0.5f)),
+                    DelayTime::create(0.25f),
+                    EaseSineIn::create(FadeOut::create(0.5f)),
+                    nullptr
+                )
+            )
+        );
         upgrades_tab->addChild(upgrade_indicator, 0, "upgrade_indicator");
     }
     else if (upgrade_indicator != nullptr && !Player::canBuyUpgrade()) {

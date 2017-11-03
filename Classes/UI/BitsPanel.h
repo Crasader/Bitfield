@@ -17,7 +17,7 @@ public:
 
 private:
     // Initialize
-    void addBackground();
+    void createBackground();
     void addTabs();
     
     void addGeneratorLayer();
