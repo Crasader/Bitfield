@@ -2,7 +2,7 @@
 
 #include "Constants.h"
 #include "Util.h"
-#include "PurchaseButton.h"
+#include "UI\PurchaseButton.h"
 
 USING_NS_CC;
 
@@ -54,7 +54,7 @@ void SquadronPanel::addPurchaseButton()
     auto parentSize = background->getContentSize();
 
     auto purchase_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(484, 140), PurchaseButton::IconType::Bits);
-    purchase_button->setButtonColor(UI_COLOR_2);
+    purchase_button->setButtonColor(UI_COLOR_3);
     purchase_button->setHeaderColor(UI_COLOR_BLUE);
     purchase_button->setHeader("Upgrade Squadron");
     purchase_button->setAnchorPoint(VEC_CENTER);
@@ -69,10 +69,10 @@ void SquadronPanel::addPurchaseButton()
         if (type == ui::Widget::TouchEventType::ENDED) {
             purchase_button->setScale(1.0f);
 
-            auto ship_count = Player::squadrons[0].ints["count"];
-            auto cost = Player::ship_costs[ship_count - 1];
+            auto ship_count = Player::squadrons["Basic"].ints["count"];
+            auto cost = Player::ship_costs.front();
             if (ship_count < 7) {
-                if (Player::buyShip()) {
+                if (Player::purchaseShip()) {
                     addFilledShip();
                 }
             }
@@ -80,7 +80,7 @@ void SquadronPanel::addPurchaseButton()
                 //Player::unlockFleetPanel();
                 if (Player::bits >= cost) {
                     Player::bits -= cost;
-                    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(EVENT_FLEET_UNLOCK);
+                    Player::dispatchEvent(EVENT_FLEET_UNLOCKED, true);
                 }
             }
         }
@@ -113,7 +113,7 @@ void SquadronPanel::addSilhouettes()
     }
 
     // Add in any filled ships from save
-    for (int i = 0; i < Player::squadrons[0].ints["count"]; i++) {
+    for (int i = 0; i < Player::squadrons["Basic"].ints["count"]; i++) {
         addFilledShip();
     }
 }
@@ -130,7 +130,7 @@ void SquadronPanel::addFilledShip()
     line->setPosition(positions.front());
     line->drawLine(Vec2(0, -18),
         Vec2(0, -(filledShip->getPositionY())),
-        Color4F(Player::bit_info[BitType(7 - positions.size())].color));
+        Color4F(Player::generators[BitType(7 - positions.size())].color));
     line->setScaleY(0);
     line->runAction(EaseCircleActionOut::create(ScaleTo::create(0.8f, 1, 1)));
     background->addChild(line, 1);
@@ -142,8 +142,8 @@ void SquadronPanel::addFilledShip()
 void SquadronPanel::updatePurchaseButton()
 {
     auto purchase_button = utils::findChild<PurchaseButton*>(this, "purchase_button");
-    auto ship_count = Player::squadrons[0].ints["count"];
-    auto cost = Player::ship_costs[ship_count - 1];
+    auto ship_count = Player::squadrons["Basic"].ints["count"];
+    auto cost = Player::ship_costs.front();
     purchase_button->setCost(Util::getFormattedDouble(cost));
 
     if (Player::bits < cost) {
@@ -156,7 +156,7 @@ void SquadronPanel::updatePurchaseButton()
     }
 
     if (ship_count == 7) {
-        purchase_button->setHeaderColor(Player::bit_info[BitType::Red].color);
+        purchase_button->setHeaderColor(Player::generators[BitType::Red].color);
         purchase_button->setHeader("Unlock Fleet");
     }
 }

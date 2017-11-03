@@ -90,9 +90,9 @@ void Ship::calculateForces(float delta) {
     }
     else {
         // Stay with leader if too far
-        if (shipID > 0) {
+        if (shipID > 0 && w_stay_grouped > 0) {
             auto leader = neighbours->at(0);
-            if (getPosition().distance(leader->getPosition()) > 350) {
+            if (getPosition().distance(leader->getPosition()) > vision_radius) {
                 auto stayGroupedForce = followLeader();
                 auto toLeader = leader->getPosition() -getPosition();
                 wander_theta = CC_RADIANS_TO_DEGREES(toLeader.getAngle());
@@ -111,6 +111,7 @@ void Ship::calculateForces(float delta) {
             Vec2 wanderForce = wander();
             applyForce(wanderForce, w_wander);
 
+            // Flock
             Vec2 alignForce = align();
             applyForce(alignForce, w_alignment);
             Vec2 cohesionForce = cohesion();
@@ -127,13 +128,13 @@ void Ship::handleCollisions()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+            if (r >= 0 && c >= 0 && r < GRID_SIZE && c < GRID_SIZE) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     Vec2 dist = bit->getPosition() - getPosition();
                     if (dist.getLength() < getContentSize().width / 2) {
                         if (bit->isRemoved()) continue;
-                        auto& info = Player::bit_info[bit->getType()];
+                        auto& info = Player::generators[bit->getType()];
                         auto value = Player::calculateValue(bit->getType());
                         Player::addBits(value);
                         info.spawned--;
@@ -329,7 +330,7 @@ Bit* Ship::getTargetBit()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+            if (r >= 0 && c >= 0 && r < GRID_SIZE && c < GRID_SIZE) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     // Clear out of range targets
@@ -393,8 +394,8 @@ void Ship::addValuePopup(Bit* bit)
     auto world = getParent();
 
     //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
-    auto popup = Label::createWithTTF(Player::bit_info[bit->getType()].valueString, FONT_DEFAULT, 52);
-    auto c = Color3B(Player::bit_info[bit->getType()].color);
+    auto popup = Label::createWithTTF(Player::generators[bit->getType()].valueString, FONT_DEFAULT, 52);
+    auto c = Color3B(Player::generators[bit->getType()].color);
     popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
     popup->setPosition(bit->getPosition());
     popup->setOpacity(0);

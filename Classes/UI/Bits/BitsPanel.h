@@ -27,6 +27,8 @@ private:
     void addUpgradeLayer();
     void addUpgrades();
 
+    void createEventListeners();
+
     // Update
     void updateIndicator();
 

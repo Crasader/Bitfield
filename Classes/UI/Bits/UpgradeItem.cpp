@@ -1,7 +1,7 @@
 #include "UpgradeItem.h"
 #include "Constants.h"
 #include "Util.h"
-#include "PurchaseButton.h"
+#include "UI\PurchaseButton.h"
 #include "ui\UIImageView.h"
 #include "ui\UIText.h"
 #include "UI\UIButton.h"
@@ -51,10 +51,10 @@ void UpgradeItem::update(float delta) {
 
     // Item Opacity
     if (Player::bits < cost) {
-        buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+        buy_button->setOpacity(OPACITY_HALF);
     }
     else {
-        buy_button->setOpacity(255);
+        buy_button->setOpacity(OPACITY_FULL);
     }
 }
 
@@ -104,8 +104,8 @@ void UpgradeItem::addDescription() {
 
 void UpgradeItem::addBuyButton() {
     auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
-    buy_button->setColor(Color3B(UI_COLOR_1));
-    buy_button->setHeaderColor(Player::upgrades[id].color);
+    buy_button->setColor(Color3B(UI_COLOR_3));
+    buy_button->setHeaderColor(UI_COLOR_BLUE);// Player::upgrades[id].color);
     buy_button->setPosition(Vec2(704 + 264 / 2, 10 + 114 / 2));
     buy_button->setHeader("Buy");
     buy_button->setCost(Util::getFormattedDouble(Player::upgrades[id].cost));

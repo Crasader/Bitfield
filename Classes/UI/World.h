@@ -55,7 +55,6 @@ private:
     void updateGrid();
     void updateFleet(float delta);
     void updateBits(float delta);
-
     void debugShip();
 };
 

@@ -52,11 +52,11 @@ void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int
     int sizeDelta, float alpha, float spread) {
     auto parallax = getChildByName("parallax");
     auto layer = parallax->getChildByName(layerName);
-    if (layer->getChildrenCount() >= limit || rand_0_1() > 0.8f) return;
+    if (layer->getChildrenCount() >= limit || rand_0_1() < 0.95f) return;
 
     auto randPos = Vec2(pos.x / WORLD_WIDTH - spread / 2 + rand_0_1() * spread,
         pos.y / WORLD_HEIGHT - spread / 2 + rand_0_1() * spread);
-    auto color = Color4F(Player::bit_info[BitType(cocos2d::random() % 7)].color);
+    auto color = Color4F(Player::generators[BitType(cocos2d::random() % 7)].color);
     auto size = sizeMin + rand_0_1() * sizeDelta;
 
     // Create a polygon
@@ -93,10 +93,11 @@ void World::updateBackground()
         ship = fleet.at(0).first.at(0);
     if (!ship) return;
 
-    createPolygon("layer1", ship->getPosition(), 10, 150, 40, 0.4f, 0.3f);
-    createPolygon("layer2", ship->getPosition(), 10, 75, 45, 0.35f, 0.25f);
-    createPolygon("layer3", ship->getPosition(), 10, 35, 15, 0.25f, 0.2f);
-    createPolygon("layer4", ship->getPosition(), 10, 10, 10, 0.2f, 0.15f);
+    //if (rand_0_1() < 0.6f) return;
+    createPolygon("layer1", ship->getPosition(), 6, 180, 240, 0.4f, 0.175f);
+    createPolygon("layer2", ship->getPosition(), 6, 95, 45, 0.35f, 0.15f);
+    createPolygon("layer3", ship->getPosition(), 6, 35, 25, 0.25f, 0.125f);
+    createPolygon("layer4", ship->getPosition(), 6, 10, 10, 0.2f, 0.05f);
 }
 
 void World::updateCamera()
@@ -138,16 +139,28 @@ void World::updateGrid()
 }
 
 void World::updateFleet(float delta) {
-    for (int squadronID = 0; squadronID < Player::squadron_slots; squadronID++) {
-        auto info = Player::squadrons[squadronID];
-        auto type = info.strings["type"];
-        auto count = info.ints["count"];
+    // For each slot,
+    for (int squadronID = 0; squadronID < 7; squadronID++) {
+        if (!Player::isSlotUnlocked(squadronID)) continue;
+        const auto& type = Player::squadrons_equipped[squadronID];
+        auto& info = Player::squadrons[type];
 
         auto& ships = fleet[squadronID].first;
         auto& streaks = fleet[squadronID].second;
-        auto addShips = [&](cocos2d::Vector<Ship*>& ships, Vector<MotionStreak*>& streaks, int count) {
+        
+        // Clear out of date squadrons
+        if (!ships.empty()) {
+            auto ship = ships.at(0);
+            if (type != ship->getType()) {
+                ships.clear();
+            }
+        }
+
+        // Add ships
+        auto& count = info.ints["count"];
+        if (ships.size() < count) {
+            cocos2d::log("%d %s", squadronID, type.c_str());
             for (int shipID = ships.size(); shipID < count; shipID++) {
-                // Add ship to vector
                 auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
                 ship->setNeighbours(&ships);
                 ship->setBits(&grid);
@@ -168,20 +181,12 @@ void World::updateFleet(float delta) {
 
                 // Also add streak
                 auto colorIndex = shipID % 7;
-                auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), info.strings["streak"]);
+                auto color = Color3B(Player::generators[BitType(colorIndex)].color);
+                auto streak = MotionStreak::create(2.0f, 0, 8, color, info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
             }
-        };
-
-        // Ships don't exist in the world, so spawn them
-        if (ships.empty()) {
-            addShips(ships, streaks, count);
-        }
-        else if (ships.size() < count) {
-            // Need more ships, add to world
-            addShips(ships, streaks, count);
         }
 
         // Update streaks
@@ -190,9 +195,6 @@ void World::updateFleet(float delta) {
             auto streak = streaks.at(shipID);
             streak->setPosition(ship->getPosition());
         }
-
-
-        // TODO: Eventually will need to evict ships if type doesnt match here
     }
     if (DEBUG_SHIP) debugShip();
 }
@@ -201,7 +203,7 @@ void World::updateBits(float delta) {
     // Spawn Bits
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
-        auto& info = Player::bit_info[type];
+        auto& info = Player::generators[type];
         if (info.level < 1) continue;
 
         info.timer += delta;
@@ -215,7 +217,7 @@ void World::updateBits(float delta) {
             info.timer = 0;
         }
 
-        if (bits_spawned[type] < Player::bit_info[type].spawned) {
+        if (bits_spawned[type] < Player::generators[type].spawned) {
             addBit(type);
         }
     }
@@ -394,9 +396,9 @@ void World::createInput() {
 
 void World::createGrid()
 {
-    for (int i = 0; i < GRID_WIDTH; i++) {
+    for (int i = 0; i < GRID_SIZE; i++) {
         grid.push_back(std::vector<cocos2d::Vector< Bit* > >());
-        for (int j = 0; j < GRID_HEIGHT; j++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
             grid[i].push_back(cocos2d::Vector< Bit* >());
         }
     }
@@ -422,10 +424,10 @@ void World::initBits()
 {
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
-        auto& info = Player::bit_info[type];
+        auto& info = Player::generators[type];
         bits_spawned[i] = 0;
         if (info.level == 0) continue;
-        while (bits_spawned[type] < Player::bit_info[type].spawned) {
+        while (bits_spawned[type] < Player::generators[type].spawned) {
             addBit(type);
         }
     }

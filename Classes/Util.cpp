@@ -57,7 +57,7 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
 }
 
 std::string Util::getFormattedDouble(double bits) {
-    if (bits > BIT_MAX) return "INF";
+    if (bits > BIT_MAX) return "n/a";
 
     // Store the double in scientific notation: Looks like 1.23e+09 or 1.23e+308 or inf
     std::stringstream ss;
@@ -103,10 +103,10 @@ std::string Util::getFormattedDouble(double bits) {
 std::string Util::getSuffix(int exponent) {
     if (exponent < 3) return "";
     else if (exponent <= 35) return SUFFIX[(exponent - 3) / 3]; // Standard suffixes up to Decillion
-    else if (exponent > 279) return "INF";
-    else if (exponent >= 276) return "SSS";
-    else if (exponent >= 273) return "SS";
-    else if (exponent >= 270) return "S";
+    else if (exponent > 279) return "n/a";
+    else if (exponent >= 276) return "sss";
+    else if (exponent >= 273) return "ss";
+    else if (exponent >= 270) return "s";
     else {
         char first, second;
         first = ALPHABET[int(((exponent - 36) / 3) / 26) % 26];

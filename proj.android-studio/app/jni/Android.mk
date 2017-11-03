@@ -24,11 +24,12 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/GameScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/HUD.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/World.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/Generator.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/UpgradeItem.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/BitsPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/SquadronPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/FleetPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/Generator.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/UpgradeItem.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/BitsPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/SquadronPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/FleetPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/SquadronSlot.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/PurchaseButton.cpp
 
 

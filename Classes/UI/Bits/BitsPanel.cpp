@@ -40,7 +40,7 @@ void BitsPanel::setView(View view)
     getChildByTag(view)->setVisible(true);
 
     auto tab_layer = getChildByName("tab_layer");
-    tab_layer->getChildByTag(currentView)->setOpacity(OPACITY_HALF);
+    tab_layer->getChildByTag(currentView)->setOpacity(OPACITY_UNFOCUS);
     tab_layer->getChildByTag(view)->setOpacity(OPACITY_UI);
     currentView = view;
 
@@ -80,7 +80,7 @@ void BitsPanel::addTabs()
 
     auto generators_tab = createTab("Generators", 0);
     generators_tab->setTag(View::Generators);
-    generators_tab->setOpacity(OPACITY_HALF);
+    generators_tab->setOpacity(OPACITY_UNFOCUS);
     generators_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
         setView(View::Generators);
     });
@@ -88,7 +88,7 @@ void BitsPanel::addTabs()
 
     auto upgrades_tab = createTab("Upgrades", 228);
     upgrades_tab->setTag(View::Upgrades);
-    upgrades_tab->setOpacity(OPACITY_HALF);
+    upgrades_tab->setOpacity(OPACITY_UNFOCUS);
     upgrades_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
         setView(View::Upgrades);
     });
@@ -118,20 +118,20 @@ void BitsPanel::addGenerators()
     auto param = ui::LinearLayoutParameter::create();
     param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
     param->setMargin(ui::Margin(0, 0, 0, 16));
-    auto activeCount = 1;
-    for (auto i = 0; i < Player::bit_info.size(); i++) {
+    auto activeCount = 0;
+    for (auto i = 0; i < Player::generators.size(); i++) {
         auto button = Generator::create(BitType(i));
         button->setLayoutParameter(param);
         generator_layer->addChild(button, 0, i);
 
-        if (Player::bit_info[BitType(i)].level > 0) {
+        if (Player::generators[BitType(i)].level > 0) {
             activeCount++;
         }
     }
 
     // Adjust ScrollView internal size
     Size containerSize;
-    if (activeCount > 3) {
+    if (activeCount > 4) {
         containerSize = Size(984, 591 * 2);
         generator_layer->setInnerContainerSize(containerSize);
     }
@@ -192,6 +192,15 @@ void BitsPanel::addUpgrades()
     const int UPGRADES_SHOWN = 8;
     upgrade_layer->setInnerContainerSize(Size(upgrade_layer->getInnerContainerSize().width,
         UPGRADE_SIZE * UPGRADES_SHOWN));
+}
+
+void BitsPanel::createEventListeners()
+{
+    auto l_generator_unlocked = EventListenerCustom::create(EVENT_GENERATOR_UNLOCKED, [=](EventCustom* event) {
+        auto generator_layer = getChildByName("generator_layer");
+
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_generator_unlocked, this);
 }
 
 void BitsPanel::updateIndicator()

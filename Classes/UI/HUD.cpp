@@ -5,10 +5,9 @@
 #include "PlayerData/Player.h"
 #include "Scene\GameScene.h"
 
-#include "UI\BitsPanel.h"
-#include "UI\SquadronPanel.h"
-#include "UI\FleetPanel.h"
-#include "UI\UpgradeItem.h"
+#include "UI\Bits\BitsPanel.h"
+#include "UI\Fleet\SquadronPanel.h"
+#include "UI\Fleet\FleetPanel.h"
 
 #include "ui\UIText.h"
 #include "ui\UIScrollView.h"
@@ -44,7 +43,7 @@ bool HUD::init() {
     createCounter();
     createPanels();
     createTabs();
-    createEventListener();
+    createEventListeners();
 
     return true;
 }
@@ -166,27 +165,28 @@ void HUD::createCounter() {
     icon->setLayoutParameter(param);
     bit_counter_layer->addChild(icon, 0, "icon");
 
-    auto counter = ui::Text::create("0", FONT_DEFAULT, BIT_COUNTER_SIZE);
+    auto counter = ui::Text::create("0", FONT_DEFAULT, FONT_SIZE_HUGE);
     bit_counter_layer->addChild(counter, 0, "counter");
 }
 
 void HUD::createPanels()
 {
     addPanel(BitsPanel::create(), PanelID::Bits);
-    if (Player::squadrons[0].ints["count"] < 7) // TODO: faulty condition
-        addPanel(SquadronPanel::create(), PanelID::Squadron);
-    else
+    if (Player::eventFinished(EVENT_FLEET_UNLOCKED)) // TODO: faulty condition
         addPanel(FleetPanel::create(), PanelID::Squadron);
+    else
+        addPanel(SquadronPanel::create(), PanelID::Squadron);
 }
 
 void HUD::createTabs() {
     auto tab_layer = Layer::create();
+    tab_layer->setPosition(Vec2(UI_CENTER_X - 540, 8));
     addChild(tab_layer, 0, "tab_layer");
 
     // Create tab buttons
     for (int i = 0; i < 5; i++) {
         auto tab_button = Util::createRoundedButton(UI_ROUNDED_RECT, Size(200, 82), UI_COLOR_1);
-        tab_button->setPosition(Vec2(16 + 212 * i, 8));
+        tab_button->setPosition(Vec2(16 + 212 * i, 0));
         tab_button->setOpacity(OPACITY_UI_TABS);
         tab_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
             if (type == ui::Widget::TouchEventType::ENDED) {
@@ -196,7 +196,7 @@ void HUD::createTabs() {
                     auto sum = 0;
                     for (int i = 0; i < BitType::All; i++) {
                         auto type = BitType(i);
-                        if (Player::bit_info[type].level > 0)
+                        if (Player::generators[type].level > 0)
                             sum += Player::calculateValue(BitType(type));
                     }
                     Player::addBits(sum);
@@ -215,21 +215,25 @@ void HUD::createTabs() {
     }
 }
 
-void HUD::createEventListener()
+void HUD::createEventListeners()
 {
     // Popup Squadron Panel when we have enough money
-    auto l_first_ship = EventListenerCustom::create(EVENT_FIRST_SHIP, [=](EventCustom* event) {
-        showPanel(PanelID::Squadron);
-        getEventDispatcher()->removeCustomEventListeners(EVENT_FIRST_SHIP);
-    });
-    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
+    if (!Player::eventFinished(EVENT_SQUADRON_UNLOCKED)) {
+        auto l_first_ship = EventListenerCustom::create(EVENT_SQUADRON_UNLOCKED, [=](EventCustom* event) {
+            showPanel(PanelID::Squadron);
+            getEventDispatcher()->removeCustomEventListeners(EVENT_SQUADRON_UNLOCKED);
+        });
+        getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
+    }
 
     // Hide Squadron and create Fleet
-    auto l_fleet_unlock = EventListenerCustom::create(EVENT_FLEET_UNLOCK, [=](EventCustom* event) {
-        unlockFleet();
-        getEventDispatcher()->removeCustomEventListeners(EVENT_FLEET_UNLOCK);
-    });
-    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
+    if (!Player::eventFinished(EVENT_FLEET_UNLOCKED)) {
+        auto l_fleet_unlock = EventListenerCustom::create(EVENT_FLEET_UNLOCKED, [=](EventCustom* event) {
+            unlockFleet();
+            getEventDispatcher()->removeCustomEventListeners(EVENT_FLEET_UNLOCKED);
+        });
+        getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
+    }
 }
 
 void HUD::updateCounter()

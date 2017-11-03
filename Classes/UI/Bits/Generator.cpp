@@ -1,7 +1,7 @@
 #include "Generator.h"
 #include "Constants.h"
 #include "Util.h"
-#include "PurchaseButton.h"
+#include "UI\PurchaseButton.h"
 #include "ui\UIImageView.h"
 #include "ui\UIText.h"
 #include "UI\UIButton.h"
@@ -18,7 +18,7 @@ Generator::Generator(BitType id) {
 
 Generator* Generator::create(BitType id) {
     Generator *btn = new (std::nothrow) Generator(id);
-    auto info = Player::bit_info[id];
+    auto info = Player::generators[id];
     if (btn && btn->init()) {
         btn->autorelease();
         return btn;
@@ -54,7 +54,7 @@ void Generator::update(float delta) {
 }
 
 void Generator::createBackground() {
-    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);// UI_COLOR_2);
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(984, 134), UI_COLOR_2);
     background->setOpacity(OPACITY_UI);
     addChild(background);
 }
@@ -78,17 +78,17 @@ void Generator::addIcon() {
     border->setPosition(Vec2(16, 10));
     addChild(border);
 
-    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(126, 106), Player::bit_info[id].color);
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(126, 106), Player::generators[id].color);
     background->setPosition(Vec2(20, 14));
     addChild(background);
 
-    auto icon = ui::ImageView::create(Player::bit_info[id].icon_filepath);
+    auto icon = ui::ImageView::create(Player::generators[id].icon_filepath);
     icon->setPositionNormalized(Vec2(0.5f, 0.52f));
     background->addChild(icon);
 }
 
 void Generator::addName() {
-    auto name = ui::Text::create(Player::bit_info[id].name, FONT_DEFAULT, FONT_SIZE_MEDIUM);
+    auto name = ui::Text::create(Player::generators[id].name, FONT_DEFAULT, FONT_SIZE_MEDIUM);
     name->setAnchorPoint(Vec2(0, 0));
     name->setPosition(Vec2(166, 93 - 10));
     addChild(name);
@@ -101,12 +101,12 @@ void Generator::addName() {
 
 void Generator::addSpawnBar() {
     // Spawn Timer Empty
-    auto spawn_bar_empty = Util::createRoundedRect(UI_ROUNDED_RECT, Size(522, 32), UI_COLOR_1);
+    auto spawn_bar_empty = Util::createRoundedRect(UI_ROUNDED_RECT, Size(522, 32), UI_COLOR_3);
     spawn_bar_empty->setPosition(Vec2(166, 41));
     addChild(spawn_bar_empty, 0, "spawn_bar_empty");
 
     // Spawn Timer Filled
-    auto spawn_bar_filled = Util::createRoundedRect(UI_ROUNDED_RECT, Size(522, 32), Player::bit_info[id].color);
+    auto spawn_bar_filled = Util::createRoundedRect(UI_ROUNDED_RECT, Size(522, 32), Player::generators[id].color);
     spawn_bar_filled->setPosition(Vec2(166, 41));
     addChild(spawn_bar_filled, 0, "spawn_bar_filled");
 
@@ -147,12 +147,12 @@ void Generator::addSpawnCapacity() {
 
 void Generator::addBuyButton() {
     auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
-    buy_button->setCost(Player::bit_info[id].costString);
-    buy_button->setColor(Color3B(UI_COLOR_1));
-    buy_button->setHeaderColor(Player::bit_info[id].color);
+    buy_button->setCost(Player::generators[id].costString);
+    buy_button->setColor(Color3B(UI_COLOR_3));
+    buy_button->setHeaderColor(Player::generators[id].color);
     buy_button->setPosition(Vec2(704 + 264/2, 10 + 114/2));
     buy_button->onPurchase = [=]() {
-        auto oldLevel = Player::bit_info[id].level;
+        auto oldLevel = Player::generators[id].level;
         auto nextTier = Player::getNextTier(id);
         auto didPurchase = Player::purchaseBitUpgrade(id);
         if (didPurchase) {
@@ -164,7 +164,7 @@ void Generator::addBuyButton() {
                 scrollView->setInnerContainerSize(newSize);
                 scrollView->jumpToBottom();
             }
-            if (Player::bit_info[id].level >= nextTier) {
+            if (Player::generators[id].level >= nextTier) {
                 addLevelUp();
             }
         }
@@ -200,7 +200,7 @@ void Generator::addLevelUp() {
     // Label Strings
     std::string labelString;
     std::string iconString;
-    if (Player::bit_info[id].level > Player::LEVEL_TIER[2] + Player::LEVEL_TIER[3]) {
+    if (Player::generators[id].level > Player::LEVEL_TIER[2] + Player::LEVEL_TIER[3]) {
         labelString = BIT_STRINGS[id] + " value tripled!" ;
         iconString = "x3";
     }
@@ -241,7 +241,7 @@ void Generator::addLevelUp() {
 
 void Generator::updateLevelBar()
 {
-    auto info = Player::bit_info[id];
+    auto info = Player::generators[id];
     std::stringstream ss;
 
     // Level
@@ -257,7 +257,7 @@ void Generator::updateLevelBar()
 
 void Generator::updateSpawnBar()
 {
-    auto info = Player::bit_info[id];
+    auto info = Player::generators[id];
     std::stringstream ss;
 
     // Spawn Bar: Darken when max capacity, solid bar when spawning too fast
@@ -272,12 +272,12 @@ void Generator::updateSpawnBar()
         && spawn_bar_filled->getOpacity() < 255) {
         spawn_bar_filled->runAction(FadeIn::create(0.1f));// setOpacity(255);
     }
-    if (info.spawnTime <= 0.125f) {
-        spawn_bar_filled->setScaleX(1);
-    }
-    else {
+    //if (info.spawnTime <= 0.125f) {
+    //    spawn_bar_filled->setScaleX(1);
+    //}
+    //else {
         spawn_bar_filled->setScaleX(info.timer / info.spawnTime);
-    }
+    //}
 
     // Value
     auto value = getChildByName<ui::Text*>("value");
@@ -308,7 +308,7 @@ void Generator::updateSpawnBar()
 
 void Generator::updateInfo()
 {
-    auto info = Player::bit_info[id];
+    auto info = Player::generators[id];
     std::stringstream ss;
 
     // Spawn Capacity
@@ -321,7 +321,7 @@ void Generator::updateInfo()
 void Generator::updateBuyButton()
 {
     auto buy_button = getChildByName<PurchaseButton*>("buy_button");
-    auto& info = Player::bit_info[id];
+    auto& info = Player::generators[id];
     std::stringstream ss;
 
     // Constantly update cost string if we're on Max
@@ -332,7 +332,7 @@ void Generator::updateBuyButton()
     }
 
     if (info.cost >= BIT_MAX) {
-        buy_button->setCost("N/A");
+        buy_button->setCost("n/a");
     }
     else {
         buy_button->setCost(info.costString);
@@ -344,15 +344,17 @@ void Generator::updateBuyButton()
         ss << "Unlock";
     }
     else {
-        ss << "Level Up";
         if (amount > 1) {
-            ss << " (" << amount << ")";
+            ss << amount << " Levels";
+        }
+        else {
+            ss << "Level Up";
         }
     }
     buy_button->setHeader(ss.str());
 
     // Hide next-next tier
-    bool previousTierPurchased = (id == BitType::Green) || Player::bit_info[BitType(id - 1)].level > 0;
+    bool previousTierPurchased = (id == BitType::Green) || Player::generators[BitType(id - 1)].level > 0;
     if (!previousTierPurchased) {
         if (getOpacity() > 0) setOpacity(0);
         buy_button->setTouchEnabled(false);
@@ -362,18 +364,18 @@ void Generator::updateBuyButton()
 
         // Show the next tier, faded out
         if (info.level == 0 && Player::bits < info.cost) {
-            if (getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
-                setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+            if (getOpacity() != OPACITY_HALF)
+                setOpacity(OPACITY_HALF);
         }
         else {
-            if (getOpacity() != 255) setOpacity(255);
+            if (getOpacity() != OPACITY_FULL) setOpacity(OPACITY_FULL);
             if (Player::bits < info.cost) {
-                if (buy_button->getOpacity() != 255 * BUY_BUTTON_FADE_PERCENT)
-                    buy_button->setOpacity(255 * BUY_BUTTON_FADE_PERCENT);
+                if (buy_button->getOpacity() != OPACITY_HALF)
+                    buy_button->setOpacity(OPACITY_HALF);
             }
             else {
-                if (buy_button->getOpacity() != 255)
-                    buy_button->setOpacity(255);
+                if (buy_button->getOpacity() != OPACITY_FULL)
+                    buy_button->setOpacity(OPACITY_FULL);
             }
         }
     }

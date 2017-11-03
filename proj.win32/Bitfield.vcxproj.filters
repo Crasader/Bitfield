@@ -22,6 +22,12 @@
     <Filter Include="src\PlayerData">
       <UniqueIdentifier>{7287750f-c4e7-4d23-a629-f8d446d584fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\UI\Bits">
+      <UniqueIdentifier>{1cb57efd-6985-4c5d-ba6f-462e9ab3b131}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\UI\Fleet">
+      <UniqueIdentifier>{2c31416d-4a2f-49f4-96c2-13448763330f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -54,23 +60,8 @@
     <ClCompile Include="..\Classes\UI\PurchaseButton.cpp">
       <Filter>src\UI</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\UI\BitsPanel.cpp">
-      <Filter>src\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\UI\Generator.cpp">
-      <Filter>src\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\UI\SquadronPanel.cpp">
-      <Filter>src\UI</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\PlayerData\Player.cpp">
       <Filter>src\PlayerData</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\UI\UpgradeItem.cpp">
-      <Filter>src\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\UI\FleetPanel.cpp">
-      <Filter>src\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp">
       <Filter>src\GameObject</Filter>
@@ -80,6 +71,24 @@
     </ClCompile>
     <ClCompile Include="..\Classes\Input.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Bits\BitsPanel.cpp">
+      <Filter>src\UI\Bits</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Bits\Generator.cpp">
+      <Filter>src\UI\Bits</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Bits\UpgradeItem.cpp">
+      <Filter>src\UI\Bits</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Fleet\FleetPanel.cpp">
+      <Filter>src\UI\Fleet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Fleet\SquadronPanel.cpp">
+      <Filter>src\UI\Fleet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\UI\Fleet\SquadronSlot.cpp">
+      <Filter>src\UI\Fleet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,29 +122,14 @@
     <ClInclude Include="..\Classes\Util.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\UI\BitsPanel.h">
-      <Filter>src\UI</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\UI\PurchaseButton.h">
-      <Filter>src\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\UI\Generator.h">
-      <Filter>src\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\UI\SquadronPanel.h">
       <Filter>src\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\PlayerData\Player.h">
       <Filter>src\PlayerData</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\UI\UpgradeItem.h">
-      <Filter>src\UI</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\Types.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\UI\FleetPanel.h">
-      <Filter>src\UI</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\SquadronFactory.h">
       <Filter>src\GameObject</Filter>
@@ -145,6 +139,24 @@
     </ClInclude>
     <ClInclude Include="..\Classes\Input.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Bits\BitsPanel.h">
+      <Filter>src\UI\Bits</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Bits\Generator.h">
+      <Filter>src\UI\Bits</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Bits\UpgradeItem.h">
+      <Filter>src\UI\Bits</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Fleet\FleetPanel.h">
+      <Filter>src\UI\Fleet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Fleet\SquadronPanel.h">
+      <Filter>src\UI\Fleet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Fleet\SquadronSlot.h">
+      <Filter>src\UI\Fleet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

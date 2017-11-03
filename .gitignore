@@ -15,5 +15,3 @@ todo
 installToPhone.sh
 cocos2d
 bin
-/Classes/PlayerData/UpgradeManager.h
-/Classes/PlayerData/UpgradeManager.cpp

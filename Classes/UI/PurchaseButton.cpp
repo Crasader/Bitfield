@@ -24,7 +24,6 @@ bool PurchaseButton::init(const std::string& path, cocos2d::Size size, IconType 
     setContentSize(size);
     setCascadeOpacityEnabled(true);
     setZoomScale(0);
-    //this->setTouchEnabled(true);
     onPurchase = []() {};
 
     addHeaderBackground();

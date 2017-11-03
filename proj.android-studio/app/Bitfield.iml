@@ -45,6 +45,12 @@
     <content url="file://$MODULE_DIR$/../../Classes/UI">
       <sourceFolder url="file://$MODULE_DIR$/../../Classes/UI" isTestSource="false" />
     </content>
+    <content url="file://$MODULE_DIR$/../../Classes/UI/Bits">
+      <sourceFolder url="file://$MODULE_DIR$/../../Classes/UI/Bits" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../Classes/UI/Fleet">
+      <sourceFolder url="file://$MODULE_DIR$/../../Classes/UI/Fleet" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/../../Resources">
       <sourceFolder url="file://$MODULE_DIR$/../../Resources" type="java-resource" />
     </content>

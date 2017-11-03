@@ -33,7 +33,7 @@ private:
     void createCounter();
     void createPanels();
     void createTabs();
-    void createEventListener();
+    void createEventListeners();
 
     void updateCounter();
 };

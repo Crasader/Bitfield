@@ -30,12 +30,10 @@ void SplashScene::update(float delta) {
     if (totalTime >= LOAD_TIME) {
         totalTime = LOAD_TIME;
 
+        // Load
+        Texture2D::setDefaultAlphaPixelFormat(Texture2D::PixelFormat::RGBA4444);
         Player::load();
         auto nextScene = GameScene::create();
-
-        //// Fade background
-        //auto drawNode = getChildByName<DrawNode*>("drawNode");
-        //drawNode->runAction(FadeOut::create(1.0f));
 
         // Fade out each letter
         auto title = getChildByName<Label*>("title");

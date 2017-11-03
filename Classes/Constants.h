@@ -34,9 +34,6 @@ static const int WORLD_HEIGHT = 12000;
 static const int WORLD_OFFSET = GAME_WIDTH / 2;
 static const int GRID_RESOLUTION = 40;
 static const int GRID_SIZE = WORLD_WIDTH / GRID_RESOLUTION;
-static const float GRID_WIDTH = WORLD_WIDTH / GRID_SIZE;
-static const float GRID_HEIGHT = WORLD_HEIGHT / GRID_SIZE;
-
 static const float BIT_SCALE = 0.25f;
 
 static const std::string SPRITE_BIT = "sprites/bit.png";
@@ -45,8 +42,8 @@ static const std::string SPRITE_STREAK = "sprites/streak.png";
 static const cocos2d::Color4B SHIP_COLOR(225, 255, 255, 255);
 
 //---- BIT COUNTER
-const std::string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const std::string SUFFIX[] = { "K", "M", "B", "T", "Qa", "Qt", "Sx", "Sp", "Oc", "No", "Dc" };
+const std::string ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+const std::string SUFFIX[] = { "k", "m", "b", "t", "qa", "qt", "sx", "sp", "oc", "no", "dc" };
 const double BIT_MAX = 9.9999f * pow(10, 278);
 const double BIT_INF = 1.00f * pow(10, 279);
 
@@ -58,44 +55,43 @@ static const int UI_CENTER_X = GAME_WIDTH / 2;
 static const int UI_CENTER_Y = GAME_HEIGHT / 2;
 static const cocos2d::Vec2 VEC_ZERO(0, 0);
 static const cocos2d::Vec2 VEC_CENTER(0.5f, 0.5f);
-static const cocos2d::Vec2 ANCHOR_CENTER_BOTTOM(0.5f, 0);
-static const cocos2d::Vec2 ANCHOR_BL(0, 0);
+static const cocos2d::Vec2 VEC_BOTTOM(0.5f, 0);
+static const cocos2d::Vec2 VEC_TOP(0.5f, 1);
 
-static const int BIT_COUNTER_SIZE = 86;
-static const int PANEL_HEADER_SIZE = 84;
-static const int BUY_AMOUNT_SIZE = 60;
+static const int FONT_SIZE_HUGE = 86;
 static const int FONT_SIZE_MEDIUM = 42;
-static const int BUY_BUTTON_PRICE_SIZE = 42;
-static const int BUY_BUTTON_LEVELS_SIZE = 36;
-static const int LEVEL_UP_SIZE = 36;
-static const float BUY_BUTTON_FADE_PERCENT = 0.5f;
+static const int FONT_SIZE_SMALL = 30;
 
 static const cocos2d::Color4B WORLD_COLOR(38, 40, 51, 255);
 static const cocos2d::Color4F GRID_COLOR(1, 1, 1, 0.2f);
-static const cocos2d::Color4B UI_COLOR_1(28, 29, 37, 255);
+static const cocos2d::Color4B UI_COLOR_1(28, 29, 35, 255);
 static const cocos2d::Color4B UI_COLOR_2(38, 40, 51, 255);
-static const cocos2d::Color4B UI_COLOR_3(24, 25, 33, 255);
+static const cocos2d::Color4B UI_COLOR_3(24, 25, 31, 255);
 static const cocos2d::Color4B UI_COLOR_BLUE(79, 137, 196, 255);
 static const cocos2d::Color4B UI_COLOR_RED(197, 114, 114, 255);
 static const cocos2d::Color4B UI_COLOR_WHITE(245, 245, 245, 255);
+static const cocos2d::Color4B UI_COLOR_INDIGO(114, 124, 196, 255);
 static const float OPACITY_FULL = 255;
 static const float OPACITY_HALF = 255 * 0.5f;
 static const float OPACITY_UI = 255 * 0.95f;
 static const float OPACITY_UI_TABS = 255 * 0.8f;
+static const float OPACITY_UNFOCUS = 255 * 0.7f;
 
 static const std::string UI_ICON_SHIP = "sprites/ship.png";
-static const std::string SPRITE_BLANK = "sprites/blank.png";
 static const std::string UI_ICON_CIRCLE = "sprites/circle.png";
 static const std::string UI_ICON_SILHOUETTE = "sprites/ship_silhouette.png";
 static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
 static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";
 static const std::string UI_ICON_CAPACITY = "ui/icon_bit_t1.png";
+static const std::string UI_ICON_LOCK = "ui/lock.png";
 
 static const cocos2d::Size UI_SIZE_PANEL(1048, 632);
 static const cocos2d::Size UI_SIZE_PANEL_TABS(1048, 648);
-static const cocos2d::Size UI_SIZE_FLEET_SLOT(128, 144);
-static const cocos2d::Size UI_SIZE_FLEET_PANEL(1010, 296);
+static const cocos2d::Size UI_SIZE_TAB_LAYER(1080, 98);
+static const cocos2d::Size UI_SIZE_FLEET_SLOT_BACK(128, 160);
+static const cocos2d::Size UI_SIZE_FLEET_SLOT_FRONT(124, 128);
+static const cocos2d::Size UI_SIZE_FLEET_PANEL(1010, 280);
 static const cocos2d::Size UI_SIZE_FLEET_BUTTON(495, 128);
 
 static const int NUM_TABS = 5;
@@ -114,7 +110,13 @@ static const cocos2d::Vec2 POLYGON_VERTS[4] = {
     cocos2d::Vec2(2, 1)
 };
 
-static const std::string EVENT_FIRST_SHIP = "EVENT_FIRST_SHIP";
-static const std::string EVENT_FLEET_UNLOCK = "EVENT_FLEET_UNLOCK";
+// One-time Events
+static const std::string EVENT_SQUADRON_UNLOCKED = "EVENT_SQUADRON_UNLOCKED";
+static const std::string EVENT_FLEET_UNLOCKED = "EVENT_FLEET_UNLOCKED";
+
+static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
+
+// Recurring Events
+static const std::string EVENT_GENERATOR_UNLOCKED = "EVENT_GENERATOR_UNLOCKED";
 
 #endif // __CONSTANTS_H__
