@@ -39,11 +39,15 @@ bool World::init()
     return true;
 }
 
+static float totalDelta = 0;
 void World::update(float delta) {
     Layer::update(delta);
     updateBackground();
     updateGrid();
-    updateFleet(delta);
+    totalDelta += delta;
+    if (totalDelta > 0.65f) {
+        updateFleet(delta);
+    }
     updateBits(delta);
     updateCamera();
 }
@@ -159,7 +163,6 @@ void World::updateFleet(float delta) {
         // Add ships
         auto& count = info.ints["count"];
         if (ships.size() < count) {
-            cocos2d::log("%d %s", squadronID, type.c_str());
             for (int shipID = ships.size(); shipID < count; shipID++) {
                 auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
                 ship->setNeighbours(&ships);
@@ -396,9 +399,9 @@ void World::createInput() {
 
 void World::createGrid()
 {
-    for (int i = 0; i < GRID_SIZE; i++) {
+    for (int i = 0; i < GRID_RESOLUTION; i++) {
         grid.push_back(std::vector<cocos2d::Vector< Bit* > >());
-        for (int j = 0; j < GRID_SIZE; j++) {
+        for (int j = 0; j < GRID_RESOLUTION; j++) {
             grid[i].push_back(cocos2d::Vector< Bit* >());
         }
     }
@@ -408,6 +411,7 @@ void World::createCamera()
 {
     // Always follow the camera
     auto camera = Node::create();
+    camera->setPositionNormalized(VEC_CENTER);
     addChild(camera, 0, "camera");
 
     auto follow = Follow::createWithOffset(camera, 0, 0,

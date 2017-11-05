@@ -24,6 +24,7 @@ bool BitsPanel::init()
     addUpgradeLayer();
     addUpgrades();
     addBuyAmountButton();
+    createEventListeners();
     setView(View::Generators);
 
     return true;
@@ -64,8 +65,7 @@ void BitsPanel::createBackground()
 static ui::Button* createTab(const std::string& label, float posX)
 {
     auto tab = Util::createRoundedButton(UI_ROUNDED_RECT, Size(228, 64), UI_COLOR_1);
-    tab->setPosition(Vec2(posX, UI_SIZE_PANEL.height));
-    tab->setZoomScale(0);
+    tab->setPosition(Vec2(posX, UI_SIZE_PANEL.height + 32));
     auto tab_label = ui::Text::create(label, FONT_DEFAULT, FONT_SIZE_MEDIUM);
     tab_label->setPositionNormalized(Vec2(0.5f, 0.6f));
     tab->addChild(tab_label, 0, "tab_label");
@@ -78,18 +78,38 @@ void BitsPanel::addTabs()
     tab_layer->setCascadeOpacityEnabled(true);
     addChild(tab_layer, 0, "tab_layer");
 
-    auto generators_tab = createTab("Generators", 0);
+    auto generators_tab = createTab("Generators", 114);
     generators_tab->setTag(View::Generators);
     generators_tab->setOpacity(OPACITY_UNFOCUS);
-    generators_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
+    generators_tab->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
+        if (type == ui::Widget::TouchEventType::BEGAN) {
+            generators_tab->getChildByName("tab_label")->stopAllActions();
+            generators_tab->getChildByName("tab_label")->setScale(1.1f);
+        }
+        else if (type == ui::Widget::TouchEventType::CANCELED) {
+            generators_tab->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+        }
+        else if (type == ui::Widget::TouchEventType::ENDED) {
+            generators_tab->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+        }
         setView(View::Generators);
     });
     tab_layer->addChild(generators_tab, 0, "generators_tab");
 
-    auto upgrades_tab = createTab("Upgrades", 228);
+    auto upgrades_tab = createTab("Upgrades", 228 + 114);
     upgrades_tab->setTag(View::Upgrades);
     upgrades_tab->setOpacity(OPACITY_UNFOCUS);
-    upgrades_tab->addTouchEventListener([&](Ref* ref, ui::Widget::TouchEventType type) {
+    upgrades_tab->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
+        if (type == ui::Widget::TouchEventType::BEGAN) {
+            upgrades_tab->getChildByName("tab_label")->stopAllActions();
+            upgrades_tab->getChildByName("tab_label")->setScale(1.1f);
+        }
+        else if (type == ui::Widget::TouchEventType::CANCELED) {
+            upgrades_tab->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+        }
+        else if (type == ui::Widget::TouchEventType::ENDED) {
+            upgrades_tab->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+        }
         setView(View::Upgrades);
     });
     tab_layer->addChild(upgrades_tab, 0, "upgrades_tab");
@@ -98,9 +118,9 @@ void BitsPanel::addTabs()
 void BitsPanel::addGeneratorLayer()
 {
     auto generator_layer = ui::ScrollView::create();
-    generator_layer->setContentSize(Size(984, 591));
+    generator_layer->setContentSize(Size(984, 592));
     generator_layer->setAnchorPoint(Vec2(0, 0));
-    generator_layer->setPosition(Vec2(32, 16));
+    generator_layer->setPosition(Vec2(32, 32));
     generator_layer->setLayoutType(cocos2d::ui::Layout::Type::VERTICAL);
     generator_layer->setDirection(ui::ScrollView::Direction::VERTICAL);
     generator_layer->setScrollBarPositionFromCorner(Vec2(0, 0));
@@ -114,35 +134,43 @@ void BitsPanel::addGeneratorLayer()
 
 void BitsPanel::addGenerators()
 {
-    auto generator_layer = utils::findChild<ui::ScrollView*>(this, "generator_layer");
-    auto param = ui::LinearLayoutParameter::create();
-    param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
-    param->setMargin(ui::Margin(0, 0, 0, 16));
-    auto activeCount = 0;
+    auto count = 0;
     for (auto i = 0; i < Player::generators.size(); i++) {
-        auto button = Generator::create(BitType(i));
-        button->setLayoutParameter(param);
-        generator_layer->addChild(button, 0, i);
-
-        if (Player::generators[BitType(i)].level > 0) {
-            activeCount++;
-        }
+        addGenerator(BitType(i));
+        count++;
+        if (Player::generators[BitType(i)].level == 0) break;
     }
 
     // Adjust ScrollView internal size
+    auto generator_layer = getChildByName<ui::ScrollView*>("generator_layer");
     Size containerSize;
-    if (activeCount > 4) {
-        containerSize = Size(984, 591 * 2);
-        generator_layer->setInnerContainerSize(containerSize);
-    }
+    containerSize = Size(984, 150 * count);
+    generator_layer->setInnerContainerSize(containerSize);
+}
+
+void BitsPanel::addGenerator(BitType type) {
+    auto button = Generator::create(type);
+    auto param = ui::LinearLayoutParameter::create();
+    param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
+    param->setMargin(ui::Margin(0, 0, 0, 16));
+    button->setLayoutParameter(param);
+    getChildByName("generator_layer")->addChild(button);
 }
 
 void BitsPanel::addBuyAmountButton()
 {
-    auto tab_buy_amount = createTab("Buy x1", 820);
+    auto tab_buy_amount = createTab("Buy x1", 820 + 114);
     tab_buy_amount->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
         std::string label_string = "";
-        if (type == ui::Widget::TouchEventType::ENDED) {
+        if (type == ui::Widget::TouchEventType::BEGAN) {
+            tab_buy_amount->getChildByName("tab_label")->stopAllActions();
+            tab_buy_amount->getChildByName("tab_label")->setScale(1.1f);
+        }
+        else if (type == ui::Widget::TouchEventType::CANCELED) {
+            tab_buy_amount->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+        }
+        else if (type == ui::Widget::TouchEventType::ENDED) {
+            tab_buy_amount->getChildByName("tab_label")->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
             Player::toggleBuyMode();
             switch (Player::buy_mode) {
             case BuyMode::One: label_string = "Buy x1"; break;
@@ -159,9 +187,9 @@ void BitsPanel::addBuyAmountButton()
 void BitsPanel::addUpgradeLayer()
 {
     auto upgrade_layer = ui::ScrollView::create();
-    upgrade_layer->setContentSize(Size(984, 591));
+    upgrade_layer->setContentSize(Size(984, 592));
     upgrade_layer->setAnchorPoint(Vec2(0, 0));
-    upgrade_layer->setPosition(Vec2(32, 16));
+    upgrade_layer->setPosition(Vec2(32, 32));
     upgrade_layer->setLayoutType(cocos2d::ui::Layout::Type::VERTICAL);
     upgrade_layer->setDirection(ui::ScrollView::Direction::VERTICAL);
     upgrade_layer->setScrollBarPositionFromCorner(Vec2(0, 0));
@@ -170,6 +198,7 @@ void BitsPanel::addUpgradeLayer()
     upgrade_layer->setScrollBarColor(Color3B::WHITE);
     upgrade_layer->setTag(View::Upgrades);
     upgrade_layer->setVisible(false);
+    upgrade_layer->setScrollBarAutoHideEnabled(false);
     addChild(upgrade_layer, 0, "upgrade_layer");
 }
 
@@ -196,11 +225,36 @@ void BitsPanel::addUpgrades()
 
 void BitsPanel::createEventListeners()
 {
-    auto l_generator_unlocked = EventListenerCustom::create(EVENT_GENERATOR_UNLOCKED, [=](EventCustom* event) {
-        auto generator_layer = getChildByName("generator_layer");
+    // If we haven't unlocked all generators, listen for their unlocks
+    if (!Player::eventFinished(EVENT_ALL_GENERATORS_UNLOCKED)) {
+        auto l_generator_unlocked = EventListenerCustom::create(EVENT_GENERATOR_UNLOCKED, [=](EventCustom* event) {
+            // Done if unlocking last generator
+            auto type = (int)event->getUserData();
+            if (type == BitType::Indigo) {
+                Player::dispatchEvent(EVENT_ALL_GENERATORS_UNLOCKED, nullptr, true);
+                getEventDispatcher()->removeCustomEventListeners(EVENT_GENERATOR_UNLOCKED);
+                return;
+            }
 
-    });
-    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_generator_unlocked, this);
+            // Add next button
+            type += 1;
+            auto button = Generator::create(BitType(type));
+
+            auto param = ui::LinearLayoutParameter::create();
+            param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_HORIZONTAL);
+            param->setMargin(ui::Margin(0, 0, 0, 16));
+            button->setLayoutParameter(param);
+
+            auto generator_layer = getChildByName<ui::ScrollView*>("generator_layer");
+            generator_layer->addChild(button);
+
+            // Adjust ScrollView internal size
+            generator_layer->setInnerContainerSize(Size(984, 150 * (type + 1)));
+            generator_layer->scrollToPercentVertical(90, 0, false);
+            generator_layer->scrollToBottom(0.1f, true);
+        });
+        getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_generator_unlocked, this);
+    }
 }
 
 void BitsPanel::updateIndicator()

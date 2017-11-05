@@ -105,7 +105,7 @@ void UpgradeItem::addDescription() {
 void UpgradeItem::addBuyButton() {
     auto buy_button = PurchaseButton::create(UI_ROUNDED_RECT, Size(264, 114), PurchaseButton::IconType::Bits);
     buy_button->setColor(Color3B(UI_COLOR_3));
-    buy_button->setHeaderColor(UI_COLOR_BLUE);// Player::upgrades[id].color);
+    buy_button->setHeaderColor(Player::upgrades[id].color);
     buy_button->setPosition(Vec2(704 + 264 / 2, 10 + 114 / 2));
     buy_button->setHeader("Buy");
     buy_button->setCost(Util::getFormattedDouble(Player::upgrades[id].cost));

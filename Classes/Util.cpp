@@ -37,7 +37,8 @@ ui::Button* Util::createRoundedButton(const std::string& path, cocos2d::Size siz
     button->setContentSize(size);
     button->setColor(Color3B(color));
     button->setCascadeOpacityEnabled(true);
-    button->setAnchorPoint(Vec2(0, 0));
+    //button->setAnchorPoint(Vec2(0, 0));
+    button->setZoomScale(0);
     return button;
 }
 

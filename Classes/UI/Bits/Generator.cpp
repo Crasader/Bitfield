@@ -154,15 +154,9 @@ void Generator::addBuyButton() {
     buy_button->onPurchase = [=]() {
         auto oldLevel = Player::generators[id].level;
         auto nextTier = Player::getNextTier(id);
-        auto didPurchase = Player::purchaseBitUpgrade(id);
-        if (didPurchase) {
-            if (oldLevel == 0 && id >= BitType::Yellow && id < BitType::Indigo) {
-                // Purchased new resource, expand scrollview
-                auto scrollView = (ui::ScrollView*)getParent()->getParent();
-                auto oldSize = scrollView->getInnerContainerSize();
-                auto newSize = Size(oldSize.width, oldSize.height + 150);
-                scrollView->setInnerContainerSize(newSize);
-                scrollView->jumpToBottom();
+        if (Player::purchaseBitUpgrade(id)) {
+            if (oldLevel == 0) {
+                Player::dispatchEvent(EVENT_GENERATOR_UNLOCKED, (void*)id);
             }
             if (Player::generators[id].level >= nextTier) {
                 addLevelUp();
@@ -270,14 +264,9 @@ void Generator::updateSpawnBar()
     else if (info.spawned < info.capacity
         && spawn_bar_filled->getNumberOfRunningActions() == 0
         && spawn_bar_filled->getOpacity() < 255) {
-        spawn_bar_filled->runAction(FadeIn::create(0.1f));// setOpacity(255);
+        spawn_bar_filled->runAction(FadeIn::create(0.1f));
     }
-    //if (info.spawnTime <= 0.125f) {
-    //    spawn_bar_filled->setScaleX(1);
-    //}
-    //else {
-        spawn_bar_filled->setScaleX(info.timer / info.spawnTime);
-    //}
+    spawn_bar_filled->setScaleX(info.timer / info.spawnTime);
 
     // Value
     auto value = getChildByName<ui::Text*>("value");
@@ -287,7 +276,6 @@ void Generator::updateSpawnBar()
     auto timer = getChildByName<ui::Text*>("spawn_timer");
     auto time_remaining = info.spawnTime - info.timer;
     if (time_remaining <= 60) {
-        //if (time_remaining <= 0.125) time_remaining = 0; // Stop annoying switching between 0.0s and 0.1s
         ss << std::fixed << std::setprecision(1) << time_remaining << "s";
     }
     else {

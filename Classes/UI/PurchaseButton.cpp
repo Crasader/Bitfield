@@ -65,20 +65,29 @@ void PurchaseButton::setCost(const std::string& cost)
 bool PurchaseButton::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event * event)
 {
     if (!Button::onTouchBegan(touch, event)) return false;
-    setScale(1.05f);
+    stopAllActions();
+    setScale(1.1f);
     return true;
 }
 
 void PurchaseButton::onTouchEnded(cocos2d::Touch * touch, cocos2d::Event * event)
 {
-    Button::onTouchEnded(touch, event);
-    setScale(1.0f);
-    onPurchase();
+    if (getNumberOfRunningActions() == 0)
+        runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+    if (isHighlighted()) {
+        Button::onTouchEnded(touch, event); // Call here in case onPurchase removes self
+        onPurchase();
+    }
+    else {
+        Button::onTouchEnded(touch, event);
+    }
 }
 
 void PurchaseButton::onTouchCancelled(cocos2d::Touch * touch, cocos2d::Event * event)
 {
-    setScale(1.0f);
+    if (getNumberOfRunningActions() == 0)
+        runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+    Button::onTouchCancelled(touch, event);
 }
 
 void PurchaseButton::addHeaderBackground()

@@ -39,8 +39,11 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     this->squadronID = squadronID;
     this->shipID = shipID;
 
-    // TODO: Write up a different way for ships to catch up to leader
-    if (shipID > 0) max_speed += 0.75f;
+    //// TODO: Write up a different way for ships to catch up to leader
+    //if (shipID > 0) max_speed += 0.75f;
+
+    setScale(0);
+    runAction(EaseSineIn::create(EaseElasticOut::create(ScaleTo::create(1.0f, 1))));
 }
 
 Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
@@ -128,7 +131,7 @@ void Ship::handleCollisions()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_SIZE && c < GRID_SIZE) {
+            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     Vec2 dist = bit->getPosition() - getPosition();
@@ -142,6 +145,13 @@ void Ship::handleCollisions()
 
                         // Remove bit
                         bit->remove();
+
+                        // Animate
+                        runAction(Sequence::create(
+                            ScaleTo::create(0.1f, 1.25f),
+                            ScaleTo::create(0.1f, 1),
+                            nullptr
+                        ));
                     }
                 }
             }
@@ -330,7 +340,7 @@ Bit* Ship::getTargetBit()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_SIZE && c < GRID_SIZE) {
+            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     // Clear out of range targets

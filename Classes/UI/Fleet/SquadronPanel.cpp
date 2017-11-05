@@ -59,32 +59,21 @@ void SquadronPanel::addPurchaseButton()
     purchase_button->setHeader("Upgrade Squadron");
     purchase_button->setAnchorPoint(VEC_CENTER);
     purchase_button->setPosition(Vec2(parentSize.width / 2, 16 + 140 / 2));
-    purchase_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
-        if (type == ui::Widget::TouchEventType::BEGAN) {
-            purchase_button->setScale(1.05f);
-        }
-        if (type == ui::Widget::TouchEventType::CANCELED) {
-            purchase_button->setScale(1.0f);
-        }
-        if (type == ui::Widget::TouchEventType::ENDED) {
-            purchase_button->setScale(1.0f);
-
-            auto ship_count = Player::squadrons["Basic"].ints["count"];
-            auto cost = Player::ship_costs.front();
-            if (ship_count < 7) {
-                if (Player::purchaseShip()) {
-                    addFilledShip();
-                }
-            }
-            else {
-                //Player::unlockFleetPanel();
-                if (Player::bits >= cost) {
-                    Player::bits -= cost;
-                    Player::dispatchEvent(EVENT_FLEET_UNLOCKED, true);
-                }
+    purchase_button->onPurchase = [=]() {
+        auto ship_count = Player::squadrons["Basic"].ints["count"];
+        auto cost = Player::ship_costs.front();
+        if (ship_count < 7) {
+            if (Player::purchaseShip()) {
+                addFilledShip();
             }
         }
-    });
+        else {
+            if (Player::bits >= cost) {
+                Player::bits -= cost;
+                Player::dispatchEvent(EVENT_FLEET_UNLOCKED, nullptr, true);
+            }
+        }
+    };
 
     addChild(purchase_button, 3, "purchase_button");
 }

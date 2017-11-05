@@ -21,6 +21,7 @@ std::set<std::string> Player::events_finished;
 
 //---- Bits
 double Player::bits = 0;
+std::string Player::bitString = "";
 double Player::all_multiplier = 1;
 std::map<BitType, BitInfo> Player::generators;
 BuyMode Player::buy_mode = BuyMode::One;
@@ -295,19 +296,19 @@ void Player::saveUpgrades() {
     }
 }
 void Player::saveSquadrons() {
-    //const auto& arr = document["squadrons"].GetArray();
-    //Document::AllocatorType& allocator = document.GetAllocator();
-    //for (auto& info : squadrons) {
-    //    auto obj = rapidjson::Value(rapidjson::kObjectType);
-    //    auto type = rapidjson::StringRef(info.strings["type"].c_str());
-    //    obj.AddMember("type", type, allocator);
-    //    obj.AddMember("owned", info.ints["owned"], allocator);
-    //    if (info.strings["type"] == "Basic") {
-    //        obj.AddMember("count", info.ints["count"], allocator);
-    //    }
-
-    //    saved_squadrons.PushBack(obj, allocator);
-    //}
+    auto& arr = document["squadrons"];
+    Document::AllocatorType& allocator = document.GetAllocator();
+    for (auto it = arr.Begin(); it != arr.End(); it++) {
+        auto& obj = *it;
+        
+        auto& typeValue = obj["type"];
+        auto type = typeValue.GetString();
+        SquadronInfo& info = squadrons[type];
+        obj["owned"].SetInt(info.ints["owned"]);
+        if (obj.HasMember("count")) {
+            obj["count"].SetInt(info.ints["count"]);
+        }
+    }
 }
 void Player::saveDocument() {
     std::ofstream outputFile;
@@ -328,8 +329,8 @@ void Player::saveDocument() {
 }
 
 //---- Events
-void Player::dispatchEvent(const std::string& name, bool once) {
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name);
+void Player::dispatchEvent(const std::string& name, void* data, bool once) {
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name, data);
     if (once) events_finished.insert(name);
 }
 
@@ -341,13 +342,24 @@ bool Player::eventFinished(const std::string& event) {
 //---- Bit Generators
 void Player::addBits(double bits) {
     Player::bits = std::min<double>(Player::bits + bits, BIT_MAX);
+    updateBitString();
     if (Player::bits > 50) {
-        dispatchEvent(EVENT_SQUADRON_UNLOCKED, true);
+        dispatchEvent(EVENT_SQUADRON_UNLOCKED, nullptr, true);
     }
 }
 void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
+    updateBitString();
 }
+
+void Player::updateBitString() {
+    const auto& newString = Util::getFormattedDouble(Player::bits);
+    if (newString != bitString) {
+        bitString = newString;
+        dispatchEvent(EVENT_BITS_CHANGED);
+    }
+}
+
 bool Player::purchaseBitUpgrade(BitType type) {
     auto price = calculateCost(type);
     if (bits < price) return false;
@@ -469,7 +481,7 @@ bool Player::purchaseUpgrade(int id) {
 
     // Purchase the upgrade
     upgrades_purchased.insert(id);
-    bits -= cost;
+    subBits(cost);
 
     // Apply the upgrade
     const auto& bitType = upgrade.bitType;
@@ -506,7 +518,7 @@ bool Player::purchaseShip() {
     if (bits < cost) return false;
 
     // Purchase the upgrade
-    bits -= cost;
+    Player::subBits(cost);
     squadrons["Basic"].ints["count"]++;
     ship_costs.pop_front();
     return true;
@@ -519,7 +531,7 @@ bool Player::purchaseSquadron()
 
     //auto cost = squadron_costs.front();
     //if (bits < cost) return false;
-    //bits -= cost;
+    //subBits(cost);
     //
     //auto it = squadrons.begin();
     //auto index = cocos2d::random() % squadron_defaults.size();

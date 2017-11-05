@@ -12,11 +12,12 @@ public:
     static void save();
     static std::set<std::string> events_finished;
 
-    static void dispatchEvent(const std::string& event, bool once = false);
+    static void dispatchEvent(const std::string& event, void* data = nullptr, bool once = false);
     static bool eventFinished(const std::string& event);
     
     // Bits
     static double bits;
+    static std::string bitString;
     static double all_multiplier;
     static std::map<BitType, BitInfo> generators;
     static BuyMode buy_mode;
@@ -24,6 +25,8 @@ public:
 
     static void addBits(double bits);
     static void subBits(double bits);
+    static void updateBitString();
+
     static int getTier(BitType type);
     static int getNextTier(BitType type);
     static double calculateCost(BitType type);

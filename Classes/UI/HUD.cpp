@@ -52,11 +52,6 @@ void HUD::setWorld(World* world) {
     this->world = world;
 }
 
-void HUD::update(float delta) {
-    Layer::update(delta);
-    updateCounter();
-}
-
 void HUD::addPanel(cocos2d::Node* panel, PanelID id)
 {
     auto clip = ClippingRectangleNode::create(Rect(0, 98, GAME_WIDTH, GAME_HEIGHT));
@@ -85,7 +80,7 @@ void HUD::showPanel(PanelID id) {
     panel->runAction(Sequence::create(
         Show::create(),
         Spawn::create(
-            EaseBackOut::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, 730))),
+            EaseBackOut::create(MoveTo::create(0.3f, Vec2(UI_CENTER_X, 730))),
             EaseSineIn::create(FadeIn::create(0.1f)),
             nullptr
         ),
@@ -102,7 +97,7 @@ void HUD::hidePanel(PanelID id)
 
     panel->runAction(Sequence::create(
         Spawn::create(
-            EaseSineIn::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, 98))),
+            EaseSineIn::create(MoveTo::create(0.2f, Vec2(UI_CENTER_X, -298))),
             EaseSineIn::create(FadeOut::create(0.1f)),
             nullptr
         ),
@@ -154,8 +149,10 @@ cocos2d::Node* HUD::getTab(PanelID id)
 
 void HUD::createCounter() {
     auto bit_counter_layer = ui::HBox::create(Size(400, 90));
+    bit_counter_layer->setCascadeOpacityEnabled(true);
     bit_counter_layer->setAnchorPoint(Vec2(0.5f, 0.5f));
-    bit_counter_layer->setPosition(Vec2(GAME_WIDTH * 0.5f, GAME_HEIGHT * 0.92f));
+    bit_counter_layer->setPosition(Vec2(GAME_WIDTH * 0.5f, GAME_HEIGHT));
+    bit_counter_layer->setOpacity(0);
     addChild(bit_counter_layer, 0, "bit_counter_layer");
 
     auto icon = ui::ImageView::create(SPRITE_BIT);
@@ -167,12 +164,42 @@ void HUD::createCounter() {
 
     auto counter = ui::Text::create("0", FONT_DEFAULT, FONT_SIZE_HUGE);
     bit_counter_layer->addChild(counter, 0, "counter");
+
+    // Resize
+    bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
+        counter->getContentSize().height));
+
+    // Animate
+    bit_counter_layer->runAction(
+        Sequence::create(
+            DelayTime::create(1.25f),
+            Spawn::create(
+                EaseSineOut::create(MoveTo::create(0.9f, Vec2(GAME_WIDTH * 0.5f, GAME_HEIGHT * 0.92f))),
+                EaseSineOut::create(FadeTo::create(0.9f, OPACITY_FULL)),
+                nullptr
+            ),
+            nullptr
+        )
+    );
+
+    // Listen for changes
+    auto l_bits_added = EventListenerCustom::create(EVENT_BITS_CHANGED, [=](EventCustom* event) {
+        counter->setString(Player::bitString);
+        bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
+            counter->getContentSize().height));
+        bit_counter_layer->runAction(runAction(Sequence::create(
+            ScaleTo::create(0.1f, 1.25f),
+            ScaleTo::create(0.1f, 1),
+            nullptr
+        )));
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_bits_added, this);
 }
 
 void HUD::createPanels()
 {
     addPanel(BitsPanel::create(), PanelID::Bits);
-    if (Player::eventFinished(EVENT_FLEET_UNLOCKED)) // TODO: faulty condition
+    if (Player::eventFinished(EVENT_FLEET_UNLOCKED))
         addPanel(FleetPanel::create(), PanelID::Squadron);
     else
         addPanel(SquadronPanel::create(), PanelID::Squadron);
@@ -186,16 +213,24 @@ void HUD::createTabs() {
     // Create tab buttons
     for (int i = 0; i < 5; i++) {
         auto tab_button = Util::createRoundedButton(UI_ROUNDED_RECT, Size(200, 82), UI_COLOR_1);
-        tab_button->setPosition(Vec2(16 + 212 * i, 0));
-        tab_button->setOpacity(OPACITY_UI_TABS);
+        tab_button->setPosition(Vec2(116 + 212 * i, -100));
+        tab_button->setOpacity(0);
         tab_button->addTouchEventListener([=](Ref* ref, ui::Widget::TouchEventType type) {
-            if (type == ui::Widget::TouchEventType::ENDED) {
+            if (type == ui::Widget::TouchEventType::BEGAN) {
+                tab_button->stopAllActions();
+                tab_button->setScale(1.1f);
+            }
+            else if (type == ui::Widget::TouchEventType::CANCELED) {
+                tab_button->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+            }
+            else if (type == ui::Widget::TouchEventType::ENDED) {
+                tab_button->runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
                 if (i == 0 || i == 1) togglePanel(PanelID(i));
-                if (i == 2) Player::bits = 0;
+                if (i == 2) Player::subBits(Player::bits);
                 if (i == 3) {
-                    auto sum = 0;
-                    for (int i = 0; i < BitType::All; i++) {
-                        auto type = BitType(i);
+                    double sum = 0;
+                    for (int j = 0; j < BitType::All; j++) {
+                        auto type = BitType(j);
                         if (Player::generators[type].level > 0)
                             sum += Player::calculateValue(BitType(type));
                     }
@@ -204,6 +239,19 @@ void HUD::createTabs() {
                 if (i == 4) Player::addBits(BIT_MAX);
             }
         });
+
+        // Animate
+        tab_button->runAction(
+            Sequence::create(
+                DelayTime::create(1.0f + 0.12f * i),
+                Spawn::create(
+                    EaseSineOut::create(MoveTo::create(0.4f, Vec2(116 + 212 * i, 41))),
+                    EaseSineOut::create(FadeTo::create(0.4f, OPACITY_UI_TABS)),
+                    nullptr
+                ),
+                nullptr
+            )
+        );
         
         // Add Icon to Button
         auto tab_icon = ui::ImageView::create(TAB_ICONS[i]);
@@ -234,15 +282,4 @@ void HUD::createEventListeners()
         });
         getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
     }
-}
-
-void HUD::updateCounter()
-{
-    // Update Bit Counter
-    auto bit_counter_layer = getChildByName("bit_counter_layer");
-    auto icon = bit_counter_layer->getChildByName("icon");
-    auto counter = bit_counter_layer->getChildByName<ui::Text*>("counter");
-    counter->setString(Util::getFormattedDouble(Player::bits));
-    bit_counter_layer->setContentSize(Size(icon->getContentSize().width + counter->getContentSize().width,
-        counter->getContentSize().height));
 }

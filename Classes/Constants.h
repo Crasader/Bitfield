@@ -8,7 +8,7 @@
 
 
 //---- DEVELOPER
-#define SHOW_FPS false
+#define SHOW_FPS true
 
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
@@ -115,8 +115,11 @@ static const std::string EVENT_SQUADRON_UNLOCKED = "EVENT_SQUADRON_UNLOCKED";
 static const std::string EVENT_FLEET_UNLOCKED = "EVENT_FLEET_UNLOCKED";
 
 static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
+static const std::string EVENT_ALL_GENERATORS_UNLOCKED = "EVENT_ALL_GENERATORS_UNLOCKED";
 
 // Recurring Events
+static const std::string EVENT_BITS_CHANGED = "EVENT_BITS_CHANGED";
 static const std::string EVENT_GENERATOR_UNLOCKED = "EVENT_GENERATOR_UNLOCKED";
+
 
 #endif // __CONSTANTS_H__

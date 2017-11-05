@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cocos2d.h>
+#include "Types.h"
 
 class BitsPanel : public cocos2d::Node
 {
@@ -22,6 +23,7 @@ private:
     
     void addGeneratorLayer();
     void addGenerators();
+    void addGenerator(BitType type);
     void addBuyAmountButton();
 
     void addUpgradeLayer();

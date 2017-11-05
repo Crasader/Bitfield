@@ -15,8 +15,6 @@ public:
     static HUD* create();
     virtual bool init();
     void setWorld(World* world);
-
-    virtual void update(float delta);
     
     void addPanel(cocos2d::Node* panel, PanelID id);
     void showPanel(PanelID id);
@@ -34,8 +32,6 @@ private:
     void createPanels();
     void createTabs();
     void createEventListeners();
-
-    void updateCounter();
 };
 
 #endif // __HUD_H__
