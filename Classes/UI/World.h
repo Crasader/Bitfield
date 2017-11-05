@@ -40,6 +40,7 @@ private:
     int bits_spawned[7];
 
     float cameraOffset;
+    int cameraTarget;
 
     void createBackground();
     void createBackgroundGrid();
@@ -49,7 +50,8 @@ private:
     void createPolygon(const std::string& layerName, cocos2d::Vec2 pos,
         int limit, int sizeMin, int sizeDelta, float alpha, float spread);
     void initBits();
-    
+    void createEventListeners();
+
     void updateBackground();
     void updateCamera();
     void updateGrid();

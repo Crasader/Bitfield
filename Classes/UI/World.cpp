@@ -93,8 +93,8 @@ void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int
 void World::updateBackground()
 {
     Ship* ship = nullptr;
-    if (!fleet.empty() && !fleet.at(0).first.empty())
-        ship = fleet.at(0).first.at(0);
+    if (!fleet.empty() && !fleet.at(Player::slot_selected).first.empty())
+        ship = fleet.at(Player::slot_selected).first.at(0);
     if (!ship) return;
 
     //if (rand_0_1() < 0.6f) return;
@@ -106,8 +106,8 @@ void World::updateBackground()
 
 void World::updateCamera()
 {
-    if (fleet[0].first.empty()) return;
-    auto ship = fleet[0].first.at(0);
+    if (fleet[Player::slot_selected].first.empty()) return;
+    auto ship = fleet[Player::slot_selected].first.at(0);
     auto camera = getChildByName("camera");
     auto cameraOffset = getChildByName("cameraOffset");
     camera->setPosition(ship->getPosition() - cameraOffset->getPosition());
@@ -156,7 +156,15 @@ void World::updateFleet(float delta) {
         if (!ships.empty()) {
             auto ship = ships.at(0);
             if (type != ship->getType()) {
+                for (auto ship : ships) {
+                    ship->removeFromParent();
+                }
                 ships.clear();
+                for (auto streak : streaks) {
+                    streak->removeFromParent();
+                }
+                streaks.clear();
+                if (type == "Empty") continue;
             }
         }
 
@@ -193,7 +201,7 @@ void World::updateFleet(float delta) {
         }
 
         // Update streaks
-        for (int shipID = 0; shipID < streaks.size(); shipID++) {
+        for (int shipID = 0; shipID < ships.size(); shipID++) {
             auto ship = ships.at(shipID);
             auto streak = streaks.at(shipID);
             streak->setPosition(ship->getPosition());
@@ -435,6 +443,20 @@ void World::initBits()
             addBit(type);
         }
     }
+}
+
+void World::createEventListeners()
+{
+    //auto l_slot_selected = EventListenerCustom::create(EVENT_SLOT_SELECTED, [=](EventCustom* event) {
+    //    auto selected_slot = (int)event->getUserData();
+    //    auto ships = fleet[selected_slot].first;
+    //    if (!ships.empty()) {
+    //        auto ship = ships.at(0);
+    //        auto cameraOffset = getChildByName("cameraOffset");
+
+    //    }
+    //});
+    //getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_slot_selected, this);
 }
 
 void World::debugShip()

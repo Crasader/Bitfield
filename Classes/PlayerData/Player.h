@@ -49,11 +49,13 @@ public:
     static std::list<double> ship_costs;
     static std::list<double> squadron_costs;
     static int squadron_diamond_cost;
+    static int slot_selected;
 
     static bool purchaseShip();
     static bool purchaseSquadron();
     static void unlockSlot(int slot);
     static bool isSlotUnlocked(int slot);
+    static const std::string& getEquippedType(int slot);
 
 private:
     static void loadDocument();

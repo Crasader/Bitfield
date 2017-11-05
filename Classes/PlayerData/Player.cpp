@@ -37,6 +37,7 @@ std::map<int, std::string> Player::squadrons_equipped;
 std::list<double> Player::ship_costs;
 std::list<double> Player::squadron_costs;
 int Player::squadron_diamond_cost;
+int Player::slot_selected = 0;
 
 //---- PLAYER
 void Player::load() {
@@ -59,6 +60,7 @@ void Player::loadDocument() {
 void Player::loadGeneral()
 {
     bits = document["bits"].GetDouble();
+    updateBitString();
     all_multiplier = document["all_multiplier"].GetDouble();
     squadron_diamond_cost = document["squadron_diamond_cost"].GetInt();
 
@@ -200,17 +202,17 @@ void Player::loadSquadrons() {
                 }
             }
 
-            for (auto& pair : defaults.doubles) {
-                auto key = pair.first;
-                if (info.doubles.find(key) == info.doubles.end()) {
-                    info.doubles[key] = defaults.doubles[key];
-                }
-            }
-
             for (auto& pair : defaults.ints) {
                 auto key = pair.first;
                 if (info.ints.find(key) == info.ints.end()) {
                     info.ints[key] = defaults.ints[key];
+                }
+            }
+
+            for (auto& pair : defaults.doubles) {
+                auto key = pair.first;
+                if (info.doubles.find(key) == info.doubles.end()) {
+                    info.doubles[key] = defaults.doubles[key];
                 }
             }
         }
@@ -309,6 +311,13 @@ void Player::saveSquadrons() {
             obj["count"].SetInt(info.ints["count"]);
         }
     }
+
+    {
+        auto& arr = document["squadrons_equipped"].GetArray();
+        for (int i = 0; i < 7; i++) {
+            arr[i].SetString(squadrons_equipped[i].c_str(), allocator);
+        }
+    }
 }
 void Player::saveDocument() {
     std::ofstream outputFile;
@@ -331,7 +340,10 @@ void Player::saveDocument() {
 //---- Events
 void Player::dispatchEvent(const std::string& name, void* data, bool once) {
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name, data);
-    if (once) events_finished.insert(name);
+    if (once) {
+        events_finished.insert(name);
+        Director::getInstance()->getEventDispatcher()->removeCustomEventListeners(name);
+    }
 }
 
 bool Player::eventFinished(const std::string& event) {
@@ -526,34 +538,39 @@ bool Player::purchaseShip() {
 
 bool Player::purchaseSquadron()
 {
-    return false;
-    //if (squadron_costs.empty()) return false;
+    if (squadron_costs.empty()) return false;
 
-    //auto cost = squadron_costs.front();
-    //if (bits < cost) return false;
-    //subBits(cost);
-    //
-    //auto it = squadrons.begin();
-    //auto index = cocos2d::random() % squadron_defaults.size();
-    //for (int i = 0; i < index; i++) {
-    //    it++;
-    //}
-    //auto pair = *it;
-    //squadron_costs.pop_front();
+    auto cost = squadron_costs.front();
+    if (bits < cost) return false;
+    subBits(cost);
+    
+    auto it = squadrons.begin();
+    auto index = cocos2d::random() % squadrons.size();
+    for (int i = 0; i < index; i++) {
+        it++;
+    }
+    auto pair = *it;
+    squadron_costs.pop_front();
 
-    //cocos2d::log("Rolled %s", pair.first.c_str());
-    ////addSquadron(pair.second);
-    //return true;
+    cocos2d::log("Rolled %s", pair.first.c_str());
+    squadrons[pair.first].ints["owned"]++;
+    return true;
 }
 
 void Player::unlockSlot(int slot)
 {
-    squadrons_equipped[slot] == "Empty";
+    squadrons_equipped[slot] = "Empty";
+    dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
 }
 
 bool Player::isSlotUnlocked(int slot)
 {
     return squadrons_equipped[slot] != "Locked";
+}
+
+const std::string & Player::getEquippedType(int slot)
+{
+    return squadrons_equipped[slot];
 }
 
 //void Player::addSquadron(SquadronInfo info) {

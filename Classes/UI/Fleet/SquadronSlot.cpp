@@ -4,6 +4,7 @@
 #include "Constants.h"
 #include "UI\UIText.h"
 #include "UI\UIHBox.h"
+#include "PlayerData\Player.h"
 
 USING_NS_CC;
 
@@ -31,33 +32,52 @@ bool SquadronSlot::init(const std::string& path)
     setCascadeOpacityEnabled(true);
     setColor(Color3B(UI_COLOR_2));
     setZoomScale(0);
-    onClick = [this]() {
-        Player::unlockSlot(slot);
-    };
 
     createIconBackground();
     createIcon();
     createLabel();
+    createEventListener();
     return true;
 }
 
 bool SquadronSlot::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event * event)
 {
     if (!Button::onTouchBegan(touch, event)) return false;
-    setScale(1.05f);
+    stopAllActions();
+    setScale(1.1f);
     return true;
 }
 
 void SquadronSlot::onTouchEnded(cocos2d::Touch * touch, cocos2d::Event * event)
 {
+    if (getNumberOfRunningActions() == 0)
+        runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+    if (isHighlighted()) {
+        if (!Player::isSlotUnlocked(slot)) {
+            Player::unlockSlot(slot);
+        }
+        else {
+            if (Player::getEquippedType(slot) == "Empty") {
+                Player::squadrons_equipped[slot] = rand_0_1() > 0.5f ? "Basic" : "Wanderer";
+                Player::dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
+            }
+            else if (Player::slot_selected == slot) {
+                Player::squadrons_equipped[slot] = "Empty";
+                Player::dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
+            }
+
+            Player::slot_selected = slot;
+            Player::dispatchEvent(EVENT_SLOT_SELECTED, (void*)slot);
+        }
+    }
     Button::onTouchEnded(touch, event);
-    setScale(1.0f);
-    onClick();
 }
 
 void SquadronSlot::onTouchCancelled(cocos2d::Touch * touch, cocos2d::Event * event)
 {
-    setScale(1.0f);
+    if (getNumberOfRunningActions() == 0)
+        runAction(EaseElasticOut::create(ScaleTo::create(0.4f, 1)));
+    Button::onTouchCancelled(touch, event);
 }
 
 void SquadronSlot::createIconBackground()
@@ -70,30 +90,35 @@ void SquadronSlot::createIconBackground()
 
 void SquadronSlot::createIcon()
 {
+    std::string type = Player::getEquippedType(slot);
     std::string path;
-    if (Player::isSlotUnlocked(slot))
-        path = UI_ICON_SHIP;
-    else
+    float opacity = OPACITY_HALF;
+    if (type == "Empty") {
+        path = UI_ICON_PLUS;
+    }
+    else if (type == "Locked") {
         path = UI_ICON_LOCK;
+        opacity = OPACITY_FULL;
+    }
+    else {
+        path = Player::squadrons[type].strings["sprite"];
+        opacity = OPACITY_FULL;
+    }
 
     auto icon = ui::ImageView::create(path);
     icon->setPositionNormalized(VEC_CENTER);
+    icon->setOpacity(opacity);
     getChildByName("icon_background")->addChild(icon, 0, "icon");
 }
 
 void SquadronSlot::createLabel()
 {
-    std::string str;
+    std::string type = Player::getEquippedType(slot);
     float opacity = OPACITY_FULL;
-    if (Player::isSlotUnlocked(slot)) {
-        str = "Basic";
-    }
-    else {
-        str = "Locked";
+    if (type == "Locked" || type == "Empty")
         opacity = OPACITY_HALF;
-    }
 
-    auto label = ui::Text::create(str, FONT_DEFAULT, FONT_SIZE_SMALL);
+    auto label = ui::Text::create(type, FONT_DEFAULT, FONT_SIZE_SMALL);
     label->setPosition(Vec2(getContentSize().width / 2, 15));
     label->setOpacity(opacity);
     addChild(label, 0, "label");
@@ -101,4 +126,24 @@ void SquadronSlot::createLabel()
 
 void SquadronSlot::createEventListener()
 {
+    auto l_slot_changed = EventListenerCustom::create(EVENT_SLOT_CHANGED, [=](EventCustom* event) {
+        auto changed_slot = (int)event->getUserData();
+        if (changed_slot == this->slot) {
+            // Update Icon
+            auto icon_background = getChildByName("icon_background");
+            icon_background->removeChildByName("icon");
+
+            createIcon();
+
+            // Update Label
+            auto label = getChildByName<ui::Text*>("label");
+            auto type = Player::getEquippedType(slot);
+            label->setString(type);
+            if (type != "Locked" && type != "Empty")
+                label->setOpacity(OPACITY_FULL);
+            else
+                label->setOpacity(OPACITY_HALF);
+        }
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_slot_changed, this);
 }

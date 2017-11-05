@@ -85,7 +85,7 @@ void Ship::calculateForces(float delta) {
     applyForce(separateForce, w_separation);
 
     // Seek towards touch position
-    if (shipID == 0 && squadronID == 0 && Input::touch_down) {
+    if (shipID == 0 && squadronID == Player::slot_selected && Input::touch_down) {
         auto target = Input::touch_pos - getParent()->getPosition();
         Util::capVector(target, Rect(0, 0, WORLD_WIDTH, WORLD_HEIGHT));
         Vec2 seekForce = seek(target);

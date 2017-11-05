@@ -84,7 +84,8 @@ static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
 static const std::string UI_TAB_SELECTED = "ui/tab_selected_9patch.png";
 static const std::string UI_ICON_VALUE = "ui/icon_bit_t1.png";
 static const std::string UI_ICON_CAPACITY = "ui/icon_bit_t1.png";
-static const std::string UI_ICON_LOCK = "ui/lock.png";
+static const std::string UI_ICON_LOCK = "ui/lockOLD.png";
+static const std::string UI_ICON_PLUS = "ui/plus.png";
 
 static const cocos2d::Size UI_SIZE_PANEL(1048, 632);
 static const cocos2d::Size UI_SIZE_PANEL_TABS(1048, 648);
@@ -113,13 +114,14 @@ static const cocos2d::Vec2 POLYGON_VERTS[4] = {
 // One-time Events
 static const std::string EVENT_SQUADRON_UNLOCKED = "EVENT_SQUADRON_UNLOCKED";
 static const std::string EVENT_FLEET_UNLOCKED = "EVENT_FLEET_UNLOCKED";
-
-static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
 static const std::string EVENT_ALL_GENERATORS_UNLOCKED = "EVENT_ALL_GENERATORS_UNLOCKED";
+static const std::string EVENT_ALL_SLOTS_UNLOCKED = "EVENT_ALL_SLOTS_UNLOCKED";
 
 // Recurring Events
 static const std::string EVENT_BITS_CHANGED = "EVENT_BITS_CHANGED";
 static const std::string EVENT_GENERATOR_UNLOCKED = "EVENT_GENERATOR_UNLOCKED";
-
+static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
+static const std::string EVENT_SLOT_CHANGED = "EVENT_SLOT_CHANGED";
+static const std::string EVENT_SLOT_SELECTED = "EVENT_SLOT_SELECTED";
 
 #endif // __CONSTANTS_H__

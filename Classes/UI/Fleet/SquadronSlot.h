@@ -14,8 +14,6 @@ public:
     virtual void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) override;
     virtual void onTouchCancelled(cocos2d::Touch* touch, cocos2d::Event* event) override;
 
-    std::function<void()> onClick;
-
 private:
     int slot;
 

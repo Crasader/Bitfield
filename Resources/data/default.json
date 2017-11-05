@@ -134,7 +134,8 @@
       "type": "Wanderer",
       "sprite": "sprites/ship2.png",
       "owned": 0,
-      "max_speed": 6.0,
+      "count": 7,
+      "max_speed": 7.0,
       "w_alignment": 0.0,
       "w_cohesion": 0.0,
       "w_stay_grouped": 0.0
@@ -143,6 +144,7 @@
       "type": "Bouncer",
       "sprite": "sprites/snake_tail.png",
       "owned": 0,
+      "count": 7,
       "separation_radius": 58,
       "max_speed": 8.0,
       "max_force": 0.16,

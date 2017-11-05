@@ -162,7 +162,7 @@ void HUD::createCounter() {
     icon->setLayoutParameter(param);
     bit_counter_layer->addChild(icon, 0, "icon");
 
-    auto counter = ui::Text::create("0", FONT_DEFAULT, FONT_SIZE_HUGE);
+    auto counter = ui::Text::create(Player::bitString, FONT_DEFAULT, FONT_SIZE_HUGE);
     bit_counter_layer->addChild(counter, 0, "counter");
 
     // Resize
@@ -269,7 +269,6 @@ void HUD::createEventListeners()
     if (!Player::eventFinished(EVENT_SQUADRON_UNLOCKED)) {
         auto l_first_ship = EventListenerCustom::create(EVENT_SQUADRON_UNLOCKED, [=](EventCustom* event) {
             showPanel(PanelID::Squadron);
-            getEventDispatcher()->removeCustomEventListeners(EVENT_SQUADRON_UNLOCKED);
         });
         getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
     }
@@ -278,7 +277,6 @@ void HUD::createEventListeners()
     if (!Player::eventFinished(EVENT_FLEET_UNLOCKED)) {
         auto l_fleet_unlock = EventListenerCustom::create(EVENT_FLEET_UNLOCKED, [=](EventCustom* event) {
             unlockFleet();
-            getEventDispatcher()->removeCustomEventListeners(EVENT_FLEET_UNLOCKED);
         });
         getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
     }
