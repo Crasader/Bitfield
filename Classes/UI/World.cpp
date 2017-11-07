@@ -194,6 +194,8 @@ void World::updateFleet(float delta) {
                 auto colorIndex = shipID % 7;
                 auto color = Color3B(Player::generators[BitType(colorIndex)].color);
                 auto streak = MotionStreak::create(2.0f, 0, 8, color, info.strings["streak"]);
+                //streak->runAction(RepeatForever::create(
+                //    Sequence::createWithTwoActions(FadeTo::create(1, 0.5f), FadeTo::create(1, 1))));
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
@@ -204,7 +206,9 @@ void World::updateFleet(float delta) {
         for (int shipID = 0; shipID < ships.size(); shipID++) {
             auto ship = ships.at(shipID);
             auto streak = streaks.at(shipID);
-            streak->setPosition(ship->getPosition());
+            auto heading = ship->getVelocity().getNormalized();
+            heading.scale(8);
+            streak->setPosition(ship->getPosition() + heading);
         }
     }
     if (DEBUG_SHIP) debugShip();

@@ -132,7 +132,6 @@ void SquadronSlot::createEventListener()
             // Update Icon
             auto icon_background = getChildByName("icon_background");
             icon_background->removeChildByName("icon");
-
             createIcon();
 
             // Update Label

@@ -14,6 +14,9 @@ USING_NS_CC;
 
 Generator::Generator(BitType id) {
     this->id = id;
+    setAnchorPoint(VEC_CENTER);
+    setScale(0.8f);
+    runAction(EaseSineIn::create(EaseElasticOut::create(ScaleTo::create(0.4f, 1))));
 }
 
 Generator* Generator::create(BitType id) {

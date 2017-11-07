@@ -36,6 +36,7 @@ static const int GRID_RESOLUTION = 40;
 static const int GRID_SIZE = WORLD_WIDTH / GRID_RESOLUTION;
 static const float BIT_SCALE = 0.25f;
 
+static const std::string SPRITE_SHIP = "sprites/ship_basic.png";
 static const std::string SPRITE_BIT = "sprites/bit.png";
 static const std::string SPRITE_DIAMOND = "sprites/diamond.png";
 static const std::string SPRITE_STREAK = "sprites/streak.png";
@@ -77,7 +78,6 @@ static const float OPACITY_UI = 255 * 0.95f;
 static const float OPACITY_UI_TABS = 255 * 0.8f;
 static const float OPACITY_UNFOCUS = 255 * 0.7f;
 
-static const std::string UI_ICON_SHIP = "sprites/ship.png";
 static const std::string UI_ICON_CIRCLE = "sprites/circle.png";
 static const std::string UI_ICON_SILHOUETTE = "sprites/ship_silhouette.png";
 static const std::string UI_ROUNDED_RECT = "ui/default_9patch.png";
@@ -97,11 +97,11 @@ static const cocos2d::Size UI_SIZE_FLEET_BUTTON(495, 128);
 
 static const int NUM_TABS = 5;
 static const std::string TAB_ICONS[NUM_TABS] = {
-    "sprites/bit.png",
-    "sprites/ship.png",
-    "sprites/ship.png",
-    "sprites/ship.png",
-    "sprites/diamond.png"
+    SPRITE_BIT,
+    SPRITE_SHIP,
+    SPRITE_SHIP,
+    SPRITE_SHIP,
+    SPRITE_DIAMOND
 };
 
 static const cocos2d::Vec2 POLYGON_VERTS[4] = {

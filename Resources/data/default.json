@@ -16,7 +16,7 @@
       "timer": 0,
       "spawnTime": 2,
       "spawned": 250,
-      "capacity": 750
+      "capacity": 500
     },
     {
       "name": "Bluedium",
@@ -85,8 +85,8 @@
       "valueMultiplier": 1,
       "timer": 0,
       "spawnTime": 6,
-      "spawned": 50,
-      "capacity": 100
+      "spawned": 25,
+      "capacity": 50
     },
     {
       "name": "Indigine",
@@ -107,8 +107,8 @@
   "squadrons": [
     {
       "type": "Basic",
-      "sprite": "sprites/ship.png",
-      "streak": "sprites/streak.png",
+      "sprite": "sprites/ship_basic.png",
+      "streak": "sprites/streak_basic.png",
 
       "owned": 1,
       "count": 1,
@@ -132,7 +132,7 @@
     },
     {
       "type": "Wanderer",
-      "sprite": "sprites/ship2.png",
+      "sprite": "sprites/ship_wanderer.png",
       "owned": 0,
       "count": 7,
       "max_speed": 7.0,
@@ -142,7 +142,7 @@
     },
     {
       "type": "Bouncer",
-      "sprite": "sprites/snake_tail.png",
+      "sprite": "sprites/ship_snake.png",
       "owned": 0,
       "count": 7,
       "separation_radius": 58,

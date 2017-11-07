@@ -69,7 +69,7 @@ void SquadronPanel::addPurchaseButton()
         }
         else {
             if (Player::bits >= cost) {
-                Player::bits -= cost;
+                Player::subBits(cost);
                 Player::dispatchEvent(EVENT_FLEET_UNLOCKED, nullptr, true);
             }
         }
@@ -111,7 +111,7 @@ void SquadronPanel::addFilledShip()
 {
     auto background = getChildByName("background");
 
-    auto filledShip = Sprite::create(UI_ICON_SHIP);
+    auto filledShip = Sprite::create(SPRITE_SHIP);
     filledShip->setScale(1.5f);
     filledShip->setPosition(positions.front());
 

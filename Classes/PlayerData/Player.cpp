@@ -313,7 +313,7 @@ void Player::saveSquadrons() {
     }
 
     {
-        auto& arr = document["squadrons_equipped"].GetArray();
+        const auto& arr = document["squadrons_equipped"].GetArray();
         for (int i = 0; i < 7; i++) {
             arr[i].SetString(squadrons_equipped[i].c_str(), allocator);
         }
@@ -345,7 +345,6 @@ void Player::dispatchEvent(const std::string& name, void* data, bool once) {
         Director::getInstance()->getEventDispatcher()->removeCustomEventListeners(name);
     }
 }
-
 bool Player::eventFinished(const std::string& event) {
     return events_finished.find(event) != events_finished.end();
 }
@@ -363,7 +362,6 @@ void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
     updateBitString();
 }
-
 void Player::updateBitString() {
     const auto& newString = Util::getFormattedDouble(Player::bits);
     if (newString != bitString) {
@@ -533,6 +531,7 @@ bool Player::purchaseShip() {
     Player::subBits(cost);
     squadrons["Basic"].ints["count"]++;
     ship_costs.pop_front();
+
     return true;
 }
 
@@ -572,30 +571,3 @@ const std::string & Player::getEquippedType(int slot)
 {
     return squadrons_equipped[slot];
 }
-
-//void Player::addSquadron(SquadronInfo info) {
-//    SquadronInfo defaults = squadron_defaults["Basic"];
-//    for (auto& pair : defaults.strings) {
-//        auto key = pair.first;
-//        if (info.strings.find(key) == info.strings.end()) {
-//            info.strings[key] = defaults.strings[key];
-//        }
-//    }
-//
-//    for (auto& pair : defaults.doubles) {
-//        auto key = pair.first;
-//        if (info.doubles.find(key) == info.doubles.end()) {
-//            info.doubles[key] = defaults.doubles[key];
-//        }
-//    }
-//
-//    for (auto& pair : defaults.ints) {
-//        auto key = pair.first;
-//        if (info.ints.find(key) == info.ints.end()) {
-//            info.ints[key] = defaults.ints[key];
-//        }
-//    }
-//
-//    squadrons.push_back(info);
-//    squadron_slots++;
-//}

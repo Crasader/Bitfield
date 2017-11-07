@@ -22,7 +22,7 @@ bool SplashScene::init() {
 }
 
 void SplashScene::update(float delta) {
-    const float LOAD_TIME = 1.2f;
+    const float LOAD_TIME = 1.0f;
 
     if (transitioning) return;
 

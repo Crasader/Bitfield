@@ -18,6 +18,7 @@ bool FleetPanel::init()
     createSquadronSlots();
     createCenterPanel();
     createButtons();
+    createEventListeners();
 
     return true;
 }
@@ -35,6 +36,11 @@ void FleetPanel::createBackground()
     addChild(background);
 }
 
+static Vec2 getSlotPosition(int slot) {
+    return Vec2(UI_SIZE_FLEET_SLOT_BACK.width / 2 + (UI_SIZE_FLEET_SLOT_BACK.width + 19) * slot,
+        UI_SIZE_FLEET_SLOT_BACK.height / 2);
+}
+
 void FleetPanel::createSquadronSlots()
 {
     auto slot_layer = Layer::create();
@@ -44,11 +50,19 @@ void FleetPanel::createSquadronSlots()
     slot_layer->setPosition(Vec2(19, UI_SIZE_FLEET_PANEL.height + 32));
     for (int i = 0; i < 7; i++) {
         auto slot = SquadronSlot::create(i);
-        slot->setPosition(Vec2(UI_SIZE_FLEET_SLOT_BACK.width / 2 + (UI_SIZE_FLEET_SLOT_BACK.width + 19) * i,
-            UI_SIZE_FLEET_SLOT_BACK.height / 2));
+        slot->setPosition(getSlotPosition(i));
         slot_layer->addChild(slot);
     }
     addChild(slot_layer, 0, "slot_layer");
+
+    // Add indicator
+    auto slot_indicator = Util::createRoundedRect(UI_ROUNDED_RECT,
+        Size(UI_SIZE_FLEET_SLOT_BACK.width + 4, UI_SIZE_FLEET_SLOT_BACK.height + 4),
+        UI_COLOR_WHITE);
+    slot_indicator->setAnchorPoint(VEC_CENTER);
+    slot_indicator->setPosition(Vec2(UI_SIZE_FLEET_SLOT_BACK.width / 2,
+        UI_SIZE_FLEET_SLOT_BACK.height / 2));
+    slot_layer->addChild(slot_indicator, -1, "slot_indicator");
 }
 
 void FleetPanel::createCenterPanel()
@@ -103,7 +117,23 @@ void FleetPanel::createButtons()
 
 void FleetPanel::createEventListeners()
 {
-
+    auto l_slot_selected = EventListenerCustom::create(EVENT_SLOT_SELECTED, [=](EventCustom* event) {
+        auto changed_slot = (int)event->getUserData();
+        auto slot_indicator = getChildByName("slot_layer")->getChildByName("slot_indicator");
+        slot_indicator->stopAllActions();
+        slot_indicator->runAction(
+            Spawn::createWithTwoActions(
+                Sequence::create(
+                    FadeOut::create(0.1f),
+                    DelayTime::create(0.05f),
+                    FadeIn::create(0.05f),
+                    nullptr
+                ),
+                EaseBackOut::create(MoveTo::create(0.2f, getSlotPosition(changed_slot)))
+            )
+        );
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_slot_selected, this);
 }
 
 void FleetPanel::updateButtons()
