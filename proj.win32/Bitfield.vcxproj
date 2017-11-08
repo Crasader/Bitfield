@@ -151,6 +151,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClCompile Include="..\Classes\GameObject\Bit.cpp" />
     <ClCompile Include="..\Classes\GameObject\Ship.cpp" />
     <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
+    <ClCompile Include="..\Classes\GameObject\Snake.cpp" />
     <ClCompile Include="..\Classes\Input.cpp" />
     <ClCompile Include="..\Classes\PlayerData\Player.cpp" />
     <ClCompile Include="..\Classes\Scene\GameScene.cpp" />
@@ -160,6 +161,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClCompile Include="..\Classes\UI\Bits\Generator.cpp" />
     <ClCompile Include="..\Classes\UI\Bits\UpgradeItem.cpp" />
     <ClCompile Include="..\Classes\UI\Fleet\FleetPanel.cpp" />
+    <ClCompile Include="..\Classes\UI\Fleet\SquadronCard.cpp" />
     <ClCompile Include="..\Classes\UI\Fleet\SquadronPanel.cpp" />
     <ClCompile Include="..\Classes\UI\Fleet\SquadronSlot.cpp" />
     <ClCompile Include="..\Classes\UI\HUD.cpp" />
@@ -174,6 +176,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\GameObject\Bit.h" />
     <ClInclude Include="..\Classes\GameObject\Ship.h" />
     <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
+    <ClInclude Include="..\Classes\GameObject\Snake.h" />
     <ClInclude Include="..\Classes\Input.h" />
     <ClInclude Include="..\Classes\PlayerData\Player.h" />
     <ClInclude Include="..\Classes\Scene\GameScene.h" />
@@ -184,6 +187,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\UI\Bits\Generator.h" />
     <ClInclude Include="..\Classes\UI\Bits\UpgradeItem.h" />
     <ClInclude Include="..\Classes\UI\Fleet\FleetPanel.h" />
+    <ClInclude Include="..\Classes\UI\Fleet\SquadronCard.h" />
     <ClInclude Include="..\Classes\UI\Fleet\SquadronPanel.h" />
     <ClInclude Include="..\Classes\UI\Fleet\SquadronSlot.h" />
     <ClInclude Include="..\Classes\UI\HUD.h" />

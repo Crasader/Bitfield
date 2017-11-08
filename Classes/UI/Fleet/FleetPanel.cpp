@@ -4,6 +4,10 @@
 #include "Constants.h"
 #include "UI\PurchaseButton.h"
 #include "UI\Fleet\SquadronSlot.h"
+#include "UI\Fleet\SquadronCard.h"
+
+#include "UI\UIScrollView.h"
+#include "UI\UIText.h"
 
 USING_NS_CC;
 
@@ -71,8 +75,67 @@ void FleetPanel::createCenterPanel()
     panel->setCascadeOpacityEnabled(true);
     panel->setAnchorPoint(VEC_BOTTOM);
     panel->setPosition(Vec2(getContentSize().width / 2.f, 16));
-    addChild(panel);
+    addChild(panel, 0, "panel");
+
+    auto scrollview = ui::ScrollView::create();
+    scrollview->setContentSize(UI_SIZE_FLEET_SCROLLVIEW);
+    scrollview->setAnchorPoint(VEC_CENTER);
+    scrollview->setPosition(panel->getContentSize() / 2);
+    scrollview->setLayoutType(cocos2d::ui::Layout::Type::HORIZONTAL);
+    scrollview->setDirection(ui::ScrollView::Direction::HORIZONTAL);
+    scrollview->setScrollBarPositionFromCorner(Vec2(0, 0));
+    scrollview->setScrollBarOpacity(OPACITY_UI);
+    scrollview->setScrollBarAutoHideTime(0.7f);
+    scrollview->setScrollBarAutoHideEnabled(false);
+    panel->addChild(scrollview, 0, "scrollview");
+
+    auto rankC = createSquadronRank(0);
+    auto rankB = createSquadronRank(1);
+    auto rankA = createSquadronRank(2);
+
+    auto innerWidth = 32 * 2 + 28 * 2
+        + rankC->getContentSize().width
+        + rankB->getContentSize().width
+        + rankA->getContentSize().width;
+    scrollview->setInnerContainerSize(Size(innerWidth, UI_SIZE_FLEET_SCROLLVIEW.height));
 }
+
+cocos2d::Node* FleetPanel::createSquadronRank(int rank)
+{
+    auto scrollview = getChildByName("panel")->getChildByName<ui::ScrollView*>("scrollview");
+    char rankChar = 'C' - rank;
+
+    auto background = Util::createRoundedRect(UI_ROUNDED_RECT, Size(0, 232), UI_COLOR_1);
+    auto param = ui::LinearLayoutParameter::create();
+    param->setGravity(ui::LinearLayoutParameter::LinearGravity::CENTER_VERTICAL);
+    param->setMargin(ui::Margin(32, 0, 0, 0));
+    background->setLayoutParameter(param);
+    scrollview->addChild(background);
+
+    auto rankIcon = Sprite::create(SPRITE_BIT);
+    rankIcon->setColor(Color3B(Player::generators[BitType(rank)].color));
+    rankIcon->setPosition(Vec2(background->getBoundingBox().getMinX() + 8, background->getBoundingBox().getMaxY() - 16));
+    auto rankLabel = ui::Text::create(std::string(1, rankChar), FONT_DEFAULT, 40);
+    rankLabel->setPosition(rankIcon->getPosition());
+    background->addChild(rankIcon);
+    background->addChild(rankLabel);
+
+    // Add squadron cards
+    int count = 0;
+    for (auto& pair : Player::squadrons) {
+        auto& info = pair.second;
+        if (info.ints["rank"] == rank) {
+            auto squadronCard = SquadronCard::create(&info);
+            squadronCard->setPosition(Vec2(28 + UI_SIZE_FLEET_SLOT_BACK.width / 2 + (28 + UI_SIZE_FLEET_SLOT_BACK.width) * count, 116));
+            background->addChild(squadronCard);
+            count++;
+        }
+    }
+    background->setContentSize(Size(24 + (UI_SIZE_FLEET_SLOT_BACK.width + 28) * count, 232));
+    return background;
+}
+
+
 
 void FleetPanel::createButtons()
 {
@@ -117,6 +180,7 @@ void FleetPanel::createButtons()
 
 void FleetPanel::createEventListeners()
 {
+    // Update slot indicator
     auto l_slot_selected = EventListenerCustom::create(EVENT_SLOT_SELECTED, [=](EventCustom* event) {
         auto changed_slot = (int)event->getUserData();
         auto slot_indicator = getChildByName("slot_layer")->getChildByName("slot_indicator");
@@ -150,8 +214,3 @@ void FleetPanel::updateButtons()
 
     auto right = button_layer->getChildByName("right");
 }
-
-void FleetPanel::updateSlots()
-{
-}
-

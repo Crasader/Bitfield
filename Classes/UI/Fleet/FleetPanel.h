@@ -13,11 +13,13 @@ private:
     // Initialize
     void createBackground();
     void createSquadronSlots();
+    
     void createCenterPanel();
+    cocos2d::Node* createSquadronRank(int rank);
+
     void createButtons();
     void createEventListeners();
 
     void updateButtons();
-    void updateSlots();
 };
 

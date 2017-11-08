@@ -8,7 +8,7 @@
 
 
 //---- DEVELOPER
-#define SHOW_FPS true
+#define SHOW_FPS false
 
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;
@@ -60,6 +60,7 @@ static const cocos2d::Vec2 VEC_BOTTOM(0.5f, 0);
 static const cocos2d::Vec2 VEC_TOP(0.5f, 1);
 
 static const int FONT_SIZE_HUGE = 86;
+static const int FONT_SIZE_LARGE = 64;
 static const int FONT_SIZE_MEDIUM = 42;
 static const int FONT_SIZE_SMALL = 30;
 
@@ -90,10 +91,17 @@ static const std::string UI_ICON_PLUS = "ui/plus.png";
 static const cocos2d::Size UI_SIZE_PANEL(1048, 632);
 static const cocos2d::Size UI_SIZE_PANEL_TABS(1048, 648);
 static const cocos2d::Size UI_SIZE_TAB_LAYER(1080, 98);
+
+//----FLEET PANEL
 static const cocos2d::Size UI_SIZE_FLEET_SLOT_BACK(128, 160);
 static const cocos2d::Size UI_SIZE_FLEET_SLOT_FRONT(124, 128);
+
 static const cocos2d::Size UI_SIZE_FLEET_PANEL(1010, 280);
+static const cocos2d::Size UI_SIZE_FLEET_SCROLLVIEW(994, 280);
+//static const cocos2d::Size UI_OFFSET_FLEET_SCROLLVIEW(8, 24);
+
 static const cocos2d::Size UI_SIZE_FLEET_BUTTON(495, 128);
+
 
 static const int NUM_TABS = 5;
 static const std::string TAB_ICONS[NUM_TABS] = {
@@ -123,5 +131,6 @@ static const std::string EVENT_GENERATOR_UNLOCKED = "EVENT_GENERATOR_UNLOCKED";
 static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
 static const std::string EVENT_SLOT_CHANGED = "EVENT_SLOT_CHANGED";
 static const std::string EVENT_SLOT_SELECTED = "EVENT_SLOT_SELECTED";
+static const std::string EVENT_SQUADRON_PURCHASED = "EVENT_SQUADRON_PURCHASED";
 
 #endif // __CONSTANTS_H__

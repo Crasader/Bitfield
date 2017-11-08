@@ -118,11 +118,10 @@ std::string Util::getSuffix(int exponent) {
 
 void Util::capVector(cocos2d::Vec2& v, double minX, double maxX, double minY,  double maxY)
 {
-    auto ret = v;
-    if (ret.x < minX) ret.x = minX;
-    if (ret.x > maxX) ret.x = maxX;
-    if (ret.y < minY) ret.y = minY;
-    if (ret.y > maxY) ret.y = maxY;
+    if (v.x < minX) v.x = minX;
+    if (v.x > maxX) v.x = maxX;
+    if (v.y < minY) v.y = minY;
+    if (v.y > maxY) v.y = maxY;
 }
 
 void Util::capVector(cocos2d::Vec2& v, cocos2d::Rect rect)

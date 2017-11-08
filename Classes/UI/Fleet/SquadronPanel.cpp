@@ -113,6 +113,7 @@ void SquadronPanel::addFilledShip()
 
     auto filledShip = Sprite::create(SPRITE_SHIP);
     filledShip->setScale(1.5f);
+    //filledShip->runAction(EaseBounceOut::create(ScaleTo::create(0.3f, 1.5f)));
     filledShip->setPosition(positions.front());
 
     auto line = DrawNode::create(4);
@@ -121,7 +122,7 @@ void SquadronPanel::addFilledShip()
         Vec2(0, -(filledShip->getPositionY())),
         Color4F(Player::generators[BitType(7 - positions.size())].color));
     line->setScaleY(0);
-    line->runAction(EaseCircleActionOut::create(ScaleTo::create(0.8f, 1, 1)));
+    line->runAction(EaseSineOut::create(ScaleTo::create(0.5f, 1, 1)));
     background->addChild(line, 1);
 
     positions.pop_front();

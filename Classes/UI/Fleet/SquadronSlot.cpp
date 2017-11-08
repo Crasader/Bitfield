@@ -57,15 +57,6 @@ void SquadronSlot::onTouchEnded(cocos2d::Touch * touch, cocos2d::Event * event)
             Player::unlockSlot(slot);
         }
         else {
-            if (Player::getEquippedType(slot) == "Empty") {
-                Player::squadrons_equipped[slot] = rand_0_1() > 0.5f ? "Basic" : "Wanderer";
-                Player::dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
-            }
-            else if (Player::slot_selected == slot) {
-                Player::squadrons_equipped[slot] = "Empty";
-                Player::dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
-            }
-
             Player::slot_selected = slot;
             Player::dispatchEvent(EVENT_SLOT_SELECTED, (void*)slot);
         }

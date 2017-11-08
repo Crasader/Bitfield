@@ -551,8 +551,8 @@ bool Player::purchaseSquadron()
     auto pair = *it;
     squadron_costs.pop_front();
 
-    cocos2d::log("Rolled %s", pair.first.c_str());
     squadrons[pair.first].ints["owned"]++;
+    dispatchEvent(EVENT_SQUADRON_PURCHASED, (void*)pair.first.c_str());
     return true;
 }
 
@@ -571,3 +571,10 @@ const std::string & Player::getEquippedType(int slot)
 {
     return squadrons_equipped[slot];
 }
+
+void Player::equipSquadron(int slot, const std::string & type)
+{
+    squadrons_equipped[slot] = type;
+    dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
+}
+

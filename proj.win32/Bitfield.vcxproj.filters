@@ -90,6 +90,12 @@
     <ClCompile Include="..\Classes\UI\Fleet\SquadronSlot.cpp">
       <Filter>src\UI\Fleet</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\UI\Fleet\SquadronCard.cpp">
+      <Filter>src\UI\Fleet</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Snake.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -157,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Fleet\SquadronSlot.h">
       <Filter>src\UI\Fleet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\UI\Fleet\SquadronCard.h">
+      <Filter>src\UI\Fleet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Snake.h">
+      <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

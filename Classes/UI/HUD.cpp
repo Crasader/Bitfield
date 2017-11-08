@@ -280,4 +280,37 @@ void HUD::createEventListeners()
         });
         getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_fleet_unlock, this);
     }
+
+    // Popups on squadron purchased
+    auto l_squadron_purchased = EventListenerCustom::create(EVENT_SQUADRON_PURCHASED, [=](EventCustom* event) {
+        auto type = (const char*)event->getUserData();
+
+        // Clean up previous popup
+        auto previousPopup = getChildByName("squadron_popup");
+        if (previousPopup) {
+            previousPopup->removeFromParentAndCleanup(true);
+        }
+
+        // Determine the string to display
+        std::stringstream ss;
+        ss << "Rolled a " << type << "!";
+        if (Player::squadrons[type].ints["owned"] > 1) {
+            ss << " (Duplicate)";
+        }
+
+        // Attach the label to the camera
+        auto label = Label::create(ss.str(), FONT_DEFAULT, FONT_SIZE_LARGE);
+        label->setPositionNormalized(Vec2(0.5f, 0.5f));
+        label->setOpacity(0);
+        label->runAction(Sequence::create(
+            FadeIn::create(0.2f),
+            DelayTime::create(1.75f),
+            FadeOut::create(0.2f),
+            RemoveSelf::create(),
+            nullptr
+        ));
+        addChild(label, 99, "squadron_popup");
+
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_squadron_purchased, this);
 }

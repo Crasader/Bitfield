@@ -56,6 +56,7 @@ public:
     static void unlockSlot(int slot);
     static bool isSlotUnlocked(int slot);
     static const std::string& getEquippedType(int slot);
+    static void equipSquadron(int slot, const std::string& type);
 
 private:
     static void loadDocument();

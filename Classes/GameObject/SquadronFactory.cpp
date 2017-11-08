@@ -1,6 +1,6 @@
 #include "SquadronFactory.h"
 
-#include "Wanderer.h"
+#include "Snake.h"
 
 
 USING_NS_CC;
@@ -10,8 +10,8 @@ Ship * SquadronFactory::createShipWithInfo(SquadronInfo info, int squadronID, in
     Ship* ship = nullptr;
     auto type = info.strings["type"];
 
-    if (type == "Wanderer") {
-        ship = Ship::create(info, squadronID, shipID);
+    if (type == "Snake") {
+        ship = Snake::create(info, squadronID, shipID);
     }
     else {
         ship = Ship::create(info, squadronID, shipID);

@@ -21,10 +21,10 @@ public:
 
     cocos2d::Vec2 seek(cocos2d::Vec2 target);
     cocos2d::Vec2 align();
-    cocos2d::Vec2 cohesion();
-    cocos2d::Vec2 separate();
+    virtual cocos2d::Vec2 cohesion();
+    virtual cocos2d::Vec2 separate();
     cocos2d::Vec2 wander();
-    cocos2d::Vec2 seekBits();
+    virtual cocos2d::Vec2 seekBits();
     cocos2d::Vec2 avoidWalls();
     cocos2d::Vec2 followLeader();
 

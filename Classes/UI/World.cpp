@@ -34,6 +34,7 @@ bool World::init()
     createInput();
     createGrid();
     createCamera();
+    createEventListeners();
     initBits();
 
     return true;
@@ -193,9 +194,9 @@ void World::updateFleet(float delta) {
                 // Also add streak
                 auto colorIndex = shipID % 7;
                 auto color = Color3B(Player::generators[BitType(colorIndex)].color);
-                auto streak = MotionStreak::create(2.0f, 0, 8, color, info.strings["streak"]);
-                //streak->runAction(RepeatForever::create(
-                //    Sequence::createWithTwoActions(FadeTo::create(1, 0.5f), FadeTo::create(1, 1))));
+                int streak_size = 8;
+                if (info.ints.find("streak_size") != info.ints.end()) streak_size = info.ints["streak_size"];
+                auto streak = MotionStreak::create(2.0f, 0, streak_size, color, info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
@@ -203,7 +204,7 @@ void World::updateFleet(float delta) {
         }
 
         // Update streaks
-        for (int shipID = 0; shipID < ships.size(); shipID++) {
+        for (int shipID = 0; shipID < streaks.size(); shipID++) {
             auto ship = ships.at(shipID);
             auto streak = streaks.at(shipID);
             auto heading = ship->getVelocity().getNormalized();
@@ -451,16 +452,6 @@ void World::initBits()
 
 void World::createEventListeners()
 {
-    //auto l_slot_selected = EventListenerCustom::create(EVENT_SLOT_SELECTED, [=](EventCustom* event) {
-    //    auto selected_slot = (int)event->getUserData();
-    //    auto ships = fleet[selected_slot].first;
-    //    if (!ships.empty()) {
-    //        auto ship = ships.at(0);
-    //        auto cameraOffset = getChildByName("cameraOffset");
-
-    //    }
-    //});
-    //getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_slot_selected, this);
 }
 
 void World::debugShip()

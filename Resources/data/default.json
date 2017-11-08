@@ -109,7 +109,7 @@
       "type": "Basic",
       "sprite": "sprites/ship_basic.png",
       "streak": "sprites/streak_basic.png",
-
+      "rank": 0,
       "owned": 1,
       "count": 1,
       "vision_radius": 350,
@@ -133,6 +133,7 @@
     {
       "type": "Wanderer",
       "sprite": "sprites/ship_wanderer.png",
+      "rank": 0,
       "owned": 0,
       "count": 7,
       "max_speed": 7.0,
@@ -143,6 +144,8 @@
     {
       "type": "Bouncer",
       "sprite": "sprites/ship_snake.png",
+      "streak_size": 32,
+      "rank": 0,
       "owned": 0,
       "count": 7,
       "separation_radius": 58,
@@ -150,9 +153,32 @@
       "max_force": 0.16,
       "w_separation": 140.0,
       "w_cohesion": 1.5
+    },
+    {
+      "type": "Snake",
+      "sprite": "sprites/ship_snake.png",
+      "sprite_tail" : "sprites/ship_snake_tail.png",
+      "rank": 1,
+      "owned": 0,
+      "count": 14,
+      "max_speed": 12.0,
+      "max_force": 0.3,
+      "separation_radius": 120,
+      "w_separation": 3.2,
+      "w_cohesion": 4.8,
+      "w_stay_grouped": 0.0
+    },
+    {
+      "type": "Swarm",
+      "sprite": "sprites/ship_elite.png",
+      "rank": 2,
+      "owned": 0,
+      "count": 14,
+      "max_speed": 12.0,
+      "max_force": 0.3
     }
   ],
-  "squadrons_equipped": [ "Basic", "Locked", "Locked", "Locked", "Locked", "Locked", "Locked" ],
+  "squadrons_equipped": [ "Snake", "Locked", "Locked", "Locked", "Locked", "Locked", "Locked" ],
 
   "ship_costs": [ 50.0, 5000.0, 250000.0, 12500000.0, 5e8, 2.5e10, 5e12 ],
   "squadron_costs": [ 0.0, 5e25, 5e50, 5e75, 5e100, 5e150, 5e200, 5e250 ],
