@@ -8,6 +8,9 @@ USING_NS_CC;
 Snake::Snake(SquadronInfo info, int squadronID, int shipID)
     : Ship(info, squadronID, shipID)
 {
+    if (shipID > 0) {
+        max_speed += 1;
+    }
 }
 
 Snake* Snake::create(SquadronInfo info, int squadronID, int shipID) {
@@ -35,10 +38,17 @@ cocos2d::Vec2 Snake::cohesion()
 {
     if (shipID == 0) return Vec2(0, 0);
     auto nextShip = neighbours->at(shipID - 1);
-    return seek(nextShip->getPosition());
+    return seek(nextShip->getPosition(), true);
 }
 
 cocos2d::Vec2 Snake::seekBits() {
     if (shipID == 0) return Ship::seekBits();
     return VEC_ZERO;
 }
+
+cocos2d::Vec2 Snake::wander()
+{
+    if (shipID == 0) return Ship::wander(); 
+    return VEC_ZERO;
+}
+

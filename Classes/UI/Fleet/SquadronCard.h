@@ -20,5 +20,6 @@ private:
     void createIconBackground();
     void createIcon();
     void createLabel();
+    void createInfo();
     void createEventListener();
 };

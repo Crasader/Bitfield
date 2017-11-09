@@ -194,8 +194,7 @@ void World::updateFleet(float delta) {
                 // Also add streak
                 auto colorIndex = shipID % 7;
                 auto color = Color3B(Player::generators[BitType(colorIndex)].color);
-                int streak_size = 8;
-                if (info.ints.find("streak_size") != info.ints.end()) streak_size = info.ints["streak_size"];
+                int streak_size = info.ints["streak_size"];
                 auto streak = MotionStreak::create(2.0f, 0, streak_size, color, info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
@@ -209,6 +208,7 @@ void World::updateFleet(float delta) {
             auto streak = streaks.at(shipID);
             auto heading = ship->getVelocity().getNormalized();
             heading.scale(8);
+            if (info.strings["type"] == "Blossom" && shipID == 0) streak->setVisible(false); // TODO
             streak->setPosition(ship->getPosition() + heading);
         }
     }

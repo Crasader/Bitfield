@@ -173,6 +173,17 @@ void FleetPanel::createButtons()
     right->setHeader("Purchase Squadron");
     right->setCost(Util::getFormattedDouble(Player::squadron_diamond_cost));
     right->setPosition(Vec2(UI_SIZE_FLEET_BUTTON.width / 2 + 10, 0));
+    right->onPurchase = [=]() {
+        // Temporary, just give a free squadron
+        auto it = Player::squadrons.begin();
+        auto index = cocos2d::random() % Player::squadrons.size();
+        for (int i = 0; i < index; i++) {
+            it++;
+        }
+        auto pair = *it;
+        Player::squadrons[pair.first].ints["owned"]++;
+        Player::dispatchEvent(EVENT_SQUADRON_PURCHASED, (void*)pair.first.c_str());
+    };
     button_layer->addChild(right, 0, "right");
 
     addChild(button_layer, 0, "button_layer");

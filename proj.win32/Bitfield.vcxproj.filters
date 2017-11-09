@@ -96,6 +96,9 @@
     <ClCompile Include="..\Classes\GameObject\Snake.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Blossom.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -168,6 +171,9 @@
       <Filter>src\UI\Fleet</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Snake.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Blossom.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

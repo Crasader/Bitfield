@@ -14,6 +14,7 @@ public:
     // Segments follow the next segment in the chain
     cocos2d::Vec2 cohesion() override;
 
-    // Only the head seeks bits
+    // Only the head seeks bits and wanders
     cocos2d::Vec2 seekBits() override;
+    cocos2d::Vec2 wander() override;
 };  

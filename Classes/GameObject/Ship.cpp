@@ -14,6 +14,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     type = info.strings["type"];
     sprite = info.strings["sprite"];
 
+    count = info.ints["count"];
     vision_radius = info.ints["vision_radius"];
     separation_radius = info.ints["separation_radius"];
     wall_separation_distance = info.ints["wall_separation_distance"];
@@ -22,6 +23,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     wander_theta = 0;
     wander_delta = info.ints["wander_delta"];
 
+    scale = info.doubles["scale"];
     max_speed = info.doubles["max_speed"];
     max_force = info.doubles["max_force"];
     w_alignment = info.doubles["w_alignment"];
@@ -36,14 +38,12 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     scheduleUpdate();
     velocity = Vec2(0, 0);
     acceleration = Vec2(0, 0);
+    point_to_velocity = true;
     this->squadronID = squadronID;
     this->shipID = shipID;
 
-    //// TODO: Write up a different way for ships to catch up to leader
-    //if (shipID > 0) max_speed += 0.75f;
-
     setScale(0);
-    runAction(EaseSineIn::create(EaseElasticOut::create(ScaleTo::create(1.0f, 1))));
+    runAction(EaseSineIn::create(EaseElasticOut::create(ScaleTo::create(scale, 1))));
 }
 
 Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
@@ -71,7 +71,9 @@ void Ship::update(float delta) {
     handleCollisions();
 
     // Point towards velocity
-    setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
+    if (point_to_velocity)
+        setRotation3D(Vec3(getRotation3D().x, getRotation3D().y,
+            -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
 }
 
 void Ship::calculateForces(float delta) {
@@ -148,8 +150,8 @@ void Ship::handleCollisions()
 
                         // Animate
                         runAction(Sequence::create(
-                            ScaleTo::create(0.1f, 1.25f),
-                            ScaleTo::create(0.1f, 1),
+                            ScaleTo::create(0.1f, scale * 1.25f),
+                            ScaleTo::create(0.1f, scale),
                             nullptr
                         ));
                     }
@@ -212,7 +214,7 @@ cocos2d::Vec2 Ship::cohesion() {
     auto center = getCenterOfSquadron();
     if (neighbours->empty() || center == getPosition()) return VEC_ZERO;
 
-    return seek(center);
+    return seek(center, true);
 }
 
 // Steer away from nearby ships
@@ -249,11 +251,19 @@ cocos2d::Vec2 Ship::separate() {
 }
 
 // Steer towards the target location
-cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target) {
+cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowdown) {
     Vec2 desired = target - getPosition();
-    float length = desired.length();
+    float dist = desired.length();
     desired.normalize();
-    desired.scale(max_speed);
+
+    auto scl = 0;
+    if (slowdown && dist <= separation_radius) {
+        scl = max_speed * (dist / separation_radius);
+    }
+    else {
+        scl = max_speed;
+    }
+    desired.scale(scl);
 
     Vec2 steer = desired - velocity;
     if (steer.length() > max_force) {
@@ -296,7 +306,8 @@ bool Ship::canSee(cocos2d::Node* target) {
     auto heading = getVelocity().getNormalized();
     auto toTarget = (target->getPosition() - getPosition()).getNormalized();
     auto angle = CC_RADIANS_TO_DEGREES(Vec2::angle(heading, toTarget));
-    return (angle >= 0 && angle <= 135);
+    return (angle >= 0 && angle <= 90) || (angle >= 270 && angle <= 360);
+        //(angle >= 0 && angle <= 135);
 }
 
 bool Ship::inRange(cocos2d::Node* target) {

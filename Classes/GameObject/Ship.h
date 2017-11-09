@@ -19,11 +19,11 @@ public:
     virtual void handleCollisions();
     void applyForce(cocos2d::Vec2 force, float scale = 1);
 
-    cocos2d::Vec2 seek(cocos2d::Vec2 target);
+    cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowdown = false);
     cocos2d::Vec2 align();
     virtual cocos2d::Vec2 cohesion();
     virtual cocos2d::Vec2 separate();
-    cocos2d::Vec2 wander();
+    virtual cocos2d::Vec2 wander();
     virtual cocos2d::Vec2 seekBits();
     cocos2d::Vec2 avoidWalls();
     cocos2d::Vec2 followLeader();
@@ -40,9 +40,11 @@ public:
     const std::string& getType();
     cocos2d::Vec2 getCenterOfSquadron();
 
+    // Public for now
     cocos2d::Vec2 velocity;
     cocos2d::Vec2 acceleration;
 
+    int count;
     int vision_radius;
     int separation_radius;
     int wall_separation_distance;
@@ -51,6 +53,7 @@ public:
     int wander_theta;
     int wander_delta;
 
+    double scale;
     double max_speed;
     double max_force;
     double w_alignment;
@@ -64,6 +67,7 @@ public:
 
     int squadronID;
     int shipID;
+    bool point_to_velocity;
 
 protected:
     cocos2d::Vector<Ship*>* neighbours;
@@ -74,6 +78,7 @@ protected:
     std::string sprite;
 
 private:
+    // TODO: send event to WORLD
     void addValuePopup(Bit* bit);
 };
 
