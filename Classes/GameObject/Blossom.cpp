@@ -19,6 +19,9 @@ Blossom::Blossom(SquadronInfo info, int squadronID, int shipID)
     if (shipID == 0) {
         addPetalNodes();
     }
+    else {
+        w_wander = 0;
+    }
 }
 
 Blossom* Blossom::create(SquadronInfo info, int squadronID, int shipID) {
@@ -41,6 +44,11 @@ void Blossom::update(float delta)
 {
     // Update petal positions
     if (shipID == 0) {
+        // Rotate
+        setRotationSkewX(getRotationSkewX() + 3);
+        setRotationSkewY(getRotationSkewY() + 3);
+
+        // Update petals
         auto offset = getChildByName("offset");
         for (int i = 0; i < 7; i++) {
             auto petalNode = getChildByTag(i);

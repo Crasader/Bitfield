@@ -17,6 +17,7 @@ public:
     virtual void update(float delta) override;
     virtual void calculateForces(float delta);
     virtual void handleCollisions();
+    virtual void onBitPickup();
     void applyForce(cocos2d::Vec2 force, float scale = 1);
 
     cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowdown = false);

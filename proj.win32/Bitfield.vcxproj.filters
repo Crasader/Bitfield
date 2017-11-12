@@ -22,10 +22,10 @@
     <Filter Include="src\PlayerData">
       <UniqueIdentifier>{7287750f-c4e7-4d23-a629-f8d446d584fe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\UI\Bits">
+    <Filter Include="src\UI\BitsPanel">
       <UniqueIdentifier>{1cb57efd-6985-4c5d-ba6f-462e9ab3b131}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\UI\Fleet">
+    <Filter Include="src\UI\FleetPanel">
       <UniqueIdentifier>{2c31416d-4a2f-49f4-96c2-13448763330f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -73,30 +73,33 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Bits\BitsPanel.cpp">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Bits\Generator.cpp">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Bits\UpgradeItem.cpp">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Fleet\FleetPanel.cpp">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Fleet\SquadronPanel.cpp">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Fleet\SquadronSlot.cpp">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\UI\Fleet\SquadronCard.cpp">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\GameObject\Snake.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="..\Classes\GameObject\Blossom.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Barrier.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
   </ItemGroup>
@@ -150,30 +153,33 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Bits\BitsPanel.h">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Bits\Generator.h">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Bits\UpgradeItem.h">
-      <Filter>src\UI\Bits</Filter>
+      <Filter>src\UI\BitsPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Fleet\FleetPanel.h">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Fleet\SquadronPanel.h">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Fleet\SquadronSlot.h">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\UI\Fleet\SquadronCard.h">
-      <Filter>src\UI\Fleet</Filter>
+      <Filter>src\UI\FleetPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Snake.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Blossom.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Barrier.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

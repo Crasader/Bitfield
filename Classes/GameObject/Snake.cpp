@@ -8,9 +8,6 @@ USING_NS_CC;
 Snake::Snake(SquadronInfo info, int squadronID, int shipID)
     : Ship(info, squadronID, shipID)
 {
-    if (shipID > 0) {
-        max_speed += 1;
-    }
 }
 
 Snake* Snake::create(SquadronInfo info, int squadronID, int shipID) {

@@ -144,7 +144,6 @@ void World::updateGrid()
 }
 
 void World::updateFleet(float delta) {
-    // For each slot,
     for (int squadronID = 0; squadronID < 7; squadronID++) {
         if (!Player::isSlotUnlocked(squadronID)) continue;
         const auto& type = Player::squadrons_equipped[squadronID];
@@ -195,7 +194,8 @@ void World::updateFleet(float delta) {
                 auto colorIndex = shipID % 7;
                 auto color = Color3B(Player::generators[BitType(colorIndex)].color);
                 int streak_size = info.ints["streak_size"];
-                auto streak = MotionStreak::create(2.0f, 0, streak_size, color, info.strings["streak"]);
+                double streak_length = info.doubles["streak_length"];
+                auto streak = MotionStreak::create(streak_length, 0, streak_size, color, info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
@@ -205,6 +205,15 @@ void World::updateFleet(float delta) {
         // Update streaks
         for (int shipID = 0; shipID < streaks.size(); shipID++) {
             auto ship = ships.at(shipID);
+            
+            // Hide off-camera ships
+            if (!cameraContains(ship->getBoundingBox())) {
+                ship->setVisible(false);
+            }
+            else if (!ship->isVisible()){
+                ship->setVisible(true);
+            }
+
             auto streak = streaks.at(shipID);
             auto heading = ship->getVelocity().getNormalized();
             heading.scale(8);
@@ -288,8 +297,14 @@ void World::offsetCameraForPanelIsVisible(bool visible) {
 
 bool World::cameraContains(cocos2d::Vec2 point)
 {
-    auto rect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
-    return (rect.containsPoint(point));
+    auto worldRect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
+    return (worldRect.containsPoint(point));
+}
+
+bool World::cameraContains(cocos2d::Rect rect)
+{
+    auto worldRect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
+    return worldRect.intersectsRect(rect);
 }
 
 bool World::worldContains(cocos2d::Vec2 point)

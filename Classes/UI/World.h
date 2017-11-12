@@ -27,6 +27,7 @@ public:
 
     void offsetCameraForPanelIsVisible(bool visible);
     bool cameraContains(cocos2d::Vec2 point);
+    bool cameraContains(cocos2d::Rect rect);
 
     static bool worldContains(cocos2d::Vec2 point);
     static cocos2d::Vec2 getCellInGrid(cocos2d::Vec2 pos);

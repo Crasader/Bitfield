@@ -38,6 +38,7 @@ static const float BIT_SCALE = 0.25f;
 
 static const std::string SPRITE_SHIP = "sprites/ship_basic.png";
 static const std::string SPRITE_BIT = "sprites/bit.png";
+static const std::string SPRITE_GLOW = "sprites/glow.png";
 static const std::string SPRITE_DIAMOND = "sprites/diamond.png";
 static const std::string SPRITE_STREAK = "sprites/streak.png";
 static const cocos2d::Color4B SHIP_COLOR(225, 255, 255, 255);

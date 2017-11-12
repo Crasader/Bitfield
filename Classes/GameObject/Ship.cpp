@@ -43,7 +43,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     this->shipID = shipID;
 
     setScale(0);
-    runAction(EaseSineIn::create(EaseElasticOut::create(ScaleTo::create(scale, 1))));
+    runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
 }
 
 Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
@@ -108,7 +108,7 @@ void Ship::calculateForces(float delta) {
 
         // Seek bits
         Vec2 bitForce = seekBits();
-        if (!bitForce.isZero() && w_seek_bits > 0) {
+        if (!bitForce.isZero()) {
             applyForce(bitForce, w_seek_bits);
         }
         else {
@@ -137,7 +137,7 @@ void Ship::handleCollisions()
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     Vec2 dist = bit->getPosition() - getPosition();
-                    if (dist.getLength() < getContentSize().width / 2) {
+                    if (dist.getLength() < getContentSize().height * scale / 2.f) {
                         if (bit->isRemoved()) continue;
                         auto& info = Player::generators[bit->getType()];
                         auto value = Player::calculateValue(bit->getType());
@@ -148,12 +148,7 @@ void Ship::handleCollisions()
                         // Remove bit
                         bit->remove();
 
-                        // Animate
-                        runAction(Sequence::create(
-                            ScaleTo::create(0.1f, scale * 1.25f),
-                            ScaleTo::create(0.1f, scale),
-                            nullptr
-                        ));
+                        onBitPickup();
                     }
                 }
             }
@@ -167,6 +162,8 @@ void Ship::applyForce(cocos2d::Vec2 force, float scale) {
 }
 
 cocos2d::Vec2 Ship::wander() {
+    if (w_wander == 0) return VEC_ZERO;
+
     // Project future position
     Vec2 projection(velocity);
     projection.normalize();
@@ -182,6 +179,8 @@ cocos2d::Vec2 Ship::wander() {
 
 // Align direction with nearby ships
 cocos2d::Vec2 Ship::align() {
+    if (w_alignment == 0) return VEC_ZERO;
+
     Vec2 desired(0, 0);
     float count = 0;
 
@@ -211,6 +210,8 @@ cocos2d::Vec2 Ship::align() {
 
 // Steer towards the center of mass
 cocos2d::Vec2 Ship::cohesion() {
+    if (w_cohesion == 0) return VEC_ZERO;
+
     auto center = getCenterOfSquadron();
     if (neighbours->empty() || center == getPosition()) return VEC_ZERO;
 
@@ -219,6 +220,8 @@ cocos2d::Vec2 Ship::cohesion() {
 
 // Steer away from nearby ships
 cocos2d::Vec2 Ship::separate() {
+    if (w_separation == 0) return VEC_ZERO;
+
     Vec2 desired(0, 0);
     float count = 0;
 
@@ -275,12 +278,14 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowdown) {
 
 // Seek towards closest bit
 cocos2d::Vec2 Ship::seekBits() {
+    if (w_wander == 0) return VEC_ZERO;
+
     auto targetBit = getTargetBit();
     if (targetBit) {
         return seek(targetBit->getPosition());
     }
     
-    return Vec2(0, 0);
+    return VEC_ZERO;
 }
 
 // Steer away from walls
@@ -306,8 +311,7 @@ bool Ship::canSee(cocos2d::Node* target) {
     auto heading = getVelocity().getNormalized();
     auto toTarget = (target->getPosition() - getPosition()).getNormalized();
     auto angle = CC_RADIANS_TO_DEGREES(Vec2::angle(heading, toTarget));
-    return (angle >= 0 && angle <= 90) || (angle >= 270 && angle <= 360);
-        //(angle >= 0 && angle <= 135);
+    return angle >= 0 && angle <= 90;
 }
 
 bool Ship::inRange(cocos2d::Node* target) {
@@ -410,6 +414,15 @@ cocos2d::Vec2 Ship::getCenterOfSquadron()
     return center;
 }
 
+void Ship::onBitPickup()
+{
+    runAction(Sequence::create(
+        ScaleTo::create(0.1f, scale * 1.25f),
+        ScaleTo::create(0.1f, scale),
+        nullptr
+    ));
+}
+
 void Ship::addValuePopup(Bit* bit)
 {
     auto world = getParent();
@@ -434,6 +447,6 @@ void Ship::addValuePopup(Bit* bit)
         RemoveSelf::create(),
         nullptr)
     );
-    world->addChild(popup, 5 + bit->getType());
+    world->addChild(popup, 150 + bit->getType());
 }
 
