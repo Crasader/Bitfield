@@ -51,6 +51,7 @@ public:
     static int squadron_diamond_cost;
     static int slot_selected;
 
+    static bool canBuyShip();
     static bool purchaseShip();
     static bool purchaseSquadron();
     static void unlockSlot(int slot);

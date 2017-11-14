@@ -522,16 +522,20 @@ bool Player::isUpgradePurchased(int id) {
 }
 
 //---- Squadrons
-bool Player::purchaseShip() {
+bool Player::canBuyShip() {
     if (ship_costs.empty()) return false;
     auto cost = ship_costs.front();
     if (bits < cost) return false;
-
+    return true;
+}
+bool Player::purchaseShip() {
+    if (!canBuyShip()) return false;
+    
     // Purchase the upgrade
+    auto cost = ship_costs.front();
     Player::subBits(cost);
     squadrons["Basic"].ints["count"]++;
     ship_costs.pop_front();
-
     return true;
 }
 

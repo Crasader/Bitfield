@@ -33,11 +33,11 @@ public:
     void setBits(Grid* bits);
     void setBoundary(cocos2d::Rect boundary);
 
-    bool canSee(cocos2d::Node* target);
+    virtual bool canSee(cocos2d::Node* target);
     bool inRange(cocos2d::Node* target);
     const cocos2d::Vec2& getVelocity();
     const cocos2d::Vec2& getAcceleration();
-    Bit* getTargetBit();
+    virtual Bit* getTargetBit();
     const std::string& getType();
     cocos2d::Vec2 getCenterOfSquadron();
 
@@ -77,10 +77,6 @@ protected:
 
     std::string type;
     std::string sprite;
-
-private:
-    // TODO: send event to WORLD
-    void addValuePopup(Bit* bit);
 };
 
 #endif // __SHIP_H__

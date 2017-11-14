@@ -133,5 +133,6 @@ static const std::string EVENT_SLOT_UNLOCKED = "EVENT_SLOT_UNLOCKED";
 static const std::string EVENT_SLOT_CHANGED = "EVENT_SLOT_CHANGED";
 static const std::string EVENT_SLOT_SELECTED = "EVENT_SLOT_SELECTED";
 static const std::string EVENT_SQUADRON_PURCHASED = "EVENT_SQUADRON_PURCHASED";
+static const std::string EVENT_BIT_PICKUP = "EVENT_BIT_PICKUP";
 
 #endif // __CONSTANTS_H__
