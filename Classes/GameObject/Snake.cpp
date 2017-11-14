@@ -33,7 +33,7 @@ cocos2d::Vec2 Snake::separate() {
 
 cocos2d::Vec2 Snake::cohesion()
 {
-    if (shipID == 0) return Vec2(0, 0);
+    if (shipID == 0) return VEC_ZERO;
     auto nextShip = neighbours->at(shipID - 1);
     return seek(nextShip->getPosition(), true);
 }

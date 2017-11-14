@@ -143,11 +143,10 @@ void Ship::handleCollisions()
                         auto value = Player::calculateValue(bit->getType());
                         Player::addBits(value);
                         info.spawned--;
-                        addValuePopup(bit);
 
                         // Remove bit
+                        Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
                         bit->remove();
-
                         onBitPickup();
                     }
                 }
@@ -278,7 +277,7 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowdown) {
 
 // Seek towards closest bit
 cocos2d::Vec2 Ship::seekBits() {
-    if (w_wander == 0) return VEC_ZERO;
+    if (w_seek_bits == 0) return VEC_ZERO;
 
     auto targetBit = getTargetBit();
     if (targetBit) {
@@ -290,9 +289,11 @@ cocos2d::Vec2 Ship::seekBits() {
 
 // Steer away from walls
 cocos2d::Vec2 Ship::avoidWalls() {
+    if (w_avoid_wall == 0) return VEC_ZERO;
+
     auto heading = velocity.getNormalized();
     heading.scale(wall_separation_distance);
-    if (boundary.containsPoint(getPosition() + heading)) return Vec2(0, 0);
+    if (boundary.containsPoint(getPosition() + heading)) return VEC_ZERO;
 
     auto mid = Vec2(boundary.getMidX(), boundary.getMidY());
     auto toTarget = mid - getPosition();
@@ -343,6 +344,8 @@ void Ship::setBoundary(cocos2d::Rect boundary)
 }
 
 // Target the closest untargetted bit. We may already be targetting it.
+// TODO: This logic needs some work:
+// What if a ship targets a bit and then moves out of grid range?
 Bit* Ship::getTargetBit()
 {
     Bit* previousTarget = nullptr;
@@ -378,6 +381,7 @@ Bit* Ship::getTargetBit()
                         // See if new bit is closer than current closest
                         auto toBit = bit->getPosition() - getPosition();
                         if (toBit.lengthSquared() < toNearest.lengthSquared()) {
+                            nearestBit->setShip(nullptr);
                             nearestBit = bit;
                         }
                     }
@@ -422,31 +426,3 @@ void Ship::onBitPickup()
         nullptr
     ));
 }
-
-void Ship::addValuePopup(Bit* bit)
-{
-    auto world = getParent();
-
-    //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
-    auto popup = Label::createWithTTF(Player::generators[bit->getType()].valueString, FONT_DEFAULT, 52);
-    auto c = Color3B(Player::generators[bit->getType()].color);
-    popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
-    popup->setPosition(bit->getPosition());
-    popup->setOpacity(0);
-    popup->runAction(Sequence::create(
-        Spawn::createWithTwoActions(
-            EaseInOut::create(FadeIn::create(0.1f), 2),
-            EaseInOut::create(ScaleTo::create(0.1f, 1.3f), 2)
-        ),
-        DelayTime::create(0.5f),
-        Spawn::createWithTwoActions(
-            EaseInOut::create(FadeOut::create(0.3f), 2),
-            EaseInOut::create(ScaleTo::create(0.3f, 0.5f), 2)
-        ),
-        DelayTime::create(0.3f),
-        RemoveSelf::create(),
-        nullptr)
-    );
-    world->addChild(popup, 150 + bit->getType());
-}
-

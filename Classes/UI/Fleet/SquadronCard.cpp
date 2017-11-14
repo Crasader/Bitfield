@@ -126,13 +126,11 @@ void SquadronCard::createEventListener()
         auto type = (const char*)event->getUserData();
         if (strcmp(info->strings["type"].c_str(), type) == 0) {
             auto owned = info->ints["owned"];
-            cocos2d::log("%d %s owned", owned, type);
 
             // Update Icon
             auto icon_background = getChildByName("icon_background");
             auto icon = icon_background->getChildByName("icon");
             if (icon->getOpacity() < OPACITY_FULL && owned > 0) {
-                cocos2d::log("%.2f %.2f", (float)icon->getOpacity(), OPACITY_HALF);
                 icon->setOpacity(OPACITY_FULL);
             }
 

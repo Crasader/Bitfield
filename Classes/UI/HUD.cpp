@@ -48,6 +48,11 @@ bool HUD::init() {
     return true;
 }
 
+void HUD::update(float delta)
+{
+    Layer::update(delta);
+}
+
 void HUD::setWorld(World* world) {
     this->world = world;
 }
@@ -87,6 +92,7 @@ void HUD::showPanel(PanelID id) {
         nullptr
     ));
 
+    getTab(id)->setOpacity(OPACITY_UI_TABS);
     world->offsetCameraForPanelIsVisible(true);
 }
 
@@ -105,6 +111,8 @@ void HUD::hidePanel(PanelID id)
         nullptr
     ));
 
+    getTab(id)->setOpacity(OPACITY_HALF);
+
     world->offsetCameraForPanelIsVisible(false);
 }
 
@@ -122,7 +130,8 @@ void HUD::togglePanel(PanelID id)
 
 void HUD::unlockFleet()
 {
-    auto clip = getChildByTag(PanelID::Squadron);
+    auto fleetPanel = getChildByTag(PanelID::Temp);
+    auto clip = getChildByTag(PanelID::Fleet);
     auto panel = clip->getChildByName("panel");
     panel->runAction(Sequence::create(
         Spawn::create(
@@ -130,11 +139,11 @@ void HUD::unlockFleet()
             EaseSineIn::create(FadeOut::create(0.1f)),
             nullptr
         ),
-        RemoveSelf::create(false),
+        RemoveSelf::create(true),
         CallFunc::create([=]() {
             clip->removeFromParentAndCleanup(true);
-            addPanel(FleetPanel::create(), PanelID::Squadron);
-            showPanel(PanelID::Squadron);
+            fleetPanel->setTag(PanelID::Fleet);
+            showPanel(PanelID::Fleet);
         }),
         nullptr
     ));
@@ -199,10 +208,13 @@ void HUD::createCounter() {
 void HUD::createPanels()
 {
     addPanel(BitsPanel::create(), PanelID::Bits);
-    if (Player::eventFinished(EVENT_FLEET_UNLOCKED))
-        addPanel(FleetPanel::create(), PanelID::Squadron);
-    else
-        addPanel(SquadronPanel::create(), PanelID::Squadron);
+
+    auto fleetID = PanelID::Fleet;
+    if (!Player::eventFinished(EVENT_FLEET_UNLOCKED)) {
+        addPanel(SquadronPanel::create(), PanelID::Fleet);
+        fleetID = PanelID::Temp;
+    }
+    addPanel(FleetPanel::create(), fleetID);
 }
 
 void HUD::createTabs() {
@@ -246,7 +258,7 @@ void HUD::createTabs() {
                 DelayTime::create(1.0f + 0.12f * i),
                 Spawn::create(
                     EaseSineOut::create(MoveTo::create(0.4f, Vec2(116 + 212 * i, 41))),
-                    EaseSineOut::create(FadeTo::create(0.4f, OPACITY_UI_TABS)),
+                    EaseSineOut::create(FadeTo::create(0.4f, OPACITY_HALF)),
                     nullptr
                 ),
                 nullptr
@@ -265,13 +277,13 @@ void HUD::createTabs() {
 
 void HUD::createEventListeners()
 {
-    // Popup Squadron Panel when we have enough money
-    if (!Player::eventFinished(EVENT_SQUADRON_UNLOCKED)) {
-        auto l_first_ship = EventListenerCustom::create(EVENT_SQUADRON_UNLOCKED, [=](EventCustom* event) {
-            showPanel(PanelID::Squadron);
-        });
-        getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
-    }
+    //// Popup Squadron Panel when we have enough money
+    //if (!Player::eventFinished(EVENT_SQUADRON_UNLOCKED)) {
+    //    auto l_first_ship = EventListenerCustom::create(EVENT_SQUADRON_UNLOCKED, [=](EventCustom* event) {
+    //        showPanel(PanelID::Squadron);
+    //    });
+    //    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_first_ship, this);
+    //}
 
     // Hide Squadron and create Fleet
     if (!Player::eventFinished(EVENT_FLEET_UNLOCKED)) {

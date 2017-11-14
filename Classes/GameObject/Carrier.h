@@ -13,8 +13,12 @@ public:
     // Mini ships try to stay inside the carrier
     cocos2d::Vec2 cohesion() override;
 
-    // Mini ships seek bits
     cocos2d::Vec2 seekBits() override;
 
+    virtual void onBitPickup() override;
+
+    virtual bool canSee(cocos2d::Node* target) override;
+
 private:
+    bool shouldReturn;
 };  

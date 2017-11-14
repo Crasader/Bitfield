@@ -102,6 +102,9 @@
     <ClCompile Include="..\Classes\GameObject\Barrier.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Carrier.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -180,6 +183,9 @@
       <Filter>src\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Barrier.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Carrier.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

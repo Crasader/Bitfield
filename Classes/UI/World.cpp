@@ -147,11 +147,9 @@ void World::updateFleet(float delta) {
     for (int squadronID = 0; squadronID < 7; squadronID++) {
         if (!Player::isSlotUnlocked(squadronID)) continue;
         const auto& type = Player::squadrons_equipped[squadronID];
-        auto& info = Player::squadrons[type];
-
         auto& ships = fleet[squadronID].first;
         auto& streaks = fleet[squadronID].second;
-        
+
         // Clear out of date squadrons
         if (!ships.empty()) {
             auto ship = ships.at(0);
@@ -164,11 +162,12 @@ void World::updateFleet(float delta) {
                     streak->removeFromParent();
                 }
                 streaks.clear();
-                if (type == "Empty") continue;
             }
         }
+        if (type == "Empty") continue;
 
         // Add ships
+        auto& info = Player::squadrons[type];
         auto& count = info.ints["count"];
         if (ships.size() < count) {
             for (int shipID = ships.size(); shipID < count; shipID++) {
@@ -217,7 +216,7 @@ void World::updateFleet(float delta) {
             auto streak = streaks.at(shipID);
             auto heading = ship->getVelocity().getNormalized();
             heading.scale(8);
-            if (info.strings["type"] == "Blossom" && shipID == 0) streak->setVisible(false); // TODO
+            if ((info.strings["type"] == "Carrier" || info.strings["type"] == "Blossom") && shipID == 0) streak->setVisible(false); // TODO
             streak->setPosition(ship->getPosition() + heading);
         }
     }
@@ -467,6 +466,38 @@ void World::initBits()
 
 void World::createEventListeners()
 {
+    // Popup on bit pickup
+    auto l_bit_pickup = EventListenerCustom::create(EVENT_BIT_PICKUP, [=](EventCustom* event) {
+        auto bit = static_cast<Bit*>(event->getUserData());
+        if (!cameraContains(bit->getPosition())) return;
+
+        auto info = Player::generators[bit->getType()];
+        auto popup = Label::createWithTTF(info.valueString, FONT_DEFAULT, 52);
+        auto c = Color3B(info.color);
+        popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
+        popup->setPosition(bit->getPosition());
+        popup->setOpacity(0);
+        popup->runAction(Sequence::create(
+            EaseSineInOut::create(
+                Spawn::createWithTwoActions(
+                    FadeIn::create(0.15f),
+                    ScaleTo::create(0.15f, 1.3f)
+                )
+            ),
+            DelayTime::create(0.5f),
+            EaseSineInOut::create(
+                Spawn::createWithTwoActions(
+                    FadeOut::create(0.15f),
+                    ScaleTo::create(0.15f, 0.5f)
+                )
+            ),
+            DelayTime::create(0.3f),
+            RemoveSelf::create(),
+            nullptr)
+        );
+        addChild(popup, 150 + bit->getType());
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_bit_pickup, this);
 }
 
 void World::debugShip()

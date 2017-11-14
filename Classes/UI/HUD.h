@@ -9,11 +9,13 @@ class HUD : public cocos2d::Layer
 {
 public:
     enum PanelID {
-        Bits, Squadron, Missions, Artifacts, Shop
+        Bits, Fleet, Missions, Artifacts, Shop, Temp
     };
 
     static HUD* create();
-    virtual bool init();
+    virtual bool init() override;
+    virtual void update(float delta) override;
+
     void setWorld(World* world);
     
     void addPanel(cocos2d::Node* panel, PanelID id);

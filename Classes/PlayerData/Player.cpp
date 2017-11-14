@@ -494,20 +494,37 @@ bool Player::purchaseUpgrade(int id) {
     subBits(cost);
 
     // Apply the upgrade
-    const auto& bitType = upgrade.bitType;
-    const auto& upgradeType = upgrade.upgradeType;
+    auto bitType = upgrade.bitType;
+    auto upgradeType = upgrade.upgradeType;
+    auto& info = Player::generators[bitType];
     if (bitType == BitType::All) {
         Player::all_multiplier *= upgrade.value;
+        for (int i = 0; i < 7; i++) {
+            bitType = BitType(i);
+            info = Player::generators[bitType];
+            info.cost = calculateCost(bitType);
+            info.costString = Util::getFormattedDouble(info.cost);
+            info.value = calculateValue(bitType);
+            info.valueString = Util::getFormattedDouble(info.value);
+        }
     }
     else {
         switch (upgradeType) {
         case UpgradeType::Value:
-            generators[bitType].valueMultiplier *= upgrade.value; break;
+            info.valueMultiplier *= upgrade.value; break;
         case UpgradeType::Capacity:
-            generators[bitType].capacity += upgrade.value; break;
+            info.capacity += upgrade.value; break;
         default: break;
         }
+
+        // Update (TODO)
+        info.cost = calculateCost(bitType);
+        info.costString = Util::getFormattedDouble(info.cost);
+        info.value = calculateValue(bitType);
+        info.valueString = Util::getFormattedDouble(info.value);
     }
+    updateBitString();//TODO
+
     return true;
 }
 bool Player::canBuyUpgrade() {
@@ -522,16 +539,20 @@ bool Player::isUpgradePurchased(int id) {
 }
 
 //---- Squadrons
-bool Player::purchaseShip() {
+bool Player::canBuyShip() {
     if (ship_costs.empty()) return false;
     auto cost = ship_costs.front();
     if (bits < cost) return false;
-
+    return true;
+}
+bool Player::purchaseShip() {
+    if (!canBuyShip()) return false;
+    
     // Purchase the upgrade
+    auto cost = ship_costs.front();
     Player::subBits(cost);
     squadrons["Basic"].ints["count"]++;
     ship_costs.pop_front();
-
     return true;
 }
 
