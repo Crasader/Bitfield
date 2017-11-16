@@ -14,6 +14,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     type = info.strings["type"];
     sprite = info.strings["sprite"];
 
+    count = info.ints["count"];
     vision_radius = info.ints["vision_radius"];
     separation_radius = info.ints["separation_radius"];
     wall_separation_distance = info.ints["wall_separation_distance"];
@@ -22,6 +23,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     wander_theta = 0;
     wander_delta = info.ints["wander_delta"];
 
+    scale = info.doubles["scale"];
     max_speed = info.doubles["max_speed"];
     max_force = info.doubles["max_force"];
     w_alignment = info.doubles["w_alignment"];
@@ -36,11 +38,12 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     scheduleUpdate();
     velocity = Vec2(0, 0);
     acceleration = Vec2(0, 0);
+    point_to_velocity = true;
     this->squadronID = squadronID;
     this->shipID = shipID;
 
-    // TODO: Write up a different way for ships to catch up to leader
-    if (shipID > 0) max_speed += 0.75f;
+    setScale(0);
+    runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
 }
 
 Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
@@ -68,7 +71,9 @@ void Ship::update(float delta) {
     handleCollisions();
 
     // Point towards velocity
-    setRotation3D(Vec3(getRotation3D().x, getRotation3D().y, -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
+    if (point_to_velocity)
+        setRotation3D(Vec3(getRotation3D().x, getRotation3D().y,
+            -CC_RADIANS_TO_DEGREES(velocity.getAngle()) + 90));
 }
 
 void Ship::calculateForces(float delta) {
@@ -82,7 +87,7 @@ void Ship::calculateForces(float delta) {
     applyForce(separateForce, w_separation);
 
     // Seek towards touch position
-    if (shipID == 0 && squadronID == 0 && Input::touch_down) {
+    if (shipID == 0 && squadronID == Player::slot_selected && Input::touch_down) {
         auto target = Input::touch_pos - getParent()->getPosition();
         Util::capVector(target, Rect(0, 0, WORLD_WIDTH, WORLD_HEIGHT));
         Vec2 seekForce = seek(target);
@@ -90,9 +95,9 @@ void Ship::calculateForces(float delta) {
     }
     else {
         // Stay with leader if too far
-        if (shipID > 0) {
+        if (shipID > 0 && w_stay_grouped > 0) {
             auto leader = neighbours->at(0);
-            if (getPosition().distance(leader->getPosition()) > 350) {
+            if (getPosition().distance(leader->getPosition()) > vision_radius) {
                 auto stayGroupedForce = followLeader();
                 auto toLeader = leader->getPosition() -getPosition();
                 wander_theta = CC_RADIANS_TO_DEGREES(toLeader.getAngle());
@@ -103,7 +108,7 @@ void Ship::calculateForces(float delta) {
 
         // Seek bits
         Vec2 bitForce = seekBits();
-        if (!bitForce.isZero() && w_seek_bits > 0) {
+        if (!bitForce.isZero()) {
             applyForce(bitForce, w_seek_bits);
         }
         else {
@@ -111,6 +116,7 @@ void Ship::calculateForces(float delta) {
             Vec2 wanderForce = wander();
             applyForce(wanderForce, w_wander);
 
+            // Flock
             Vec2 alignForce = align();
             applyForce(alignForce, w_alignment);
             Vec2 cohesionForce = cohesion();
@@ -127,20 +133,21 @@ void Ship::handleCollisions()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     Vec2 dist = bit->getPosition() - getPosition();
-                    if (dist.getLength() < getContentSize().width / 2) {
+                    if (dist.getLength() < getContentSize().height * scale / 2.f) {
                         if (bit->isRemoved()) continue;
-                        auto& info = Player::bit_info[bit->getType()];
+                        auto& info = Player::generators[bit->getType()];
                         auto value = Player::calculateValue(bit->getType());
                         Player::addBits(value);
                         info.spawned--;
-                        addValuePopup(bit);
 
                         // Remove bit
+                        Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
                         bit->remove();
+                        onBitPickup();
                     }
                 }
             }
@@ -154,6 +161,8 @@ void Ship::applyForce(cocos2d::Vec2 force, float scale) {
 }
 
 cocos2d::Vec2 Ship::wander() {
+    if (w_wander == 0) return VEC_ZERO;
+
     // Project future position
     Vec2 projection(velocity);
     projection.normalize();
@@ -169,6 +178,8 @@ cocos2d::Vec2 Ship::wander() {
 
 // Align direction with nearby ships
 cocos2d::Vec2 Ship::align() {
+    if (w_alignment == 0) return VEC_ZERO;
+
     Vec2 desired(0, 0);
     float count = 0;
 
@@ -198,14 +209,18 @@ cocos2d::Vec2 Ship::align() {
 
 // Steer towards the center of mass
 cocos2d::Vec2 Ship::cohesion() {
+    if (w_cohesion == 0) return VEC_ZERO;
+
     auto center = getCenterOfSquadron();
     if (neighbours->empty() || center == getPosition()) return VEC_ZERO;
 
-    return seek(center);
+    return seek(center, true);
 }
 
 // Steer away from nearby ships
 cocos2d::Vec2 Ship::separate() {
+    if (w_separation == 0) return VEC_ZERO;
+
     Vec2 desired(0, 0);
     float count = 0;
 
@@ -238,11 +253,19 @@ cocos2d::Vec2 Ship::separate() {
 }
 
 // Steer towards the target location
-cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target) {
+cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowdown) {
     Vec2 desired = target - getPosition();
-    float length = desired.length();
+    float dist = desired.length();
     desired.normalize();
-    desired.scale(max_speed);
+
+    auto scl = 0;
+    if (slowdown && dist <= separation_radius) {
+        scl = max_speed * (dist / separation_radius);
+    }
+    else {
+        scl = max_speed;
+    }
+    desired.scale(scl);
 
     Vec2 steer = desired - velocity;
     if (steer.length() > max_force) {
@@ -254,19 +277,23 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target) {
 
 // Seek towards closest bit
 cocos2d::Vec2 Ship::seekBits() {
+    if (w_seek_bits == 0) return VEC_ZERO;
+
     auto targetBit = getTargetBit();
     if (targetBit) {
         return seek(targetBit->getPosition());
     }
     
-    return Vec2(0, 0);
+    return VEC_ZERO;
 }
 
 // Steer away from walls
 cocos2d::Vec2 Ship::avoidWalls() {
+    if (w_avoid_wall == 0) return VEC_ZERO;
+
     auto heading = velocity.getNormalized();
     heading.scale(wall_separation_distance);
-    if (boundary.containsPoint(getPosition() + heading)) return Vec2(0, 0);
+    if (boundary.containsPoint(getPosition() + heading)) return VEC_ZERO;
 
     auto mid = Vec2(boundary.getMidX(), boundary.getMidY());
     auto toTarget = mid - getPosition();
@@ -285,7 +312,7 @@ bool Ship::canSee(cocos2d::Node* target) {
     auto heading = getVelocity().getNormalized();
     auto toTarget = (target->getPosition() - getPosition()).getNormalized();
     auto angle = CC_RADIANS_TO_DEGREES(Vec2::angle(heading, toTarget));
-    return (angle >= 0 && angle <= 135);
+    return angle >= 0 && angle <= 90;
 }
 
 bool Ship::inRange(cocos2d::Node* target) {
@@ -317,6 +344,8 @@ void Ship::setBoundary(cocos2d::Rect boundary)
 }
 
 // Target the closest untargetted bit. We may already be targetting it.
+// TODO: This logic needs some work:
+// What if a ship targets a bit and then moves out of grid range?
 Bit* Ship::getTargetBit()
 {
     Bit* previousTarget = nullptr;
@@ -329,7 +358,7 @@ Bit* Ship::getTargetBit()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_WIDTH && c < GRID_HEIGHT) {
+            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
                 auto& grid = (*bits);
                 for (auto bit : grid[r][c]) {
                     // Clear out of range targets
@@ -352,6 +381,7 @@ Bit* Ship::getTargetBit()
                         // See if new bit is closer than current closest
                         auto toBit = bit->getPosition() - getPosition();
                         if (toBit.lengthSquared() < toNearest.lengthSquared()) {
+                            nearestBit->setShip(nullptr);
                             nearestBit = bit;
                         }
                     }
@@ -388,30 +418,11 @@ cocos2d::Vec2 Ship::getCenterOfSquadron()
     return center;
 }
 
-void Ship::addValuePopup(Bit* bit)
+void Ship::onBitPickup()
 {
-    auto world = getParent();
-
-    //auto popup = Util::createIconLabel(0, Player::calculateValue(bit->getType()), 40);
-    auto popup = Label::createWithTTF(Player::bit_info[bit->getType()].valueString, FONT_DEFAULT, 52);
-    auto c = Color3B(Player::bit_info[bit->getType()].color);
-    popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
-    popup->setPosition(bit->getPosition());
-    popup->setOpacity(0);
-    popup->runAction(Sequence::create(
-        Spawn::createWithTwoActions(
-            EaseInOut::create(FadeIn::create(0.1f), 2),
-            EaseInOut::create(ScaleTo::create(0.1f, 1.3f), 2)
-        ),
-        DelayTime::create(0.5f),
-        Spawn::createWithTwoActions(
-            EaseInOut::create(FadeOut::create(0.3f), 2),
-            EaseInOut::create(ScaleTo::create(0.3f, 0.5f), 2)
-        ),
-        DelayTime::create(0.3f),
-        RemoveSelf::create(),
-        nullptr)
-    );
-    world->addChild(popup, 5 + bit->getType());
+    runAction(Sequence::create(
+        ScaleTo::create(0.1f, scale * 1.25f),
+        ScaleTo::create(0.1f, scale),
+        nullptr
+    ));
 }
-

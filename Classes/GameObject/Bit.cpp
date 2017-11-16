@@ -8,7 +8,7 @@ Bit::Bit(BitType type) {
     ship = nullptr;
     removed = false;
 
-    setColor(Color3B(Player::bit_info[type].color));
+    setColor(Color3B(Player::generators[type].color));
     setScale(BIT_SCALE);
     setRotation(rand_0_1() * 360);
 }

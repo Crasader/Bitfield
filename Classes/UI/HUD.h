@@ -9,14 +9,14 @@ class HUD : public cocos2d::Layer
 {
 public:
     enum PanelID {
-        Bits, Squadron, Missions, Artifacts, Shop
+        Bits, Fleet, Missions, Artifacts, Shop, Temp
     };
 
     static HUD* create();
-    virtual bool init();
-    void setWorld(World* world);
+    virtual bool init() override;
+    virtual void update(float delta) override;
 
-    virtual void update(float delta);
+    void setWorld(World* world);
     
     void addPanel(cocos2d::Node* panel, PanelID id);
     void showPanel(PanelID id);
@@ -33,9 +33,7 @@ private:
     void createCounter();
     void createPanels();
     void createTabs();
-    void createEventListener();
-
-    void updateCounter();
+    void createEventListeners();
 };
 
 #endif // __HUD_H__

@@ -37,7 +37,8 @@ ui::Button* Util::createRoundedButton(const std::string& path, cocos2d::Size siz
     button->setContentSize(size);
     button->setColor(Color3B(color));
     button->setCascadeOpacityEnabled(true);
-    button->setAnchorPoint(Vec2(0, 0));
+    //button->setAnchorPoint(Vec2(0, 0));
+    button->setZoomScale(0);
     return button;
 }
 
@@ -57,7 +58,7 @@ rapidjson::Document Util::loadDocument(const std::string& path) {
 }
 
 std::string Util::getFormattedDouble(double bits) {
-    if (bits > BIT_MAX) return "INF";
+    if (bits > BIT_MAX) return "n/a";
 
     // Store the double in scientific notation: Looks like 1.23e+09 or 1.23e+308 or inf
     std::stringstream ss;
@@ -103,10 +104,10 @@ std::string Util::getFormattedDouble(double bits) {
 std::string Util::getSuffix(int exponent) {
     if (exponent < 3) return "";
     else if (exponent <= 35) return SUFFIX[(exponent - 3) / 3]; // Standard suffixes up to Decillion
-    else if (exponent > 279) return "INF";
-    else if (exponent >= 276) return "SSS";
-    else if (exponent >= 273) return "SS";
-    else if (exponent >= 270) return "S";
+    else if (exponent > 279) return "n/a";
+    else if (exponent >= 276) return "sss";
+    else if (exponent >= 273) return "ss";
+    else if (exponent >= 270) return "s";
     else {
         char first, second;
         first = ALPHABET[int(((exponent - 36) / 3) / 26) % 26];
@@ -117,11 +118,10 @@ std::string Util::getSuffix(int exponent) {
 
 void Util::capVector(cocos2d::Vec2& v, double minX, double maxX, double minY,  double maxY)
 {
-    auto ret = v;
-    if (ret.x < minX) ret.x = minX;
-    if (ret.x > maxX) ret.x = maxX;
-    if (ret.y < minY) ret.y = minY;
-    if (ret.y > maxY) ret.y = maxY;
+    if (v.x < minX) v.x = minX;
+    if (v.x > maxX) v.x = maxX;
+    if (v.y < minY) v.y = minY;
+    if (v.y > maxY) v.y = maxY;
 }
 
 void Util::capVector(cocos2d::Vec2& v, cocos2d::Rect rect)

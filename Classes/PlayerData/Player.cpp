@@ -17,11 +17,13 @@ using namespace rapidjson;
 
 //---- General
 Document Player::document;
+std::set<std::string> Player::events_finished;
 
 //---- Bits
 double Player::bits = 0;
+std::string Player::bitString = "";
 double Player::all_multiplier = 1;
-std::map<BitType, BitInfo> Player::bit_info;
+std::map<BitType, BitInfo> Player::generators;
 BuyMode Player::buy_mode = BuyMode::One;
 const int Player::LEVEL_TIER[] = { 10, 25, 50, 50 }; // Last value of x means "Every x levels, level up"
 
@@ -30,20 +32,19 @@ std::map<int, Upgrade> Player::upgrades;
 std::set<int> Player::upgrades_purchased;
 
 //---- Squadron
-std::map<std::string, SquadronInfo> Player::squadron_defaults;
-std::map<int, SquadronInfo> Player::squadrons;
-int Player::squadron_slots;
-double Player::ship_costs[7];
+std::map<std::string, SquadronInfo> Player::squadrons;
+std::map<int, std::string> Player::squadrons_equipped;
+std::list<double> Player::ship_costs;
+std::list<double> Player::squadron_costs;
+int Player::squadron_diamond_cost;
+int Player::slot_selected = 0;
 
 //---- PLAYER
 void Player::load() {
-    Texture2D::setDefaultAlphaPixelFormat(Texture2D::PixelFormat::RGBA4444);
-
     loadDocument();
     loadGeneral();
     loadBits();
     loadUpgrades();
-    loadSquadronDefaults();
     loadSquadrons();
 }
 void Player::loadDocument() {
@@ -59,48 +60,61 @@ void Player::loadDocument() {
 void Player::loadGeneral()
 {
     bits = document["bits"].GetDouble();
+    updateBitString();
     all_multiplier = document["all_multiplier"].GetDouble();
-    const auto& costs = document["ship_costs"].GetArray();
-    for (int i = 0; i < 7; i++) {
-        const auto& cost = costs[i];
-        ship_costs[i] = cost.GetDouble();
+    squadron_diamond_cost = document["squadron_diamond_cost"].GetInt();
+
+    // Ship costs
+    {
+        const auto& arr = document["ship_costs"].GetArray();
+        for (const auto& item : arr) {
+            ship_costs.push_back(item.GetDouble());
+        }
     }
 
-    //const auto& costs = document["squadron_costs"].GetArray();
-    //for (auto i = ) {
-    //    const auto& cost = costs[i];
-    //    ship_costs[i] = cost.GetDouble();
-    //}
+    // Squadron costs
+    {
+        const auto& arr = document["squadron_costs"].GetArray();
+        for (const auto& item : arr) {
+            squadron_costs.push_back(item.GetDouble());
+        }
+    }
 
-    squadron_slots = document["squadron_slots"].GetInt();
+    // Events
+    {
+        const auto& arr = document["events_finished"].GetArray();
+        for (auto& item : arr) {
+            events_finished.insert(item.GetString());
+        }
+    }
 }
 void Player::loadBits() {
-    const auto& resources = document["resources"].GetArray();
-    for (SizeType i = 0; i < resources.Size(); i++) {
-        const auto& resource = resources[i];
+    const auto& arr = document["resources"].GetArray();
+    for (int i = 0; i < arr.Size(); i++) {
+        const auto& item = arr[i];
         auto type = BitType(i);
 
         BitInfo info;
-        info.name = resource["name"].GetString();
-        const auto& colors = resource["color"].GetArray();
+        info.name = item["name"].GetString();
+        const auto& colors = item["color"].GetArray();
         info.color = Color4B(colors[0].GetInt(), colors[1].GetInt(), colors[2].GetInt(), colors[3].GetInt());
-        info.icon_filepath = resource["icon_filepath"].GetString();
-        info.level = resource["level"].GetInt();
-        info.baseCost = resource["baseCost"].GetDouble();
-        info.baseValue = resource["baseValue"].GetDouble();
-        info.costMultiplier = resource["costMultiplier"].GetDouble();
-        info.valueMultiplier = resource["valueMultiplier"].GetDouble();
-        info.timer = resource["timer"].GetDouble();
-        info.spawnTime = resource["spawnTime"].GetDouble();
-        info.spawned = resource["spawned"].GetInt();
-        info.capacity = resource["capacity"].GetInt();
-        bit_info[type] = info;
+        info.icon_filepath = item["icon_filepath"].GetString();
+        info.level = item["level"].GetInt();
+        info.baseCost = item["baseCost"].GetDouble();
+        info.baseValue = item["baseValue"].GetDouble();
+        info.costMultiplier = item["costMultiplier"].GetDouble();
+        info.valueMultiplier = item["valueMultiplier"].GetDouble();
+        info.timer = item["timer"].GetDouble();
+        info.spawnTime = item["spawnTime"].GetDouble();
+        info.spawned = item["spawned"].GetInt();
+        info.capacity = item["capacity"].GetInt();
+        generators[type] = info;
 
         // Runtime
-        bit_info[type].cost = calculateCost(type);
-        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
-        bit_info[type].value = calculateValue(type);
-        bit_info[type].valueString = Util::getFormattedDouble(bit_info[type].value);
+        generators[type].cost = calculateCost(type);
+        generators[type].costString = Util::getFormattedDouble(generators[type].cost);
+        generators[type].value = calculateValue(type);
+        generators[type].valueString = Util::getFormattedDouble(generators[type].value);
     }
 }
 void Player::loadUpgrades() {
@@ -137,7 +151,7 @@ void Player::loadUpgrades() {
             break;
         default: break;
         }
-        info.color = (info.bitType == BitType::All) ? Color4B(WORLD_COLOR) : bit_info[info.bitType].color;
+        info.color = (info.bitType == BitType::All) ? Color4B(WORLD_COLOR) : generators[info.bitType].color;
 
         // Name
         ss << BIT_STRINGS[info.bitType] << " " << identifier;
@@ -153,75 +167,62 @@ void Player::loadUpgrades() {
         upgrades[i] = info;
     }
 }
-void Player::loadSquadronDefaults() {
-    const auto& category = document["squadron_defaults"].GetArray();
-    for (SizeType i = 0; i < category.Size(); i++) {
-        const auto& item = category[i];
-
-        SquadronInfo info;
-        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
-            auto key = it->name.GetString();
-            const auto& value = it->value;
-
-            if (value.IsString()) {
-                info.strings[key] = value.GetString();
-            } else if (value.IsInt()) {
-                info.ints[key] = value.GetInt();
-            } else if (value.IsDouble()) {
-                info.doubles[key] = value.GetDouble();
-            }
-        }
-
-        squadron_defaults[info.strings["type"]] = info;
-    }
-}
 void Player::loadSquadrons() {
-    const auto& category = document["squadrons"].GetArray();
-    for (SizeType i = 0; i < category.Size(); i++) {
-        const auto& item = category[i];
-        auto type = item["type"].GetString();
+    {
+        const auto& arr = document["squadrons"].GetArray();
+        for (const auto& squadron_info : arr) {
+            SquadronInfo info;
+            for (auto it = squadron_info.MemberBegin(); it != squadron_info.MemberEnd(); it++) {
+                const auto& key = it->name.GetString();
+                const auto& value = it->value;
 
-        // Load in the info
-        SquadronInfo info = squadron_defaults[type];
-        for (auto it = item.MemberBegin(); it != item.MemberEnd(); it++) {
-            auto key = it->name.GetString();
-            const auto& value = it->value;
-
-            if (value.IsString()) {
-                info.strings[key] = value.GetString();
+                if (value.IsString()) {
+                    info.strings[key] = value.GetString();
+                }
+                else if (value.IsInt()) {
+                    info.ints[key] = value.GetInt();
+                }
+                else if (value.IsDouble()) {
+                    info.doubles[key] = value.GetDouble();
+                }
             }
-            else if (value.IsInt()) {
-                info.ints[key] = value.GetInt();
-            }
-            else if (value.IsDouble()) {
-                info.doubles[key] = value.GetDouble();
-            }
+            squadrons[info.strings["type"]] = info;
         }
 
-        // Fill in any gaps with defaults
-        SquadronInfo defaults = squadron_defaults["Default"];
-        for (auto& pair : defaults.strings) {
-            auto key = pair.first;
-            if (info.strings.find(key) == info.strings.end()) {
-                info.strings[key] = defaults.strings[key];
+        // Fill in gaps
+        for (auto& pair : squadrons) {
+            if (pair.first == "Basic") continue;
+
+            auto& info = pair.second;
+            SquadronInfo defaults = squadrons["Basic"];
+            for (auto& pair : defaults.strings) {
+                auto key = pair.first;
+                if (info.strings.find(key) == info.strings.end()) {
+                    info.strings[key] = defaults.strings[key];
+                }
+            }
+
+            for (auto& pair : defaults.ints) {
+                auto key = pair.first;
+                if (info.ints.find(key) == info.ints.end()) {
+                    info.ints[key] = defaults.ints[key];
+                }
+            }
+
+            for (auto& pair : defaults.doubles) {
+                auto key = pair.first;
+                if (info.doubles.find(key) == info.doubles.end()) {
+                    info.doubles[key] = defaults.doubles[key];
+                }
             }
         }
+    }
 
-        for (auto& pair : defaults.doubles) {
-            auto key = pair.first;
-            if (info.doubles.find(key) == info.doubles.end()) {
-                info.doubles[key] = defaults.doubles[key];
-            }
+    {
+        const auto& arr = document["squadrons_equipped"].GetArray();
+        for (int i = 0; i < 7; i++) {
+            squadrons_equipped[i] = arr[i].GetString();
         }
-
-        for (auto& pair : defaults.ints) {
-            auto key = pair.first;
-            if (info.ints.find(key) == info.ints.end()) {
-                info.ints[key] = defaults.ints[key];
-            }
-        }
-
-        squadrons[i] = info;
     }
 }
 
@@ -240,13 +241,45 @@ void Player::saveGeneral()
     document["bits"] = bits;
     document["all_multiplier"] = all_multiplier;
 
+    Document::AllocatorType& allocator = document.GetAllocator();
+
+    // Ship costs
+    {
+        document["ship_costs"].SetArray();
+        const auto& arr = document["ship_costs"].GetArray();
+        for (const auto& item : ship_costs) {
+            auto val = rapidjson::Value(item);
+            arr.PushBack(val, allocator);
+        }
+    }
+
+    // Squadron costs
+    {
+        document["squadron_costs"].SetArray();
+        const auto& arr = document["squadron_costs"].GetArray();
+        for (const auto& item : squadron_costs) {
+            auto val = rapidjson::Value(item);
+            arr.PushBack(val, allocator);
+        }
+    }
+
+    // Events
+    {
+        document["events_finished"].SetArray();
+        const auto& arr = document["events_finished"].GetArray();
+        for (const auto& item : events_finished) {
+            auto val = rapidjson::Value(item.c_str(), allocator);
+            arr.PushBack(val, allocator);
+        }
+    }
+
 }
 void Player::saveBits() {
     const auto& resources = document["resources"].GetArray();
     for (SizeType i = 0; i < resources.Size(); i++) {
         auto& resource = resources[i];
 
-        BitInfo info = bit_info[BitType(i)];
+        BitInfo info = generators[BitType(i)];
         resource["level"] = info.level;
         resource["valueMultiplier"] = info.valueMultiplier;
         resource["timer"] = info.timer;
@@ -265,21 +298,25 @@ void Player::saveUpgrades() {
     }
 }
 void Player::saveSquadrons() {
-    document["squadrons"].SetArray();
-    const auto& saved_squadrons = document["squadrons"].GetArray();
-
+    auto& arr = document["squadrons"];
     Document::AllocatorType& allocator = document.GetAllocator();
-    for (auto& info : squadrons) {
-        auto obj = rapidjson::Value(rapidjson::kObjectType);
-        auto type = rapidjson::StringRef(info.second.strings["type"].c_str());
-        obj.AddMember("type", type, allocator);
-        // TODO: just save all key value pairs you dummy
-        // actually wait a lot of them we dont need..
-        if (info.second.strings["type"] == "Default") {
-            obj.AddMember("count", info.second.ints["count"], allocator);
+    for (auto it = arr.Begin(); it != arr.End(); it++) {
+        auto& obj = *it;
+        
+        auto& typeValue = obj["type"];
+        auto type = typeValue.GetString();
+        SquadronInfo& info = squadrons[type];
+        obj["owned"].SetInt(info.ints["owned"]);
+        if (obj.HasMember("count")) {
+            obj["count"].SetInt(info.ints["count"]);
         }
+    }
 
-        saved_squadrons.PushBack(obj, allocator);
+    {
+        const auto& arr = document["squadrons_equipped"].GetArray();
+        for (int i = 0; i < 7; i++) {
+            arr[i].SetString(squadrons_equipped[i].c_str(), allocator);
+        }
     }
 }
 void Player::saveDocument() {
@@ -300,25 +337,44 @@ void Player::saveDocument() {
     fclose(fp);
 }
 
-//---- Bit Generators
-static void dispatch(const std::string& name) {
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name);
+//---- Events
+void Player::dispatchEvent(const std::string& name, void* data, bool once) {
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(name, data);
+    if (once) {
+        events_finished.insert(name);
+        Director::getInstance()->getEventDispatcher()->removeCustomEventListeners(name);
+    }
+}
+bool Player::eventFinished(const std::string& event) {
+    return events_finished.find(event) != events_finished.end();
 }
 
+
+//---- Bit Generators
 void Player::addBits(double bits) {
     Player::bits = std::min<double>(Player::bits + bits, BIT_MAX);
+    updateBitString();
     if (Player::bits > 50) {
-        dispatch(EVENT_FIRST_SHIP);
+        dispatchEvent(EVENT_SQUADRON_UNLOCKED, nullptr, true);
     }
 }
 void Player::subBits(double bits) {
     Player::bits = std::max<double>(Player::bits - bits, 0);
+    updateBitString();
 }
+void Player::updateBitString() {
+    const auto& newString = Util::getFormattedDouble(Player::bits);
+    if (newString != bitString) {
+        bitString = newString;
+        dispatchEvent(EVENT_BITS_CHANGED);
+    }
+}
+
 bool Player::purchaseBitUpgrade(BitType type) {
     auto price = calculateCost(type);
     if (bits < price) return false;
 
-    auto& info = bit_info[type];
+    auto& info = generators[type];
     int amount = getBuyAmount(type);
     subBits(price);
 
@@ -349,7 +405,7 @@ bool Player::purchaseBitUpgrade(BitType type) {
     return true;
 }
 int Player::getTier(BitType type) {
-    auto level = bit_info[type].level;
+    auto level = generators[type].level;
     if (level >= LEVEL_TIER[2]) {
         return level - (level % LEVEL_TIER[3]);
     }
@@ -364,7 +420,7 @@ int Player::getTier(BitType type) {
     }
 }
 int Player::getNextTier(BitType type) {
-    auto level = bit_info[type].level;
+    auto level = generators[type].level;
     if (level >= LEVEL_TIER[2]) {
         return getTier(type) + LEVEL_TIER[3];
     }
@@ -380,7 +436,7 @@ int Player::getNextTier(BitType type) {
 }
 double Player::calculateCost(BitType type) {
     int buyAmount = getBuyAmount(type);
-    auto info = bit_info[type];
+    auto info = generators[type];
     if (info.level == 0) {
         return info.baseCost;
     }
@@ -393,11 +449,11 @@ double Player::calculateCost(BitType type) {
     return std::min(cost, BIT_INF);
 }
 double Player::calculateValue(BitType type) {
-    auto info = bit_info[type];
+    auto info = generators[type];
     return std::min(std::max(1, info.level) * info.baseValue * info.valueMultiplier * Player::all_multiplier, BIT_INF);
 }
 int Player::getBuyAmount(BitType type) {
-    auto info = bit_info[type];
+    auto info = generators[type];
     if (info.level == 0) return 1;
 
     int amount = 0;
@@ -422,8 +478,8 @@ void Player::toggleBuyMode() {
 
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
-        bit_info[type].cost = calculateCost(type);
-        bit_info[type].costString = Util::getFormattedDouble(bit_info[type].cost);
+        generators[type].cost = calculateCost(type);
+        generators[type].costString = Util::getFormattedDouble(generators[type].cost);
     }
 }
 
@@ -435,23 +491,40 @@ bool Player::purchaseUpgrade(int id) {
 
     // Purchase the upgrade
     upgrades_purchased.insert(id);
-    bits -= cost;
+    subBits(cost);
 
     // Apply the upgrade
-    const auto& bitType = upgrade.bitType;
-    const auto& upgradeType = upgrade.upgradeType;
+    auto bitType = upgrade.bitType;
+    auto upgradeType = upgrade.upgradeType;
+    auto& info = Player::generators[bitType];
     if (bitType == BitType::All) {
         Player::all_multiplier *= upgrade.value;
+        for (int i = 0; i < 7; i++) {
+            bitType = BitType(i);
+            info = Player::generators[bitType];
+            info.cost = calculateCost(bitType);
+            info.costString = Util::getFormattedDouble(info.cost);
+            info.value = calculateValue(bitType);
+            info.valueString = Util::getFormattedDouble(info.value);
+        }
     }
     else {
         switch (upgradeType) {
         case UpgradeType::Value:
-            bit_info[bitType].valueMultiplier *= upgrade.value; break;
+            info.valueMultiplier *= upgrade.value; break;
         case UpgradeType::Capacity:
-            bit_info[bitType].capacity += upgrade.value; break;
+            info.capacity += upgrade.value; break;
         default: break;
         }
+
+        // Update (TODO)
+        info.cost = calculateCost(bitType);
+        info.costString = Util::getFormattedDouble(info.cost);
+        info.value = calculateValue(bitType);
+        info.valueString = Util::getFormattedDouble(info.value);
     }
+    updateBitString();//TODO
+
     return true;
 }
 bool Player::canBuyUpgrade() {
@@ -466,13 +539,63 @@ bool Player::isUpgradePurchased(int id) {
 }
 
 //---- Squadrons
-bool Player::buyShip() {
-    auto count = squadrons[0].ints["count"];
-    auto cost = ship_costs[count - 1];
-    if (count >= 7 || bits < cost) return false;
-
-    // Purchase the upgrade
-    bits -= cost;
-    squadrons[0].ints["count"]++;
+bool Player::canBuyShip() {
+    if (ship_costs.empty()) return false;
+    auto cost = ship_costs.front();
+    if (bits < cost) return false;
     return true;
 }
+bool Player::purchaseShip() {
+    if (!canBuyShip()) return false;
+    
+    // Purchase the upgrade
+    auto cost = ship_costs.front();
+    Player::subBits(cost);
+    squadrons["Basic"].ints["count"]++;
+    ship_costs.pop_front();
+    return true;
+}
+
+bool Player::purchaseSquadron()
+{
+    if (squadron_costs.empty()) return false;
+
+    auto cost = squadron_costs.front();
+    if (bits < cost) return false;
+    subBits(cost);
+    
+    auto it = squadrons.begin();
+    auto index = cocos2d::random() % squadrons.size();
+    for (int i = 0; i < index; i++) {
+        it++;
+    }
+    auto pair = *it;
+    squadron_costs.pop_front();
+
+    squadrons[pair.first].ints["owned"]++;
+    dispatchEvent(EVENT_SQUADRON_PURCHASED, (void*)pair.first.c_str());
+    return true;
+}
+
+void Player::unlockSlot(int slot)
+{
+    squadrons_equipped[slot] = "Empty";
+    dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
+}
+
+bool Player::isSlotUnlocked(int slot)
+{
+    return squadrons_equipped[slot] != "Locked";
+}
+
+const std::string & Player::getEquippedType(int slot)
+{
+    return squadrons_equipped[slot];
+}
+
+void Player::equipSquadron(int slot, const std::string & type)
+{
+    squadrons_equipped[slot] = type;
+    dispatchEvent(EVENT_SLOT_CHANGED, (void*)slot);
+}
+

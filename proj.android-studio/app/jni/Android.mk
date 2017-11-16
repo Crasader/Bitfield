@@ -16,19 +16,24 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/PlayerData/Player.cpp \
                    $(LOCAL_PATH)/../../../Classes/Util.cpp \
                    $(LOCAL_PATH)/../../../Classes/Input.cpp \
-                   $(LOCAL_PATH)/../../../Classes/Quadtree.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Ship.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Bit.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Carrier.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Barrier.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Blossom.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Snake.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/SquadronFactory.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/SplashScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/GameScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/HUD.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/World.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/Generator.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/UpgradeItem.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/BitsPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/SquadronPanel.cpp \
-                   $(LOCAL_PATH)/../../../Classes/UI/FleetPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/Generator.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/UpgradeItem.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Bits/BitsPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/SquadronPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/FleetPanel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/SquadronSlot.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UI/Fleet/SquadronCard.cpp \
                    $(LOCAL_PATH)/../../../Classes/UI/PurchaseButton.cpp
 
 

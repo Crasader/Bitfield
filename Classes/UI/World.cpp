@@ -34,16 +34,21 @@ bool World::init()
     createInput();
     createGrid();
     createCamera();
+    createEventListeners();
     initBits();
 
     return true;
 }
 
+static float totalDelta = 0;
 void World::update(float delta) {
     Layer::update(delta);
     updateBackground();
     updateGrid();
-    updateFleet(delta);
+    totalDelta += delta;
+    if (totalDelta > 0.65f) {
+        updateFleet(delta);
+    }
     updateBits(delta);
     updateCamera();
 }
@@ -52,11 +57,11 @@ void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int
     int sizeDelta, float alpha, float spread) {
     auto parallax = getChildByName("parallax");
     auto layer = parallax->getChildByName(layerName);
-    if (layer->getChildrenCount() >= limit || rand_0_1() > 0.8f) return;
+    if (layer->getChildrenCount() >= limit || rand_0_1() < 0.95f) return;
 
     auto randPos = Vec2(pos.x / WORLD_WIDTH - spread / 2 + rand_0_1() * spread,
         pos.y / WORLD_HEIGHT - spread / 2 + rand_0_1() * spread);
-    auto color = Color4F(Player::bit_info[BitType(cocos2d::random() % 7)].color);
+    auto color = Color4F(Player::generators[BitType(cocos2d::random() % 7)].color);
     auto size = sizeMin + rand_0_1() * sizeDelta;
 
     // Create a polygon
@@ -89,20 +94,21 @@ void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int
 void World::updateBackground()
 {
     Ship* ship = nullptr;
-    if (!fleet.empty() && !fleet.at(0).first.empty())
-        ship = fleet.at(0).first.at(0);
+    if (!fleet.empty() && !fleet.at(Player::slot_selected).first.empty())
+        ship = fleet.at(Player::slot_selected).first.at(0);
     if (!ship) return;
 
-    createPolygon("layer1", ship->getPosition(), 10, 150, 40, 0.4f, 0.3f);
-    createPolygon("layer2", ship->getPosition(), 10, 75, 45, 0.35f, 0.25f);
-    createPolygon("layer3", ship->getPosition(), 10, 35, 15, 0.25f, 0.2f);
-    createPolygon("layer4", ship->getPosition(), 10, 10, 10, 0.2f, 0.15f);
+    //if (rand_0_1() < 0.6f) return;
+    createPolygon("layer1", ship->getPosition(), 6, 180, 240, 0.4f, 0.175f);
+    createPolygon("layer2", ship->getPosition(), 6, 95, 45, 0.35f, 0.15f);
+    createPolygon("layer3", ship->getPosition(), 6, 35, 25, 0.25f, 0.125f);
+    createPolygon("layer4", ship->getPosition(), 6, 10, 10, 0.2f, 0.05f);
 }
 
 void World::updateCamera()
 {
-    if (fleet[0].first.empty()) return;
-    auto ship = fleet[0].first.at(0);
+    if (fleet[Player::slot_selected].first.empty()) return;
+    auto ship = fleet[Player::slot_selected].first.at(0);
     auto camera = getChildByName("camera");
     auto cameraOffset = getChildByName("cameraOffset");
     camera->setPosition(ship->getPosition() - cameraOffset->getPosition());
@@ -138,16 +144,33 @@ void World::updateGrid()
 }
 
 void World::updateFleet(float delta) {
-    for (int squadronID = 0; squadronID < Player::squadron_slots; squadronID++) {
-        auto info = Player::squadrons[squadronID];
-        auto type = info.strings["type"];
-        auto count = info.ints["count"];
-
+    for (int squadronID = 0; squadronID < 7; squadronID++) {
+        if (!Player::isSlotUnlocked(squadronID)) continue;
+        const auto& type = Player::squadrons_equipped[squadronID];
         auto& ships = fleet[squadronID].first;
         auto& streaks = fleet[squadronID].second;
-        auto addShips = [&](cocos2d::Vector<Ship*>& ships, Vector<MotionStreak*>& streaks, int count) {
+
+        // Clear out of date squadrons
+        if (!ships.empty()) {
+            auto ship = ships.at(0);
+            if (type != ship->getType()) {
+                for (auto ship : ships) {
+                    ship->removeFromParent();
+                }
+                ships.clear();
+                for (auto streak : streaks) {
+                    streak->removeFromParent();
+                }
+                streaks.clear();
+            }
+        }
+        if (type == "Empty") continue;
+
+        // Add ships
+        auto& info = Player::squadrons[type];
+        auto& count = info.ints["count"];
+        if (ships.size() < count) {
             for (int shipID = ships.size(); shipID < count; shipID++) {
-                // Add ship to vector
                 auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
                 ship->setNeighbours(&ships);
                 ship->setBits(&grid);
@@ -168,31 +191,34 @@ void World::updateFleet(float delta) {
 
                 // Also add streak
                 auto colorIndex = shipID % 7;
-                auto streak = MotionStreak::create(2.0f, 0, 8, Color3B(Player::bit_info[BitType(colorIndex)].color), info.strings["streak"]);
+                auto color = Color3B(Player::generators[BitType(colorIndex)].color);
+                int streak_size = info.ints["streak_size"];
+                double streak_length = info.doubles["streak_length"];
+                auto streak = MotionStreak::create(streak_length, 0, streak_size, color, info.strings["streak"]);
                 streak->setFastMode(true);
                 streaks.pushBack(streak);
                 addChild(streak);
             }
-        };
-
-        // Ships don't exist in the world, so spawn them
-        if (ships.empty()) {
-            addShips(ships, streaks, count);
-        }
-        else if (ships.size() < count) {
-            // Need more ships, add to world
-            addShips(ships, streaks, count);
         }
 
         // Update streaks
         for (int shipID = 0; shipID < streaks.size(); shipID++) {
             auto ship = ships.at(shipID);
+            
+            // Hide off-camera ships
+            if (!cameraContains(ship->getBoundingBox())) {
+                ship->setVisible(false);
+            }
+            else if (!ship->isVisible()){
+                ship->setVisible(true);
+            }
+
             auto streak = streaks.at(shipID);
-            streak->setPosition(ship->getPosition());
+            auto heading = ship->getVelocity().getNormalized();
+            heading.scale(8);
+            if ((info.strings["type"] == "Carrier" || info.strings["type"] == "Blossom") && shipID == 0) streak->setVisible(false); // TODO
+            streak->setPosition(ship->getPosition() + heading);
         }
-
-
-        // TODO: Eventually will need to evict ships if type doesnt match here
     }
     if (DEBUG_SHIP) debugShip();
 }
@@ -201,7 +227,7 @@ void World::updateBits(float delta) {
     // Spawn Bits
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
-        auto& info = Player::bit_info[type];
+        auto& info = Player::generators[type];
         if (info.level < 1) continue;
 
         info.timer += delta;
@@ -215,7 +241,7 @@ void World::updateBits(float delta) {
             info.timer = 0;
         }
 
-        if (bits_spawned[type] < Player::bit_info[type].spawned) {
+        if (bits_spawned[type] < Player::generators[type].spawned) {
             addBit(type);
         }
     }
@@ -270,8 +296,14 @@ void World::offsetCameraForPanelIsVisible(bool visible) {
 
 bool World::cameraContains(cocos2d::Vec2 point)
 {
-    auto rect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
-    return (rect.containsPoint(point));
+    auto worldRect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
+    return (worldRect.containsPoint(point));
+}
+
+bool World::cameraContains(cocos2d::Rect rect)
+{
+    auto worldRect = Rect(-getPosition(), Size(GAME_WIDTH, GAME_HEIGHT));
+    return worldRect.intersectsRect(rect);
 }
 
 bool World::worldContains(cocos2d::Vec2 point)
@@ -394,9 +426,9 @@ void World::createInput() {
 
 void World::createGrid()
 {
-    for (int i = 0; i < GRID_WIDTH; i++) {
+    for (int i = 0; i < GRID_RESOLUTION; i++) {
         grid.push_back(std::vector<cocos2d::Vector< Bit* > >());
-        for (int j = 0; j < GRID_HEIGHT; j++) {
+        for (int j = 0; j < GRID_RESOLUTION; j++) {
             grid[i].push_back(cocos2d::Vector< Bit* >());
         }
     }
@@ -406,6 +438,7 @@ void World::createCamera()
 {
     // Always follow the camera
     auto camera = Node::create();
+    camera->setPositionNormalized(VEC_CENTER);
     addChild(camera, 0, "camera");
 
     auto follow = Follow::createWithOffset(camera, 0, 0,
@@ -422,13 +455,49 @@ void World::initBits()
 {
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
-        auto& info = Player::bit_info[type];
+        auto& info = Player::generators[type];
         bits_spawned[i] = 0;
         if (info.level == 0) continue;
-        while (bits_spawned[type] < Player::bit_info[type].spawned) {
+        while (bits_spawned[type] < Player::generators[type].spawned) {
             addBit(type);
         }
     }
+}
+
+void World::createEventListeners()
+{
+    // Popup on bit pickup
+    auto l_bit_pickup = EventListenerCustom::create(EVENT_BIT_PICKUP, [=](EventCustom* event) {
+        auto bit = static_cast<Bit*>(event->getUserData());
+        if (!cameraContains(bit->getPosition())) return;
+
+        auto info = Player::generators[bit->getType()];
+        auto popup = Label::createWithTTF(info.valueString, FONT_DEFAULT, 52);
+        auto c = Color3B(info.color);
+        popup->setColor(Color3B(c.r * 1.25f, c.g * 1.25f, c.b * 1.25f));
+        popup->setPosition(bit->getPosition());
+        popup->setOpacity(0);
+        popup->runAction(Sequence::create(
+            EaseSineInOut::create(
+                Spawn::createWithTwoActions(
+                    FadeIn::create(0.15f),
+                    ScaleTo::create(0.15f, 1.3f)
+                )
+            ),
+            DelayTime::create(0.5f),
+            EaseSineInOut::create(
+                Spawn::createWithTwoActions(
+                    FadeOut::create(0.15f),
+                    ScaleTo::create(0.15f, 0.5f)
+                )
+            ),
+            DelayTime::create(0.3f),
+            RemoveSelf::create(),
+            nullptr)
+        );
+        addChild(popup, 150 + bit->getType());
+    });
+    getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_bit_pickup, this);
 }
 
 void World::debugShip()

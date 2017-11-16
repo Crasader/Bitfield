@@ -2,26 +2,31 @@
 
 #include "cocos2d.h"
 #include "rapidjson\document.h"
-#include <map>
-#include <set>
 #include "Types.h"
 
 class Player {
 public:
-    // Loading and Saving
+    // General
     static rapidjson::Document document;
     static void load();
     static void save();
+    static std::set<std::string> events_finished;
+
+    static void dispatchEvent(const std::string& event, void* data = nullptr, bool once = false);
+    static bool eventFinished(const std::string& event);
     
     // Bits
     static double bits;
+    static std::string bitString;
     static double all_multiplier;
-    static std::map<BitType, BitInfo> bit_info;
+    static std::map<BitType, BitInfo> generators;
     static BuyMode buy_mode;
     static const int LEVEL_TIER[];
 
     static void addBits(double bits);
     static void subBits(double bits);
+    static void updateBitString();
+
     static int getTier(BitType type);
     static int getNextTier(BitType type);
     static double calculateCost(BitType type);
@@ -39,19 +44,26 @@ public:
     static bool isUpgradePurchased(int id);
 
     // Squadron
-    static std::map<std::string, SquadronInfo> squadron_defaults;
-    static std::map<int, SquadronInfo> squadrons;
-    static int squadron_slots;
-    static double ship_costs[7];
-    //static std::vector<int> squadron_costs;
-    static bool buyShip();
+    static std::map<std::string, SquadronInfo> squadrons;
+    static std::map<int, std::string> squadrons_equipped;
+    static std::list<double> ship_costs;
+    static std::list<double> squadron_costs;
+    static int squadron_diamond_cost;
+    static int slot_selected;
+
+    static bool canBuyShip();
+    static bool purchaseShip();
+    static bool purchaseSquadron();
+    static void unlockSlot(int slot);
+    static bool isSlotUnlocked(int slot);
+    static const std::string& getEquippedType(int slot);
+    static void equipSquadron(int slot, const std::string& type);
 
 private:
     static void loadDocument();
     static void loadGeneral();
     static void loadUpgrades();
     static void loadBits();
-    static void loadSquadronDefaults();
     static void loadSquadrons();
 
     static void saveGeneral();

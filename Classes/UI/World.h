@@ -27,6 +27,7 @@ public:
 
     void offsetCameraForPanelIsVisible(bool visible);
     bool cameraContains(cocos2d::Vec2 point);
+    bool cameraContains(cocos2d::Rect rect);
 
     static bool worldContains(cocos2d::Vec2 point);
     static cocos2d::Vec2 getCellInGrid(cocos2d::Vec2 pos);
@@ -40,6 +41,7 @@ private:
     int bits_spawned[7];
 
     float cameraOffset;
+    int cameraTarget;
 
     void createBackground();
     void createBackgroundGrid();
@@ -49,13 +51,13 @@ private:
     void createPolygon(const std::string& layerName, cocos2d::Vec2 pos,
         int limit, int sizeMin, int sizeDelta, float alpha, float spread);
     void initBits();
-    
+    void createEventListeners();
+
     void updateBackground();
     void updateCamera();
     void updateGrid();
     void updateFleet(float delta);
     void updateBits(float delta);
-
     void debugShip();
 };
 
