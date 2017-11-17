@@ -93,16 +93,22 @@
     <ClCompile Include="..\Classes\UI\Fleet\SquadronCard.cpp">
       <Filter>src\UI\FleetPanel</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\GameObject\Snake.cpp">
-      <Filter>src\GameObject</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Classes\GameObject\Blossom.cpp">
-      <Filter>src\GameObject</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\GameObject\Barrier.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Pulser.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Unstable.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Snake.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
     <ClCompile Include="..\Classes\GameObject\Carrier.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Blossom.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
   </ItemGroup>
@@ -176,16 +182,22 @@
     <ClInclude Include="..\Classes\UI\Fleet\SquadronCard.h">
       <Filter>src\UI\FleetPanel</Filter>
     </ClInclude>
-    <ClInclude Include="..\Classes\GameObject\Snake.h">
-      <Filter>src\GameObject</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\GameObject\Blossom.h">
-      <Filter>src\GameObject</Filter>
-    </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Barrier.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Pulser.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Unstable.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Snake.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Carrier.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Blossom.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

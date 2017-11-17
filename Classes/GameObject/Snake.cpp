@@ -3,15 +3,16 @@
 #include "Input.h"
 #include "Util.h"
 #include "Constants.h"
+#include "UI\World.h"
 USING_NS_CC;
 
-Snake::Snake(SquadronInfo info, int squadronID, int shipID)
-    : Ship(info, squadronID, shipID)
+Snake::Snake(World* world, SquadronInfo info, int squadronID, int shipID)
+    : Ship(world, info, squadronID, shipID)
 {
 }
 
-Snake* Snake::create(SquadronInfo info, int squadronID, int shipID) {
-    Snake* ship = new (std::nothrow) Snake(info, squadronID, shipID);
+Snake* Snake::create(World* world, SquadronInfo info, int squadronID, int shipID) {
+    Snake* ship = new (std::nothrow) Snake(world, info, squadronID, shipID);
     
     // Use appropriate sprite for body vs tail
     std::string path;
@@ -34,7 +35,7 @@ cocos2d::Vec2 Snake::separate() {
 cocos2d::Vec2 Snake::cohesion()
 {
     if (shipID == 0) return VEC_ZERO;
-    auto nextShip = neighbours->at(shipID - 1);
+    auto nextShip = world->getSquadron(squadronID).at(shipID - 1);
     return seek(nextShip->getPosition(), true);
 }
 

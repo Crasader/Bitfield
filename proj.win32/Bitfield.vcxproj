@@ -148,13 +148,15 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Classes\AppDelegate.cpp" />
-    <ClCompile Include="..\Classes\GameObject\Bit.cpp" />
     <ClCompile Include="..\Classes\GameObject\Barrier.cpp" />
+    <ClCompile Include="..\Classes\GameObject\Bit.cpp" />
     <ClCompile Include="..\Classes\GameObject\Blossom.cpp" />
     <ClCompile Include="..\Classes\GameObject\Carrier.cpp" />
+    <ClCompile Include="..\Classes\GameObject\Pulser.cpp" />
     <ClCompile Include="..\Classes\GameObject\Ship.cpp" />
-    <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
     <ClCompile Include="..\Classes\GameObject\Snake.cpp" />
+    <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
+    <ClCompile Include="..\Classes\GameObject\Unstable.cpp" />
     <ClCompile Include="..\Classes\Input.cpp" />
     <ClCompile Include="..\Classes\PlayerData\Player.cpp" />
     <ClCompile Include="..\Classes\Scene\GameScene.cpp" />
@@ -176,13 +178,15 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
   <ItemGroup>
     <ClInclude Include="..\Classes\AppDelegate.h" />
     <ClInclude Include="..\Classes\Constants.h" />
-    <ClInclude Include="..\Classes\GameObject\Bit.h" />
     <ClInclude Include="..\Classes\GameObject\Barrier.h" />
+    <ClInclude Include="..\Classes\GameObject\Bit.h" />
     <ClInclude Include="..\Classes\GameObject\Blossom.h" />
     <ClInclude Include="..\Classes\GameObject\Carrier.h" />
+    <ClInclude Include="..\Classes\GameObject\Pulser.h" />
     <ClInclude Include="..\Classes\GameObject\Ship.h" />
-    <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
     <ClInclude Include="..\Classes\GameObject\Snake.h" />
+    <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
+    <ClInclude Include="..\Classes\GameObject\Unstable.h" />
     <ClInclude Include="..\Classes\Input.h" />
     <ClInclude Include="..\Classes\PlayerData\Player.h" />
     <ClInclude Include="..\Classes\Scene\GameScene.h" />

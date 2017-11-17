@@ -4,10 +4,11 @@
 #include "Util.h"
 #include "Constants.h"
 #include "GameObject\Bit.h"
+#include "UI/World.h"
 USING_NS_CC;
 
-Carrier::Carrier(SquadronInfo info, int squadronID, int shipID)
-    : Ship(info, squadronID, shipID)
+Carrier::Carrier(World* world, SquadronInfo info, int squadronID, int shipID)
+    : Ship(world, info, squadronID, shipID)
 {
     if (shipID > 0) {
         max_speed = info.doubles["mini_max_speed"];
@@ -30,8 +31,8 @@ Carrier::Carrier(SquadronInfo info, int squadronID, int shipID)
     }
 }
 
-Carrier* Carrier::create(SquadronInfo info, int squadronID, int shipID) {
-    Carrier* ship = new (std::nothrow) Carrier(info, squadronID, shipID);
+Carrier* Carrier::create(World* world, SquadronInfo info, int squadronID, int shipID) {
+    Carrier* ship = new (std::nothrow) Carrier(world, info, squadronID, shipID);
     
     // Use appropriate sprite for carrier vs minis
     std::string path;
@@ -49,7 +50,7 @@ Carrier* Carrier::create(SquadronInfo info, int squadronID, int shipID) {
 void Carrier::update(float delta)
 {
     if (shipID > 0) {
-        auto leader = neighbours->at(0);
+        auto leader = world->getSquadron(squadronID).at(0);
         if (shouldReturn && (leader->getPosition() - getPosition()).length() < separation_radius) {
             shouldReturn = false;
         }
@@ -60,7 +61,7 @@ void Carrier::update(float delta)
 cocos2d::Vec2 Carrier::cohesion()
 {
     if (shipID == 0) return VEC_ZERO;
-    auto ship = neighbours->at(0);
+    auto ship = world->getSquadron(squadronID).at(0);
     auto node = ship->getChildByTag(shipID - 1);
     auto vel = ship->getVelocity().getNormalized();
     vel.scale(20);

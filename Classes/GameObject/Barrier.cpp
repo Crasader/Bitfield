@@ -3,16 +3,16 @@
 #include "Input.h"
 #include "Util.h"
 #include "Constants.h"
+#include "UI/World.h"
 USING_NS_CC;
 
-Barrier::Barrier(SquadronInfo info, int squadronID, int shipID)
-    : Ship(info, squadronID, shipID)
+Barrier::Barrier(World* world, SquadronInfo info, int squadronID, int shipID)
+    : Ship(world, info, squadronID, shipID)
 {
     start_scale = info.doubles["barrier_scale"];
     shrink_scale = info.doubles["shrink_scale"];
     grow_scale = info.doubles["grow_scale"];
     max_scale = info.doubles["max_scale"];
-    
     
     if (shipID == 1) {
         point_to_velocity = false;
@@ -21,14 +21,14 @@ Barrier::Barrier(SquadronInfo info, int squadronID, int shipID)
         w_seek_bits = 0;
         scale = start_scale;
         stopAllActions();
-        runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
+        runAction(EaseElasticOut::create(ScaleTo::create(1.5f, start_scale)));
     }
 
     target_scale = scale;
 }
 
-Barrier* Barrier::create(SquadronInfo info, int squadronID, int shipID) {
-    Barrier* ship = new (std::nothrow) Barrier(info, squadronID, shipID);
+Barrier* Barrier::create(World* world, SquadronInfo info, int squadronID, int shipID) {
+    Barrier* ship = new (std::nothrow) Barrier(world, info, squadronID, shipID);
     
     std::string path;
     if (shipID == 0) {
@@ -49,7 +49,7 @@ void Barrier::update(float delta)
 {
     if (shipID == 1) {
         auto ratio = scale / max_scale * 1.2f;
-        setPosition(neighbours->at(0)->getPosition());
+        setPosition(world->getSquadron(squadronID).at(0)->getPosition());
         setRotationSkewX(getRotationSkewX() + 4 * ratio);
         setRotationSkewY(getRotationSkewY() + 4 * ratio);
 
@@ -74,10 +74,4 @@ void Barrier::onBitPickup()
     if (target_scale > max_scale) {
         target_scale = max_scale;
     }
-}
-
-void Barrier::handleCollisions()
-{
-    //if (shipID == 0) return;
-    Ship::handleCollisions();
 }

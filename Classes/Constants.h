@@ -18,8 +18,8 @@ static const bool DEBUG_SHIP = false;
 //---- GENERAL
 static const std::string GAME_TITLE = "Bitfield";
 static const int FPS = 60;
-static const int GAME_WIDTH = 1080;
-static const int GAME_HEIGHT = 1920;
+static int GAME_WIDTH = 1080;
+static int GAME_HEIGHT = 1920;
 static std::string DEFAULT_FILE = "data/default.json";
 static std::string SAVE_FILE = "data/save.json";
 static const std::string FONT_DEFAULT = "fonts/exprswy_free.ttf";
@@ -134,5 +134,7 @@ static const std::string EVENT_SLOT_CHANGED = "EVENT_SLOT_CHANGED";
 static const std::string EVENT_SLOT_SELECTED = "EVENT_SLOT_SELECTED";
 static const std::string EVENT_SQUADRON_PURCHASED = "EVENT_SQUADRON_PURCHASED";
 static const std::string EVENT_BIT_PICKUP = "EVENT_BIT_PICKUP";
+
+static const std::string EVENT_PULSER_PULSE = "EVENT_PULSER_PULSE";
 
 #endif // __CONSTANTS_H__

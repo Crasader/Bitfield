@@ -3,10 +3,11 @@
 #include "Input.h"
 #include "Util.h"
 #include "Constants.h"
+#include "UI/World.h"
 USING_NS_CC;
 
-Blossom::Blossom(SquadronInfo info, int squadronID, int shipID)
-    : Ship(info, squadronID, shipID)
+Blossom::Blossom(World* world, SquadronInfo info, int squadronID, int shipID)
+    : Ship(world, info, squadronID, shipID)
 {
     inner_radius_min = info.ints["inner_radius_min"];
     inner_radius_max = info.ints["inner_radius_max"];
@@ -24,8 +25,8 @@ Blossom::Blossom(SquadronInfo info, int squadronID, int shipID)
     }
 }
 
-Blossom* Blossom::create(SquadronInfo info, int squadronID, int shipID) {
-    Blossom* ship = new (std::nothrow) Blossom(info, squadronID, shipID);
+Blossom* Blossom::create(World* world, SquadronInfo info, int squadronID, int shipID) {
+    Blossom* ship = new (std::nothrow) Blossom(world, info, squadronID, shipID);
     
     // Use appropriate sprite for body vs petals
     std::string path;
@@ -69,7 +70,7 @@ void Blossom::update(float delta)
         }
     }
     else {
-        auto ship = neighbours->at(0);
+        auto ship = world->getSquadron(squadronID).at(0);
         auto petalNode = ship->getChildByTag(shipID - 1);
         setPosition(ship->getPosition() + petalNode->getPosition());
 
@@ -82,7 +83,7 @@ void Blossom::update(float delta)
 cocos2d::Vec2 Blossom::cohesion()
 {
     if (shipID == 0) return Vec2(0, 0);
-    auto ship = neighbours->at(0);
+    auto ship = world->getSquadron(squadronID).at(0);
     auto petalNode = ship->getChildByTag(shipID - 1);
     return seek(ship->getPosition() + petalNode->getPosition());
 }

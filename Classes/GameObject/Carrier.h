@@ -5,8 +5,8 @@
 class Carrier : public Ship
 {
 public:
-    Carrier(SquadronInfo info, int squadronID, int shipID);
-    static Carrier* create(SquadronInfo info, int squadronID, int shipID);
+    Carrier(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Carrier* create(World* world, SquadronInfo info, int squadronID, int shipID);
 
     virtual void update(float delta) override;
 

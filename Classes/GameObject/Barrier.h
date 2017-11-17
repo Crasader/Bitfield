@@ -5,12 +5,11 @@
 class Barrier : public Ship
 {
 public:
-    Barrier(SquadronInfo info, int squadronID, int shipID);
-    static Barrier* create(SquadronInfo info, int squadronID, int shipID);
+    Barrier(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Barrier* create(World* world, SquadronInfo info, int squadronID, int shipID);
     virtual void update(float delta) override;
 
     virtual void onBitPickup() override;
-    virtual void handleCollisions() override;
 
 private:
     double start_scale;

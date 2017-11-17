@@ -171,15 +171,9 @@ void World::updateFleet(float delta) {
         auto& count = info.ints["count"];
         if (ships.size() < count) {
             for (int shipID = ships.size(); shipID < count; shipID++) {
-                auto ship = SquadronFactory::createShipWithInfo(info, squadronID, shipID);
-                ship->setNeighbours(&ships);
-                ship->setBits(&grid);
-                ship->setBoundary(Rect(Vec2(0, 0), getContentSize()));
+                auto ship = SquadronFactory::createShipWithInfo(this, info, squadronID, shipID);
 
-                if (squadronID == 0 && shipID == 0) {
-                    ship->setPosition(Vec2(WORLD_WIDTH * 0.5f, WORLD_HEIGHT * 0.5f));
-                }
-                else if (ships.empty()) {
+                if (ships.empty()) {
                     ship->setPosition(Vec2(rand_0_1() * WORLD_WIDTH, rand_0_1() * WORLD_HEIGHT));
                 }
                 else {
@@ -262,28 +256,39 @@ void World::addBit(BitType type) {
     grid.at(row).at(col).pushBack(bit);
 }
 
-static int num_squares = 0;
-void World::addGridSquare(cocos2d::Vec2 pos)
+void World::addTileGlow(int x, int y, Color3B color, float a)
 {
-    if (!worldContains(pos) || num_squares > 10) return;
+    auto pos = getCellPosition(x, y, true);
+    if (!cameraContains(pos)) return;;
 
     auto square = DrawNode::create();
-    square->drawSolidRect(Vec2(0, 0), Vec2(GRID_SIZE, GRID_SIZE), Color4F::WHITE);
-    square->setPosition(getPositionInGrid(pos));
-    square->setOpacity(255 * 0.2f);
+    square->drawSolidRect(Vec2(-GRID_SIZE /2 , -GRID_SIZE /2 ), Vec2(GRID_SIZE/2, GRID_SIZE/2), Color4F(color));
+    square->setAnchorPoint(VEC_CENTER);
+    square->setPosition(pos);
+    square->setOpacity(255 * a);
     square->runAction(Sequence::create(
-        EaseSineInOut::create(FadeOut::create(0.5f)),
+        EaseSineInOut::create(
+            Spawn::createWithTwoActions(
+                FadeOut::create(0.4f),
+                ScaleTo::create(0.4f, 0.75f)
+            )
+        ),
         RemoveSelf::create(),
-        CallFunc::create([&]() {
-            num_squares--;
-        }),
         nullptr
-        ));
+    ));
     addChild(square);
-    num_squares++;
 }
 
-void World::offsetCameraForPanelIsVisible(bool visible) {
+void World::consumeTile(int x, int y)
+{
+    assert(gridContains(x, y));
+    for (auto bit : grid.at(x).at(y)) {
+        bit->remove();
+        Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
+    }
+}
+
+void World::offsetCamera(bool visible) {
     auto cameraOffset = getChildByName("cameraOffset");
     cameraOffset->stopAllActions();
     if (visible) {
@@ -308,23 +313,46 @@ bool World::cameraContains(cocos2d::Rect rect)
 
 bool World::worldContains(cocos2d::Vec2 point)
 {
-    return point.x > 0
-        && point.x < WORLD_WIDTH
-        && point.y > 0
-        && point.y < WORLD_HEIGHT;
+    return point.x > getPositionX()
+        && point.x < getPositionX() + WORLD_WIDTH
+        && point.y > getPositionY()
+        && point.y < getPositionY() + WORLD_HEIGHT;
 }
 
-cocos2d::Vec2 World::getCellInGrid(cocos2d::Vec2 pos)
+bool World::gridContains(int x, int y)
+{
+    return x >= 0 && x < GRID_RESOLUTION && y >= 0 && y < GRID_RESOLUTION;
+}
+
+const Squadron& World::getSquadron(int id)
+{
+    return fleet.at(id).first;
+}
+
+const Bits& World::getBits(int x, int y)
+{
+    return grid.at(x).at(y);
+}
+
+const cocos2d::Rect& World::getBoundary()
+{
+    return Rect(getPositionX(), getPositionY(), WORLD_WIDTH, WORLD_HEIGHT);
+}
+
+cocos2d::Vec2 World::getCellIndex(cocos2d::Vec2 pos)
 {
     int gridX = pos.x / GRID_SIZE;
     int gridY = pos.y / GRID_SIZE;
     return Vec2(gridX, gridY);
 }
 
-cocos2d::Vec2 World::getPositionInGrid(cocos2d::Vec2 pos)
+cocos2d::Vec2 World::getCellPosition(int x, int y, bool center)
 {
-    auto gridPos = getCellInGrid(pos);
+    auto gridPos = Vec2(x, y);
     gridPos.scale(GRID_SIZE);
+    if (center) {
+        gridPos += Vec2(GRID_SIZE / 2.f, GRID_SIZE / 2.f);
+    }
     return gridPos;
 }
 
@@ -413,11 +441,17 @@ void World::createBackgroundGrid()
 }
 
 void World::createInput() {
-    // Touch
+    // Touch events - highlight tapped tiles
     auto touch = Input::createTouchListener();
     touch->onTouchEnded = [=](Touch* touch, Event* event) {
         if (Input::touch_time < Input::TAP_TIME) {
-            addGridSquare(touch->getLocation() - getPosition());
+            // Find what grid square we touched
+            auto cell = getCellIndex(touch->getLocation() - getPosition());
+            int x = cell.x;
+            int y = cell.y;
+            if (gridContains(x, y));
+                addTileGlow(x, y, Color3B::WHITE, 0.2f);
+            //consumeTile(x, y); // IF (TOUCH_RELIC_UNLOCKED) ...
         }
         return true;
     };
@@ -427,9 +461,9 @@ void World::createInput() {
 void World::createGrid()
 {
     for (int i = 0; i < GRID_RESOLUTION; i++) {
-        grid.push_back(std::vector<cocos2d::Vector< Bit* > >());
+        grid.push_back(std::vector< Bits >());
         for (int j = 0; j < GRID_RESOLUTION; j++) {
-            grid[i].push_back(cocos2d::Vector< Bit* >());
+            grid.at(i).push_back(Bits());
         }
     }
 }
@@ -502,33 +536,33 @@ void World::createEventListeners()
 
 void World::debugShip()
 {
-    auto drawNode = getChildByName<DrawNode*>("drawNode");
-    auto ship = fleet[0].first.at(0);
-    if (!drawNode) {
-        addChild(DrawNode::create(), 0, "drawNode");
-    }
-    if (drawNode && ship) {
-        drawNode->clear();
-        drawNode->setPosition(ship->getPosition());
-        drawNode->drawCircle(Vec2(0, 0), ship->vision_radius, 0, 64, false, Color4F::WHITE);
-        drawNode->drawCircle(Vec2(0, 0), ship->separation_radius, 0, 64, false, Color4F::WHITE);
+    //auto drawNode = getChildByName<DrawNode*>("drawNode");
+    //auto ship = fleet[0].first.at(0);
+    //if (!drawNode) {
+    //    addChild(DrawNode::create(), 0, "drawNode");
+    //}
+    //if (drawNode && ship) {
+    //    drawNode->clear();
+    //    drawNode->setPosition(ship->getPosition());
+    //    drawNode->drawCircle(Vec2(0, 0), ship->vision_radius, 0, 64, false, Color4F::WHITE);
+    //    drawNode->drawCircle(Vec2(0, 0), ship->separation_radius, 0, 64, false, Color4F::WHITE);
 
-        // Project future position
-        Vec2 projection = ship->velocity;
-        projection.normalize();
-        projection.scale(ship->wander_length);
+    //    // Project future position
+    //    Vec2 projection = ship->velocity;
+    //    projection.normalize();
+    //    projection.scale(ship->wander_length);
 
-        // Point to a random spot on the circle
-        Vec2 toRadius = Vec2(ship->wander_radius, 0);
-        toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(ship->wander_theta));
+    //    // Point to a random spot on the circle
+    //    Vec2 toRadius = Vec2(ship->wander_radius, 0);
+    //    toRadius = toRadius.rotateByAngle(Vec2(0, 0), CC_DEGREES_TO_RADIANS(ship->wander_theta));
 
-        drawNode->drawLine(Vec2(0, 0), projection, Color4F::RED);
-        drawNode->drawCircle(projection, ship->wander_radius, 0, 64, false, Color4F::RED);
-        drawNode->drawLine(Vec2(0, 0), projection + toRadius, Color4F::BLUE);
+    //    drawNode->drawLine(Vec2(0, 0), projection, Color4F::RED);
+    //    drawNode->drawCircle(projection, ship->wander_radius, 0, 64, false, Color4F::RED);
+    //    drawNode->drawLine(Vec2(0, 0), projection + toRadius, Color4F::BLUE);
 
-        drawNode->drawLine(Vec2(0, 0), ship->acceleration * 1000, Color4F::YELLOW);
+    //    drawNode->drawLine(Vec2(0, 0), ship->acceleration * 1000, Color4F::YELLOW);
 
-        auto sep = ship->separate();
-        drawNode->drawLine(Vec2(0, 0), sep * 1000, Color4F::GREEN);
-    }
+    //    auto sep = ship->separate();
+    //    drawNode->drawLine(Vec2(0, 0), sep * 1000, Color4F::GREEN);
+    //}
 }

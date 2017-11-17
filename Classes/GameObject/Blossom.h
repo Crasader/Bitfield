@@ -5,8 +5,8 @@
 class Blossom : public Ship
 {
 public:
-    Blossom(SquadronInfo info, int squadronID, int shipID);
-    static Blossom* create(SquadronInfo info, int squadronID, int shipID);
+    Blossom(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Blossom* create(World* world, SquadronInfo info, int squadronID, int shipID);
 
     virtual void update(float delta) override;
 

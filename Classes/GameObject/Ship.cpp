@@ -6,10 +6,11 @@
 #include "Constants.h"
 #include "PlayerData/Player.h"
 #include "Bit.h"
+#include "UI\World.h"
 
 USING_NS_CC;
 
-Ship::Ship(SquadronInfo info, int squadronID, int shipID)
+Ship::Ship(World* world, SquadronInfo info, int squadronID, int shipID)
 {
     type = info.strings["type"];
     sprite = info.strings["sprite"];
@@ -33,7 +34,7 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     w_seek = info.doubles["w_seek"];
     w_seek_bits = info.doubles["w_seek_bits"];
     w_avoid_wall = info.doubles["w_avoid_wall"];
-    w_stay_grouped = info.doubles["w_stay_grouped"];
+    w_leash = info.doubles["w_leash"];
 
     scheduleUpdate();
     velocity = Vec2(0, 0);
@@ -41,14 +42,15 @@ Ship::Ship(SquadronInfo info, int squadronID, int shipID)
     point_to_velocity = true;
     this->squadronID = squadronID;
     this->shipID = shipID;
+    this->world = world;
 
     setScale(0);
     runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
 }
 
-Ship* Ship::create(SquadronInfo info, int squadronID, int shipID) {
-    Ship* ship = new (std::nothrow) Ship(info, squadronID, shipID);
-    if (ship && ship->initWithFile(info.strings["sprite"])) {
+Ship* Ship::create(World* world, SquadronInfo info, int squadronID, int shipID) {
+    Ship* ship = new (std::nothrow) Ship(world, info, squadronID, shipID);
+    if (ship && ship->initWithFile(ship->getSprite())) {
         ship->autorelease();
         return ship;
     }
@@ -78,9 +80,9 @@ void Ship::update(float delta) {
 
 void Ship::calculateForces(float delta) {
     // Always avoid walls and other ships
-    auto stayWithinForce = avoidWalls();
-    if (!stayWithinForce.isZero()) {
-        applyForce(stayWithinForce, w_avoid_wall);
+    auto f_avoid_walls = avoidWalls();
+    if (!f_avoid_walls.isZero()) {
+        applyForce(f_avoid_walls, w_avoid_wall);
         return;
     }
     Vec2 separateForce = separate();
@@ -95,13 +97,14 @@ void Ship::calculateForces(float delta) {
     }
     else {
         // Stay with leader if too far
-        if (shipID > 0 && w_stay_grouped > 0) {
-            auto leader = neighbours->at(0);
+        if (shipID > 0 && w_leash > 0) {
+            auto squadron = world->getSquadron(squadronID);
+            auto leader = squadron.at(0);
             if (getPosition().distance(leader->getPosition()) > vision_radius) {
-                auto stayGroupedForce = followLeader();
+                auto stayGroupedForce = leash();
                 auto toLeader = leader->getPosition() -getPosition();
                 wander_theta = CC_RADIANS_TO_DEGREES(toLeader.getAngle());
-                applyForce(stayGroupedForce, w_stay_grouped);
+                applyForce(stayGroupedForce, w_leash);
                 return;
             }
         }
@@ -133,22 +136,21 @@ void Ship::handleCollisions()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
-                auto& grid = (*bits);
-                for (auto bit : grid[r][c]) {
-                    Vec2 dist = bit->getPosition() - getPosition();
-                    if (dist.getLength() < getContentSize().height * scale / 2.f) {
-                        if (bit->isRemoved()) continue;
-                        auto& info = Player::generators[bit->getType()];
-                        auto value = Player::calculateValue(bit->getType());
-                        Player::addBits(value);
-                        info.spawned--;
+            if (!world->gridContains(r, c)) continue;
 
-                        // Remove bit
-                        Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
-                        bit->remove();
-                        onBitPickup();
-                    }
+            for (auto bit : world->getBits(r, c)) {
+                Vec2 dist = bit->getPosition() - getPosition();
+                if (dist.getLength() < getContentSize().height * scale / 2.f) {
+                    if (bit->isRemoved()) continue;
+                    auto& info = Player::generators[bit->getType()];
+                    auto value = Player::calculateValue(bit->getType());
+                    Player::addBits(value);
+                    info.spawned--;
+
+                    // Remove bit
+                    Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
+                    bit->remove();
+                    onBitPickup();
                 }
             }
         }
@@ -184,7 +186,7 @@ cocos2d::Vec2 Ship::align() {
     float count = 0;
 
     // Average together every ship's heading and try to align with the group
-    for (Ship* ship : *neighbours) {
+    for (Ship* ship : world->getSquadron(squadronID)) {
         if (!canSee(ship)) continue;
         auto dir = ship->getVelocity();
         desired.add(dir);
@@ -212,7 +214,7 @@ cocos2d::Vec2 Ship::cohesion() {
     if (w_cohesion == 0) return VEC_ZERO;
 
     auto center = getCenterOfSquadron();
-    if (neighbours->empty() || center == getPosition()) return VEC_ZERO;
+    if (world->getSquadron(squadronID).empty() || center == getPosition()) return VEC_ZERO;
 
     return seek(center, true);
 }
@@ -225,7 +227,7 @@ cocos2d::Vec2 Ship::separate() {
     float count = 0;
 
     // Steer away from nearby ships
-    for (Ship* ship : *neighbours) {
+    for (Ship* ship : world->getSquadron(squadronID)) {
         Vec2 toOther = ship->getPosition() - getPosition();
         if (toOther.getLength() > 0 && toOther.getLength() < separation_radius) {
             Vec2 awayFromOther = getPosition() - ship->getPosition();
@@ -293,6 +295,7 @@ cocos2d::Vec2 Ship::avoidWalls() {
 
     auto heading = velocity.getNormalized();
     heading.scale(wall_separation_distance);
+    auto boundary = Rect(VEC_ZERO, world->getContentSize());
     if (boundary.containsPoint(getPosition() + heading)) return VEC_ZERO;
 
     auto mid = Vec2(boundary.getMidX(), boundary.getMidY());
@@ -301,9 +304,9 @@ cocos2d::Vec2 Ship::avoidWalls() {
     return seek(mid);
 }
 
-cocos2d::Vec2 Ship::followLeader() {
+cocos2d::Vec2 Ship::leash() {
     if (shipID == 0) return VEC_ZERO;
-    return seek(neighbours->at(0)->getPosition());
+    return seek(world->getSquadron(squadronID).at(0)->getPosition());
 }
 
 bool Ship::canSee(cocos2d::Node* target) {
@@ -328,21 +331,6 @@ const cocos2d::Vec2& Ship::getAcceleration() {
     return acceleration;
 }
 
-void Ship::setNeighbours(cocos2d::Vector<Ship*>* neighbours)
-{
-    this->neighbours = neighbours;
-}
-
-void Ship::setBits(Grid* bits)
-{
-    this->bits = bits;
-}
-
-void Ship::setBoundary(cocos2d::Rect boundary)
-{
-    this->boundary = boundary;
-}
-
 // Target the closest untargetted bit. We may already be targetting it.
 // TODO: This logic needs some work:
 // What if a ship targets a bit and then moves out of grid range?
@@ -358,32 +346,31 @@ Bit* Ship::getTargetBit()
 
     for (int r = row - 1; r <= row + 1; r++) {
         for (int c = col - 1; c <= col + 1; c++) {
-            if (r >= 0 && c >= 0 && r < GRID_RESOLUTION && c < GRID_RESOLUTION) {
-                auto& grid = (*bits);
-                for (auto bit : grid[r][c]) {
-                    // Clear out of range targets
-                    if (bit->isTargettedBy(this) && !canSee(bit)) bit->setShip(nullptr);
+            if (!world->gridContains(r, c)) continue;
+            auto& bits = world->getBits(r, c);
+            for (auto bit : bits) {
+                // Clear out of range targets
+                if (bit->isTargettedBy(this) && !canSee(bit)) bit->setShip(nullptr);
                             
-                    // If Bit is targetted by another ship, ignore it
-                    if (bit->isTargetted() && !bit->isTargettedBy(this) || !canSee(bit)) continue;
+                // If Bit is targetted by another ship, ignore it
+                if (bit->isTargetted() && !bit->isTargettedBy(this) || !canSee(bit)) continue;
 
-                    // Check if bit is our last target
-                    if (bit->isTargettedBy(this)) {
-                        previousTarget = bit;
-                    }
+                // Check if bit is our last target
+                if (bit->isTargettedBy(this)) {
+                    previousTarget = bit;
+                }
 
-                    // Found initial bit
-                    if (nearestBit == nullptr) {
+                // Found initial bit
+                if (nearestBit == nullptr) {
+                    nearestBit = bit;
+                    toNearest = nearestBit->getPosition() - getPosition();
+                }
+                else {
+                    // See if new bit is closer than current closest
+                    auto toBit = bit->getPosition() - getPosition();
+                    if (toBit.lengthSquared() < toNearest.lengthSquared()) {
+                        nearestBit->setShip(nullptr);
                         nearestBit = bit;
-                        toNearest = nearestBit->getPosition() - getPosition();
-                    }
-                    else {
-                        // See if new bit is closer than current closest
-                        auto toBit = bit->getPosition() - getPosition();
-                        if (toBit.lengthSquared() < toNearest.lengthSquared()) {
-                            nearestBit->setShip(nullptr);
-                            nearestBit = bit;
-                        }
                     }
                 }
             }
@@ -407,14 +394,19 @@ const std::string& Ship::getType()
     return type;
 }
 
+const std::string & Ship::getSprite()
+{
+    return sprite;
+}
+
 cocos2d::Vec2 Ship::getCenterOfSquadron()
 {
     Vec2 center;
-    for (Ship* ship : *neighbours) {
+    for (Ship* ship : world->getSquadron(squadronID)) {
         center.add(ship->getPosition());
     }
 
-    center.scale(1.0f / (*neighbours).size());
+    center.scale(1.0f / world->getSquadron(squadronID).size());
     return center;
 }
 

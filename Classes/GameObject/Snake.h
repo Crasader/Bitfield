@@ -5,8 +5,8 @@
 class Snake : public Ship
 {
 public:
-    Snake(SquadronInfo info, int squadronID, int shipID);
-    static Snake* create(SquadronInfo info, int squadronID, int shipID);
+    Snake(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Snake* create(World* world, SquadronInfo info, int squadronID, int shipID);
 
     // Head does not avoid other body parts
     cocos2d::Vec2 separate() override;

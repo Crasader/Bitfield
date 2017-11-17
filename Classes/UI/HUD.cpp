@@ -93,7 +93,7 @@ void HUD::showPanel(PanelID id) {
     ));
 
     getTab(id)->setOpacity(OPACITY_UI_TABS);
-    world->offsetCameraForPanelIsVisible(true);
+    world->offsetCamera(true);
 }
 
 void HUD::hidePanel(PanelID id)
@@ -113,7 +113,7 @@ void HUD::hidePanel(PanelID id)
 
     getTab(id)->setOpacity(OPACITY_HALF);
 
-    world->offsetCameraForPanelIsVisible(false);
+    world->offsetCamera(false);
 }
 
 void HUD::togglePanel(PanelID id)

@@ -1,9 +1,13 @@
 #pragma once
 
-#include "Ship.h"
+#include "Types.h"
+
+class Ship;
+class World;
 
 class SquadronFactory
 {
 public:
-    static Ship* createShipWithInfo(SquadronInfo info, int squadronID, int shipID);
+    static Ship* createShipWithInfo(World* world,
+        SquadronInfo info, int squadronID, int shipID);
 };
