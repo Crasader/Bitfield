@@ -22,6 +22,8 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Barrier.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Blossom.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Snake.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Pulser.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/Unstable.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/SquadronFactory.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/SplashScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/Scene/GameScene.cpp \

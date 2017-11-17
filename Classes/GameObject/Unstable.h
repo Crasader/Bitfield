@@ -5,17 +5,19 @@
 class Unstable : public Ship
 {
 public:
-    Unstable(World* world, SquadronInfo info, int squadronID, int shipID);
-    static Unstable* create(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Unstable* create(World* world, SquadronInfo& info, int squadronID, int shipID);
 
     virtual void update(float delta) override;
 
-    void igniteRandomTile();
+    cocos2d::Color3B getStreakColor() override;
+
+protected:
+    virtual void loadInfo(World* world, SquadronInfo& info, int squadronID, int shipID) override;
 
 private:
-    int flames;
-    int target_x, target_y;
+    void igniteRandomTile();
 
+    int flames;
     double timer;
     double flame_t;
 };  

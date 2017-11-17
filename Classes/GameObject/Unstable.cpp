@@ -7,24 +7,23 @@
 #include "UI\World.h"
 USING_NS_CC;
 
-Unstable::Unstable(World* world, SquadronInfo info, int squadronID, int shipID)
-    : Ship(world, info, squadronID, shipID)
-{
-    flames = 0;
-    target_x = -1;
-    target_y = -1;
-    timer = 0;
-    flame_t = info.doubles["flame_t"];
-}
-
-Unstable* Unstable::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Unstable* ship = new (std::nothrow) Unstable(world, info, squadronID, shipID);
-    if (ship && ship->initWithFile(info.strings["sprite"])) {
+Unstable* Unstable::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Unstable* ship = new (std::nothrow) Unstable();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
         ship->autorelease();
         return ship;
     }
     CC_SAFE_DELETE(ship);
     return nullptr;
+}
+
+void Unstable::loadInfo(World * world, SquadronInfo& info, int squadronID, int shipID)
+{
+    Ship::loadInfo(world, info, squadronID, shipID);
+
+    flames = 0;
+    timer = 0;
+    flame_t = info.doubles["flame_t"];
 }
 
 void Unstable::update(float delta)
@@ -35,7 +34,6 @@ void Unstable::update(float delta)
     }
     else if (flames == 1 && timer > flame_t + 0.25f) {
         igniteRandomTile();
-
     }
     else if (flames == 2 && timer > flame_t + 0.5f) {
         igniteRandomTile();
@@ -45,12 +43,17 @@ void Unstable::update(float delta)
     Ship::update(delta);
 }
 
+cocos2d::Color3B Unstable::getStreakColor()
+{
+    return Color3B(UI_COLOR_RED);
+}
+
 void Unstable::igniteRandomTile() {
     auto cell = world->getCellIndex(getPosition());
 
     auto target_cell = cell;
-    target_cell.x += -2 + random() % 5;
-    target_cell.y += -2 + random() % 5;
+    target_cell.x += -2 + cocos2d::random() % 5;
+    target_cell.y += -2 + cocos2d::random() % 5;
     if (!world->gridContains(target_cell.x, target_cell.y)) return;
 
     world->addTileGlow(target_cell.x, target_cell.y, Color3B(UI_COLOR_RED), 0.6f);

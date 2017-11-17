@@ -7,9 +7,20 @@
 #include "UI/World.h"
 USING_NS_CC;
 
-Carrier::Carrier(World* world, SquadronInfo info, int squadronID, int shipID)
-    : Ship(world, info, squadronID, shipID)
+Carrier* Carrier::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Carrier* ship = new (std::nothrow) Carrier();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
+        ship->autorelease();
+        return ship;
+    }
+    CC_SAFE_DELETE(ship);
+    return nullptr;
+}
+
+void Carrier::loadInfo(World* world, SquadronInfo& info, int squadronID, int shipID)
 {
+    Ship::loadInfo(world, info, squadronID, shipID);
+
     if (shipID > 0) {
         max_speed = info.doubles["mini_max_speed"];
         max_force = info.doubles["mini_max_force"];
@@ -20,6 +31,7 @@ Carrier::Carrier(World* world, SquadronInfo info, int squadronID, int shipID)
         stopAllActions();
         runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
         shouldReturn = false;
+        sprite = info.strings["sprite_mini"];
     }
     else {
         for (int i = 0; i < 7; i++) {
@@ -28,23 +40,8 @@ Carrier::Carrier(World* world, SquadronInfo info, int squadronID, int shipID)
             node->setPositionX(x);
             addChild(node, 0, i);
         }
+        sprite = info.strings["sprite"];
     }
-}
-
-Carrier* Carrier::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Carrier* ship = new (std::nothrow) Carrier(world, info, squadronID, shipID);
-    
-    // Use appropriate sprite for carrier vs minis
-    std::string path;
-    if (shipID == 0) path = info.strings["sprite"];
-    else path = info.strings["sprite_mini"];
-    
-    if (ship && ship->initWithFile(path)) {
-        ship->autorelease();
-        return ship;
-    }
-    CC_SAFE_DELETE(ship);
-    return nullptr;
 }
 
 void Carrier::update(float delta)

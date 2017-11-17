@@ -5,17 +5,15 @@
 
 class World;
 class Bit;
+class ShipStreak;
 
 class Ship : public cocos2d::Sprite
 {
 public:
-    Ship(World* world, SquadronInfo info, int squadronID, int shipID);
-    static Ship* create(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Ship* create(World* world, SquadronInfo& info, int squadronID, int shipID);
+    virtual bool init(World* world, SquadronInfo& info, int squadronID, int shipID);
 
     virtual void update(float delta) override;
-    virtual void calculateForces(float delta);
-    virtual void handleCollisions();
-    virtual void onBitPickup();
     void applyForce(cocos2d::Vec2 force, float scale = 1);
     bool inRange(cocos2d::Node* target);
     virtual bool canSee(cocos2d::Node* target);
@@ -37,9 +35,19 @@ public:
     const cocos2d::Vec2& getAcceleration();
     const std::string& getType();
     const std::string& getSprite();
+    ShipStreak* getStreak();
+    virtual cocos2d::Color3B getStreakColor();
 
 protected:
+    virtual void loadInfo(World* world, SquadronInfo& info, int squadronID, int shipID);
+    virtual void loadStreak(SquadronInfo& info);
+    
+    virtual void calculateForces(float delta);
+    virtual void handleCollisions();
+    virtual void onBitPickup();
+
     World* world;
+    ShipStreak* streak;
 
     int squadronID;
     int shipID;
@@ -58,10 +66,10 @@ protected:
     int wander_radius;
     int wander_theta;
     int wander_delta;
-
     double scale;
     double max_speed;
     double max_force;
+
     double w_alignment;
     double w_cohesion;
     double w_separation;

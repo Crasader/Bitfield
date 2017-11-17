@@ -67,3 +67,11 @@ struct SquadronInfo {
     std::map<std::string, int> ints;
     std::map<std::string, double> doubles;
 };
+
+struct StreakInfo {
+    float fade;
+    float minSeg;
+    float stroke;
+    cocos2d::Color3B color;
+    std::string path;
+};

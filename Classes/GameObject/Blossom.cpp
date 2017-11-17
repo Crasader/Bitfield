@@ -6,9 +6,20 @@
 #include "UI/World.h"
 USING_NS_CC;
 
-Blossom::Blossom(World* world, SquadronInfo info, int squadronID, int shipID)
-    : Ship(world, info, squadronID, shipID)
+Blossom* Blossom::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Blossom* ship = new (std::nothrow) Blossom();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
+        ship->autorelease();
+        return ship;
+    }
+    CC_SAFE_DELETE(ship);
+    return nullptr;
+}
+
+void Blossom::loadInfo(World * world, SquadronInfo& info, int squadronID, int shipID)
 {
+    Ship::loadInfo(world, info, squadronID, shipID);
+
     inner_radius_min = info.ints["inner_radius_min"];
     inner_radius_max = info.ints["inner_radius_max"];
     outer_radius_min = info.ints["outer_radius_min"];
@@ -19,26 +30,22 @@ Blossom::Blossom(World* world, SquadronInfo info, int squadronID, int shipID)
 
     if (shipID == 0) {
         addPetalNodes();
+        sprite = info.strings["sprite"];
     }
     else {
         w_wander = 0;
+        sprite = info.strings["sprite_petal"];
     }
 }
 
-Blossom* Blossom::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Blossom* ship = new (std::nothrow) Blossom(world, info, squadronID, shipID);
-    
-    // Use appropriate sprite for body vs petals
-    std::string path;
-    if (shipID == 0) path = info.strings["sprite"];
-    else path = info.strings["sprite_petal"];
-    
-    if (ship && ship->initWithFile(path)) {
-        ship->autorelease();
-        return ship;
+void Blossom::loadStreak(SquadronInfo & info)
+{
+    if (shipID == 0) {
+        streak = nullptr;
     }
-    CC_SAFE_DELETE(ship);
-    return nullptr;
+    else {
+        Ship::loadStreak(info);
+    }
 }
 
 void Blossom::update(float delta)
@@ -91,6 +98,11 @@ cocos2d::Vec2 Blossom::cohesion()
 cocos2d::Vec2 Blossom::seekBits() {
     if (shipID == 0) return Ship::seekBits();
     return VEC_ZERO;
+}
+
+cocos2d::Color3B Blossom::getStreakColor()
+{
+    return Color3B(Player::generators[BitType((shipID - 1) % 7)].color);
 }
 
 void Blossom::addPetalNodes()

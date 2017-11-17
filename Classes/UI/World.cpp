@@ -7,6 +7,7 @@
 #include "GameObject\SquadronFactory.h"
 #include "GameObject\Bit.h"
 #include "GameObject\Ship.h"
+#include "GameObject\ShipStreak.h"
 #include "ui\UIText.h"
 
 USING_NS_CC;
@@ -29,6 +30,7 @@ bool World::init()
     scheduleUpdate();
     setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
     setCascadeOpacityEnabled(true);
+    fleet = std::vector< Squadron >(7);
 
     createBackground();
     createInput();
@@ -40,7 +42,7 @@ bool World::init()
     return true;
 }
 
-static float totalDelta = 0;
+static float totalDelta = 0; // TODO
 void World::update(float delta) {
     Layer::update(delta);
     updateBackground();
@@ -94,8 +96,8 @@ void World::createPolygon(const std::string& layerName, Vec2 pos, int limit, int
 void World::updateBackground()
 {
     Ship* ship = nullptr;
-    if (!fleet.empty() && !fleet.at(Player::slot_selected).first.empty())
-        ship = fleet.at(Player::slot_selected).first.at(0);
+    if (!fleet.empty() && !fleet[Player::slot_selected].empty())
+        ship = fleet[Player::slot_selected].at(0);
     if (!ship) return;
 
     //if (rand_0_1() < 0.6f) return;
@@ -107,8 +109,8 @@ void World::updateBackground()
 
 void World::updateCamera()
 {
-    if (fleet[Player::slot_selected].first.empty()) return;
-    auto ship = fleet[Player::slot_selected].first.at(0);
+    if (fleet[Player::slot_selected].empty()) return;
+    auto ship = fleet[Player::slot_selected].at(0);
     auto camera = getChildByName("camera");
     auto cameraOffset = getChildByName("cameraOffset");
     camera->setPosition(ship->getPosition() - cameraOffset->getPosition());
@@ -147,21 +149,18 @@ void World::updateFleet(float delta) {
     for (int squadronID = 0; squadronID < 7; squadronID++) {
         if (!Player::isSlotUnlocked(squadronID)) continue;
         const auto& type = Player::squadrons_equipped[squadronID];
-        auto& ships = fleet[squadronID].first;
-        auto& streaks = fleet[squadronID].second;
+        auto& ships = fleet[squadronID];
 
         // Clear out of date squadrons
         if (!ships.empty()) {
             auto ship = ships.at(0);
             if (type != ship->getType()) {
                 for (auto ship : ships) {
+                    auto streak = ship->getStreak();
+                    if (streak) streak->removeFromParent();
                     ship->removeFromParent();
                 }
                 ships.clear();
-                for (auto streak : streaks) {
-                    streak->removeFromParent();
-                }
-                streaks.clear();
             }
         }
         if (type == "Empty") continue;
@@ -182,36 +181,21 @@ void World::updateFleet(float delta) {
 
                 ships.pushBack(ship);
                 addChild(ship, 99);
-
-                // Also add streak
-                auto colorIndex = shipID % 7;
-                auto color = Color3B(Player::generators[BitType(colorIndex)].color);
-                int streak_size = info.ints["streak_size"];
-                double streak_length = info.doubles["streak_length"];
-                auto streak = MotionStreak::create(streak_length, 0, streak_size, color, info.strings["streak"]);
-                streak->setFastMode(true);
-                streaks.pushBack(streak);
-                addChild(streak);
+                auto streak = ship->getStreak();
+                if (streak) addChild(ship->getStreak(), 98);
             }
         }
 
-        // Update streaks
-        for (int shipID = 0; shipID < streaks.size(); shipID++) {
+        // Hide off-camera ships
+        for (int shipID = 0; shipID < ships.size(); shipID++) {
             auto ship = ships.at(shipID);
             
-            // Hide off-camera ships
             if (!cameraContains(ship->getBoundingBox())) {
                 ship->setVisible(false);
             }
             else if (!ship->isVisible()){
                 ship->setVisible(true);
             }
-
-            auto streak = streaks.at(shipID);
-            auto heading = ship->getVelocity().getNormalized();
-            heading.scale(8);
-            if ((info.strings["type"] == "Carrier" || info.strings["type"] == "Blossom") && shipID == 0) streak->setVisible(false); // TODO
-            streak->setPosition(ship->getPosition() + heading);
         }
     }
     if (DEBUG_SHIP) debugShip();
@@ -326,17 +310,12 @@ bool World::gridContains(int x, int y)
 
 const Squadron& World::getSquadron(int id)
 {
-    return fleet.at(id).first;
+    return fleet[id];
 }
 
 const Bits& World::getBits(int x, int y)
 {
     return grid.at(x).at(y);
-}
-
-const cocos2d::Rect& World::getBoundary()
-{
-    return Rect(getPositionX(), getPositionY(), WORLD_WIDTH, WORLD_HEIGHT);
 }
 
 cocos2d::Vec2 World::getCellIndex(cocos2d::Vec2 pos)
@@ -449,7 +428,7 @@ void World::createInput() {
             auto cell = getCellIndex(touch->getLocation() - getPosition());
             int x = cell.x;
             int y = cell.y;
-            if (gridContains(x, y));
+            if (gridContains(x, y))
                 addTileGlow(x, y, Color3B::WHITE, 0.2f);
             //consumeTile(x, y); // IF (TOUCH_RELIC_UNLOCKED) ...
         }
@@ -461,7 +440,7 @@ void World::createInput() {
 void World::createGrid()
 {
     for (int i = 0; i < GRID_RESOLUTION; i++) {
-        grid.push_back(std::vector< Bits >());
+        grid.push_back(std::vector< Bits >(600));
         for (int j = 0; j < GRID_RESOLUTION; j++) {
             grid.at(i).push_back(Bits());
         }

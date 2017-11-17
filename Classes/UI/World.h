@@ -11,8 +11,7 @@ class Bit;
 
 typedef cocos2d::Vector< Bit* > Bits;
 typedef cocos2d::Vector< Ship* > Squadron;
-typedef cocos2d::Vector< cocos2d::MotionStreak* > Streaks;
-typedef std::map<int, std::pair< Squadron, Streaks > > Fleet;
+typedef std::vector< Squadron > Fleet;
 typedef std::vector< std::vector < Bits > > Grid;
 
 class World : public cocos2d::Layer
@@ -32,7 +31,6 @@ public:
 
     const Squadron& getSquadron(int id);
     const Bits& getBits(int x, int y);
-    const cocos2d::Rect& getBoundary();
 
     // Get the cell of a position (Vec(300, 10) --> Vec(1, 0))
     cocos2d::Vec2 getCellIndex(cocos2d::Vec2 pos);

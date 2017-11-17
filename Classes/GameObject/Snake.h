@@ -5,8 +5,7 @@
 class Snake : public Ship
 {
 public:
-    Snake(World* world, SquadronInfo info, int squadronID, int shipID);
-    static Snake* create(World* world, SquadronInfo info, int squadronID, int shipID);
+    static Snake* create(World* world, SquadronInfo& info, int squadronID, int shipID);
 
     // Head does not avoid other body parts
     cocos2d::Vec2 separate() override;
@@ -17,4 +16,7 @@ public:
     // Only the head seeks bits and wanders
     cocos2d::Vec2 seekBits() override;
     cocos2d::Vec2 wander() override;
+
+protected:
+    virtual void loadInfo(World* world, SquadronInfo& info, int squadronID, int shipID) override;
 };  

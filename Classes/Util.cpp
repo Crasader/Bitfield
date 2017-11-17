@@ -157,3 +157,4 @@ cocos2d::Node* Util::createIconLabel(int iconType, double amount, double size) {
     container->setContentSize(Size(icon->getContentSize().width + label->getContentSize().width, size));
     return container;
 }
+

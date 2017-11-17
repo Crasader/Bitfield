@@ -6,14 +6,24 @@
 #include "UI/World.h"
 USING_NS_CC;
 
-Barrier::Barrier(World* world, SquadronInfo info, int squadronID, int shipID)
-    : Ship(world, info, squadronID, shipID)
+Barrier* Barrier::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Barrier* ship = new (std::nothrow) Barrier();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
+        ship->autorelease();
+        return ship;
+    }
+    CC_SAFE_DELETE(ship);
+    return nullptr;
+}
+
+void Barrier::loadInfo(World * world, SquadronInfo & info, int squadronID, int shipID)
 {
+    Ship::loadInfo(world, info, squadronID, shipID);
     start_scale = info.doubles["barrier_scale"];
     shrink_scale = info.doubles["shrink_scale"];
     grow_scale = info.doubles["grow_scale"];
     max_scale = info.doubles["max_scale"];
-    
+
     if (shipID == 1) {
         point_to_velocity = false;
         setOpacity(255 * 0.15f);
@@ -25,24 +35,14 @@ Barrier::Barrier(World* world, SquadronInfo info, int squadronID, int shipID)
     }
 
     target_scale = scale;
-}
 
-Barrier* Barrier::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Barrier* ship = new (std::nothrow) Barrier(world, info, squadronID, shipID);
-    
-    std::string path;
+    // Sprite
     if (shipID == 0) {
-        path = info.strings["sprite"];
+        sprite = info.strings["sprite"];
     }
     else {
-        path = info.strings["sprite_barrier"];
+        sprite = info.strings["sprite_barrier"];
     }
-    if (ship && ship->initWithFile(path)) {
-        ship->autorelease();
-        return ship;
-    }
-    CC_SAFE_DELETE(ship);
-    return nullptr;
 }
 
 void Barrier::update(float delta)

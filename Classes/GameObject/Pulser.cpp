@@ -9,19 +9,9 @@ USING_NS_CC;
 
 std::vector<int> Pulser::number_reached_target = std::vector<int>(7);
 
-Pulser::Pulser(World* world, SquadronInfo info, int squadronID, int shipID)
-    : Ship(world, info, squadronID, shipID)
-{
-    reached_target = false;
-    target_x = -1;
-    target_y = -1;
-    timer = 0;
-    pulse_t = info.doubles["pulse_t"];
-}
-
-Pulser* Pulser::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Pulser* ship = new (std::nothrow) Pulser(world, info, squadronID, shipID);
-    if (ship && ship->initWithFile(info.strings["sprite"])) {
+Pulser* Pulser::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Pulser* ship = new (std::nothrow) Pulser();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
         ship->autorelease();
         return ship;
     }
@@ -29,13 +19,27 @@ Pulser* Pulser::create(World* world, SquadronInfo info, int squadronID, int ship
     return nullptr;
 }
 
-bool Pulser::initWithFile(const std::string & path)
+bool Pulser::init(World * world, SquadronInfo & info, int squadronID, int shipID)
 {
-    if (!Ship::initWithFile(path)) return false;
-
+    if (!Ship::init(world, info, squadronID, shipID)) return false;
     createEventListener();
-
     return true;
+}
+
+cocos2d::Color3B Pulser::getStreakColor()
+{
+    return Color3B(UI_COLOR_BLUE);
+}
+
+void Pulser::loadInfo(World * world, SquadronInfo & info, int squadronID, int shipID)
+{
+    Ship::loadInfo(world, info, squadronID, shipID);
+
+    reached_target = false;
+    target_x = -1;
+    target_y = -1;
+    timer = 0;
+    pulse_t = info.doubles["pulse_t"];
 }
 
 void Pulser::calculateForces(float delta)

@@ -7,11 +7,42 @@
 #include "PlayerData/Player.h"
 #include "Bit.h"
 #include "UI\World.h"
+#include "ShipStreak.h"
 
 USING_NS_CC;
 
-Ship::Ship(World* world, SquadronInfo info, int squadronID, int shipID)
+Ship* Ship::create(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    Ship* ship = new (std::nothrow) Ship();
+    if (ship && ship->init(world, info, squadronID, shipID)) {
+        ship->autorelease();
+        return ship;
+    }
+    CC_SAFE_DELETE(ship);
+    return nullptr;
+}
+
+bool Ship::init(World* world, SquadronInfo& info, int squadronID, int shipID)
 {
+    loadInfo(world, info, squadronID, shipID);
+    if (!initWithFile(sprite)) return false;
+
+    // Ship-specific
+    loadStreak(info);
+    setScale(0);
+    runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
+    return true;
+}
+
+void Ship::loadInfo(World* world, SquadronInfo& info, int squadronID, int shipID) {
+    scheduleUpdate();
+    velocity = Vec2(0, 0);
+    acceleration = Vec2(0, 0);
+    point_to_velocity = true;
+
+    this->world = world;
+    this->squadronID = squadronID;
+    this->shipID = shipID;
+
     type = info.strings["type"];
     sprite = info.strings["sprite"];
 
@@ -35,27 +66,14 @@ Ship::Ship(World* world, SquadronInfo info, int squadronID, int shipID)
     w_seek_bits = info.doubles["w_seek_bits"];
     w_avoid_wall = info.doubles["w_avoid_wall"];
     w_leash = info.doubles["w_leash"];
-
-    scheduleUpdate();
-    velocity = Vec2(0, 0);
-    acceleration = Vec2(0, 0);
-    point_to_velocity = true;
-    this->squadronID = squadronID;
-    this->shipID = shipID;
-    this->world = world;
-
-    setScale(0);
-    runAction(EaseElasticOut::create(ScaleTo::create(1.5f, scale)));
 }
 
-Ship* Ship::create(World* world, SquadronInfo info, int squadronID, int shipID) {
-    Ship* ship = new (std::nothrow) Ship(world, info, squadronID, shipID);
-    if (ship && ship->initWithFile(ship->getSprite())) {
-        ship->autorelease();
-        return ship;
-    }
-    CC_SAFE_DELETE(ship);
-    return nullptr;
+void Ship::loadStreak(SquadronInfo& info)
+{
+    float fade = info.doubles["streak_length"];
+    float size = info.doubles["streak_size"];
+    auto path = info.strings["streak_path"];
+    streak = ShipStreak::create(this, { fade, 0, size, getStreakColor(), path });
 }
 
 void Ship::update(float delta) {
@@ -397,6 +415,16 @@ const std::string& Ship::getType()
 const std::string & Ship::getSprite()
 {
     return sprite;
+}
+
+ShipStreak * Ship::getStreak()
+{
+    return streak;
+}
+
+Color3B Ship::getStreakColor()
+{
+    return Color3B(Player::generators[BitType(shipID % 7)].color);
 }
 
 cocos2d::Vec2 Ship::getCenterOfSquadron()
