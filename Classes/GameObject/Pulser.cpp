@@ -86,7 +86,9 @@ void Pulser::calculateForces(float delta)
 
         auto target_pos = world->getCellPosition(target_x, target_y, true);
         auto current_pos = world->getCellIndex(getPosition());
-        if (current_pos.x == target_x && current_pos.y == target_y) {
+        auto dist = (target_pos - getPosition()).length();
+
+        if (dist < 16 && velocity.length() < 1) {
             if (!reached_target) {
                 reached_target = true;
                 number_reached_target[squadronID]++;
@@ -95,6 +97,8 @@ void Pulser::calculateForces(float delta)
                 }
             }
         }
+
+        
         applyForce(seek(target_pos, true));
         return;
     }
@@ -113,6 +117,7 @@ void Pulser::createEventListener()
         target_x = -1;
         target_y = -1;
         timer = 0;
+        onBitPickup();
     });
     getEventDispatcher()->addEventListenerWithSceneGraphPriority(l_pulse, this);
 }

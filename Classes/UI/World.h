@@ -5,6 +5,7 @@
 #include "PlayerData/Player.h"
 #include <map>
 #include <tuple>
+#include <vector>
 
 class Ship;
 class Bit;
@@ -12,7 +13,7 @@ class Bit;
 typedef cocos2d::Vector< Bit* > Bits;
 typedef cocos2d::Vector< Ship* > Squadron;
 typedef std::vector< Squadron > Fleet;
-typedef std::vector< std::vector < Bits > > Grid;
+typedef std::vector< std::vector < cocos2d::Vector< Bit* > > > Grid;
 
 class World : public cocos2d::Layer
 {
@@ -22,6 +23,7 @@ public:
     virtual void update(float delta);
 
     void addBit(BitType type);
+    void removeBit(Bit* bit);
     
     void offsetCamera(bool offset);
     bool cameraContains(cocos2d::Vec2 point);
@@ -43,6 +45,7 @@ private:
     Bits bits;
     Grid grid;
     int bits_spawned[7];
+    Bit* free_list[7];
 
     float cameraOffset;
     int cameraTarget;
@@ -55,6 +58,7 @@ private:
     void createPolygon(const std::string& layerName, cocos2d::Vec2 pos,
         int limit, int sizeMin, int sizeDelta, float alpha, float spread);
     void initBits();
+    Bit* createBit(BitType type);
     void createEventListeners();
 
     void updateBackground();

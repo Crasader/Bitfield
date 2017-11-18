@@ -159,15 +159,14 @@ void Ship::handleCollisions()
             for (auto bit : world->getBits(r, c)) {
                 Vec2 dist = bit->getPosition() - getPosition();
                 if (dist.getLength() < getContentSize().height * scale / 2.f) {
-                    if (bit->isRemoved()) continue;
+                    if (bit->isCollected()) continue;
                     auto& info = Player::generators[bit->getType()];
                     auto value = Player::calculateValue(bit->getType());
                     Player::addBits(value);
-                    info.spawned--;
 
                     // Remove bit
                     Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
-                    bit->remove();
+                    bit->setCollected(true);
                     onBitPickup();
                 }
             }

@@ -8,7 +8,7 @@
 
 
 //---- DEVELOPER
-#define SHOW_FPS false
+#define SHOW_FPS true
 
 static const int WINDOW_WIDTH = 540;
 static const int WINDOW_HEIGHT = 960;

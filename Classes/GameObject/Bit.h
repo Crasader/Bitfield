@@ -17,13 +17,20 @@ public:
     bool isTargetted();
     void setShip(Ship* ship);
 
-    bool isRemoved();
-    void remove();
+    bool isActive();
+    void setActive(bool active);
+
+    void setCollected(bool collected);
+    bool isCollected();
+
+    // Pointer to next free Bit
+    Bit* next;
 
 private:
     BitType type;
     Ship* ship;
-    bool removed;
+    bool active;
+    bool collected;
 };
 
 #endif // __BIT_H__

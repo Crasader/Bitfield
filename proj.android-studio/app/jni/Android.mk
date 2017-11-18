@@ -17,6 +17,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Util.cpp \
                    $(LOCAL_PATH)/../../../Classes/Input.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Ship.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameObject/ShipStreak.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Bit.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Carrier.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameObject/Barrier.cpp \

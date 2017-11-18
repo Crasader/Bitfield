@@ -6,7 +6,9 @@ USING_NS_CC;
 Bit::Bit(BitType type) {
     this->type = type;
     ship = nullptr;
-    removed = false;
+    active = false;
+    collected = false;
+    next = nullptr;
 
     setColor(Color3B(Player::generators[type].color));
     setScale(BIT_SCALE);
@@ -43,12 +45,28 @@ void Bit::setShip(Ship* ship)
     this->ship = ship;
 }
 
-bool Bit::isRemoved()
+bool Bit::isActive()
 {
-    return removed;
+    return active;
 }
 
-void Bit::remove()
+void Bit::setActive(bool active)
 {
-    removed = true;
+    this->active = active;
+    if (active) {
+        setVisible(true);
+    }
+    else {
+        setVisible(false);
+    }
+}
+
+void Bit::setCollected(bool collected)
+{
+    this->collected = collected;
+}
+
+bool Bit::isCollected()
+{
+    return collected;
 }

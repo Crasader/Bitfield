@@ -30,7 +30,6 @@ bool World::init()
     scheduleUpdate();
     setContentSize(Size(WORLD_WIDTH, WORLD_HEIGHT));
     setCascadeOpacityEnabled(true);
-    fleet = std::vector< Squadron >(7);
 
     createBackground();
     createInput();
@@ -38,6 +37,7 @@ bool World::init()
     createCamera();
     createEventListeners();
     initBits();
+    fleet = std::vector<Squadron>(7);
 
     return true;
 }
@@ -118,20 +118,17 @@ void World::updateCamera()
 
 void World::updateGrid()
 {
-    // Remove dead bits or insert into grid
-    for (auto it = bits.begin(); it != bits.end(); ++it) {
-        auto bit = *it;
-        if (bit->isRemoved()) {
-            bits_spawned[bit->getType()]--;
-            bit->removeFromParent();
-
+    // Remove dead bits
+    for (auto bit : bits) {
+        if (!bit->isActive()) continue;
+        if (bit->isCollected()) {
+            // Remove from grid
             auto pos = bit->getPosition();
             int row = pos.x / GRID_SIZE;
             int col = pos.y / GRID_SIZE;
             grid.at(row).at(col).eraseObject(bit);
 
-            it = bits.erase(it);
-            if (it == bits.end()) break;
+            removeBit(bit);
         }
         else {
             // Hide off-camera bits
@@ -226,18 +223,43 @@ void World::updateBits(float delta) {
 }
 
 void World::addBit(BitType type) {
-    auto bit = Bit::create(type);
+    Bit* bit = nullptr;
+
+    // End of free list, add to pool
+    if (free_list[type] == nullptr) {
+        bit = createBit(type);
+    }
+    else {
+        // Get a bit from the free list, update pointer
+        bit = free_list[type];
+        free_list[type] = bit->next;
+    }
+
+    // Activate the bit randomly in the world
     bit->setPosition(getContentSize().width * (0.005f + rand_0_1() * 0.99f),
         getContentSize().height * (0.005f + rand_0_1() * 0.99f));
-    addChild(bit, 88);
-    bits.pushBack(bit);
+    bit->setActive(true);
+    bit->setCollected(false);
     bits_spawned[type]++;
 
-    // Add to grid
+    // Add the bit to grid data structure
     auto pos = bit->getPosition();
     int row = pos.x / GRID_SIZE;
     int col = pos.y / GRID_SIZE;
     grid.at(row).at(col).pushBack(bit);
+}
+
+void World::removeBit(Bit* bit)
+{
+    auto type = bit->getType();
+    Player::generators[type].spawned--;
+    bits_spawned[type]--;
+    bit->setActive(false);
+    bit->setCollected(false);
+    
+    // Update free list
+    bit->next = free_list[type];
+    free_list[type] = bit;
 }
 
 void World::addTileGlow(int x, int y, Color3B color, float a)
@@ -265,9 +287,9 @@ void World::addTileGlow(int x, int y, Color3B color, float a)
 
 void World::consumeTile(int x, int y)
 {
-    assert(gridContains(x, y));
+    if (!gridContains(x, y)) return;
     for (auto bit : grid.at(x).at(y)) {
-        bit->remove();
+        bit->setCollected(true);
         Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
     }
 }
@@ -466,15 +488,41 @@ void World::createCamera()
 
 void World::initBits()
 {
+    // Create the current maximum number of bits (add more later if needed)
+    int count = 0;
     for (int i = 0; i < BitType::All; i++) {
         auto type = BitType(i);
         auto& info = Player::generators[type];
+
+        int start = count;
+        for (int j = 0; j < info.capacity; j++) {
+            createBit(type);
+            count++;
+        }
+
+        // Set up the free list for this bit type
+        free_list[i] = bits.at(start);
+        for (int j = 0; j < count - start - 1; j++) {
+            bits.at(j)->next = bits.at(j + 1);
+        }
+        bits.at(count - start - 1)->next = nullptr;
+
+        // Set up live bits
         bits_spawned[i] = 0;
         if (info.level == 0) continue;
-        while (bits_spawned[type] < Player::generators[type].spawned) {
+        while (bits_spawned[i] < Player::generators[type].spawned) {
             addBit(type);
         }
     }
+}
+
+Bit * World::createBit(BitType type)
+{
+    auto bit = Bit::create(type);
+    bit->setActive(false);
+    bits.pushBack(bit);
+    addChild(bit, 88);
+    return bit;
 }
 
 void World::createEventListeners()

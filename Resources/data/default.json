@@ -250,12 +250,16 @@
     },
     {
       "type": "Pulser",
-      "sprite": "sprites/ship_pulser.png",
+      "sprite": "sprites/ship_tri.png",
+      "streak_size": 16.0,
+      "scale": 0.8,
       "rank": 1,
       "owned": 0,
       "count": 9,
       "w_seek_bits": 0.0,
-      "pulse_t": 5.0
+      "w_cohesion": 0.3,
+      "separation_radius": 140,
+      "pulse_t": 8.0
     },
     {
       "type": "Unstable",
