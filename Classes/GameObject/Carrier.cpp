@@ -46,11 +46,12 @@ void Carrier::loadInfo(World* world, SquadronInfo& info, int squadronID, int shi
 
 void Carrier::update(float delta)
 {
-    if (shipID > 0) {
+    if (shipID > 0 && shouldReturn) {
         auto leader = world->getSquadron(squadronID).at(0);
-        if (shouldReturn && (leader->getPosition() - getPosition()).length() < separation_radius) {
+        if ((leader->getPosition() - getPosition()).length() < separation_radius) {
             shouldReturn = false;
         }
+        clearTargetBit();
     }
     Ship::update(delta);
 }

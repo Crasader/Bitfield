@@ -148,24 +148,23 @@ void Ship::calculateForces(float delta) {
 
 void Ship::handleCollisions()
 {
-    auto pos = getPosition();
-    int row = pos.x / GRID_SIZE;
-    int col = pos.y / GRID_SIZE;
-
-    for (int r = row - 1; r <= row + 1; r++) {
-        for (int c = col - 1; c <= col + 1; c++) {
+    auto cell = world->getCellIndex(getPosition());
+    for (int r = cell.x - 1; r <= cell.x + 1; r++) {
+        for (int c = cell.y - 1; c <= cell.y + 1; c++) {
             if (!world->gridContains(r, c)) continue;
 
             for (auto bit : world->getBits(r, c)) {
                 Vec2 dist = bit->getPosition() - getPosition();
                 if (dist.getLength() < getContentSize().height * scale / 2.f) {
-                    if (bit->isCollected()) continue;
+                    if (bit->isCollected() || !bit->isActive()) continue;
+
+                    // Add the value of the bit
                     auto& info = Player::generators[bit->getType()];
                     auto value = Player::calculateValue(bit->getType());
                     Player::addBits(value);
+                    Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
 
                     // Remove bit
-                    Player::dispatchEvent(EVENT_BIT_PICKUP, (void*)bit);
                     bit->setCollected(true);
                     onBitPickup();
                 }
@@ -231,7 +230,7 @@ cocos2d::Vec2 Ship::cohesion() {
     if (w_cohesion == 0) return VEC_ZERO;
 
     auto center = getCenterOfSquadron();
-    if (world->getSquadron(squadronID).empty() || center == getPosition()) return VEC_ZERO;
+    if (center == getPosition()) return VEC_ZERO;
 
     return seek(center, true);
 }
@@ -298,9 +297,9 @@ cocos2d::Vec2 Ship::seek(cocos2d::Vec2 target, bool slowdown) {
 cocos2d::Vec2 Ship::seekBits() {
     if (w_seek_bits == 0) return VEC_ZERO;
 
-    auto targetBit = getTargetBit();
-    if (targetBit) {
-        return seek(targetBit->getPosition());
+    getTargetBit();
+    if (target_bit) {
+        return seek(target_bit->getPosition());
     }
     
     return VEC_ZERO;
@@ -349,61 +348,67 @@ const cocos2d::Vec2& Ship::getAcceleration() {
 }
 
 // Target the closest untargetted bit. We may already be targetting it.
-// TODO: This logic needs some work:
-// What if a ship targets a bit and then moves out of grid range?
-Bit* Ship::getTargetBit()
+void Ship::getTargetBit()
 {
-    Bit* previousTarget = nullptr;
-    Bit* nearestBit = nullptr;
-    auto toNearest = Vec2(0, 0);
+    // Clear previous target if now inactive or too far
+    auto cell = world->getCellIndex(getPosition());
+    if (target_bit) {
+        auto target_cell = world->getCellIndex(target_bit->getPosition());
+        if (target_bit->isCollected()
+            || !target_bit->isActive()
+            || abs(cell.x - target_cell.x) > 1
+            || abs(cell.y - target_cell.y) > 1) {
+            clearTargetBit();
+        }
+    }
 
-    auto pos = getPosition();
-    int row = pos.x / GRID_SIZE;
-    int col = pos.y / GRID_SIZE;
-
-    for (int r = row - 1; r <= row + 1; r++) {
-        for (int c = col - 1; c <= col + 1; c++) {
+    // Find nearest bit
+    Bit* nearest_bit = nullptr;
+    for (int r = cell.x - 1; r <= cell.x + 1; r++) {
+        for (int c = cell.y - 1; c <= cell.y + 1; c++) {
             if (!world->gridContains(r, c)) continue;
             auto& bits = world->getBits(r, c);
             for (auto bit : bits) {
-                // Clear out of range targets
-                if (bit->isTargettedBy(this) && !canSee(bit)) bit->setShip(nullptr);
-                            
-                // If Bit is targetted by another ship, ignore it
-                if (bit->isTargetted() && !bit->isTargettedBy(this) || !canSee(bit)) continue;
-
-                // Check if bit is our last target
-                if (bit->isTargettedBy(this)) {
-                    previousTarget = bit;
-                }
-
-                // Found initial bit
-                if (nearestBit == nullptr) {
-                    nearestBit = bit;
-                    toNearest = nearestBit->getPosition() - getPosition();
+                if (bit->isTargetted()) continue;
+                auto to_bit = bit->getPosition() - getPosition();
+                
+                if (!nearest_bit) {
+                    nearest_bit = bit;
                 }
                 else {
-                    // See if new bit is closer than current closest
-                    auto toBit = bit->getPosition() - getPosition();
-                    if (toBit.lengthSquared() < toNearest.lengthSquared()) {
-                        nearestBit->setShip(nullptr);
-                        nearestBit = bit;
+                    auto to_nearest = nearest_bit->getPosition() - getPosition();
+                    if (to_bit.lengthSquared() < to_nearest.lengthSquared()) {
+                        nearest_bit = bit;
                     }
                 }
             }
         }
     }
 
-    // Found a nearby bit that isn't targetted by another ship
-    if (nearestBit) {
-        // If it's not what we were targetting before, clear old and set up new
-        if (previousTarget && previousTarget != nearestBit) {
-            previousTarget->setShip(nullptr);
+    // If this bit is closer than our current target, switch
+    if (nearest_bit) {
+        if (!target_bit) {
+            target_bit = nearest_bit;
+            target_bit->setShip(this);
         }
-        nearestBit->setShip(this);
+        else {
+            auto to_target = target_bit->getPosition() - getPosition();
+            auto to_nearest = nearest_bit->getPosition() - getPosition();
+            if (to_nearest.lengthSquared() < to_target.lengthSquared()) {
+                target_bit->setShip(nullptr);
+                target_bit = nearest_bit;
+                target_bit->setShip(this);
+            }
+        }
     }
+}
 
-    return nearestBit;
+void Ship::clearTargetBit()
+{
+    if (target_bit) {
+        target_bit->setShip(nullptr);
+    }
+    target_bit = nullptr;
 }
 
 const std::string& Ship::getType()

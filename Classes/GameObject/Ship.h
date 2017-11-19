@@ -17,7 +17,8 @@ public:
     void applyForce(cocos2d::Vec2 force, float scale = 1);
     bool inRange(cocos2d::Node* target);
     virtual bool canSee(cocos2d::Node* target);
-    virtual Bit* getTargetBit();
+    virtual void getTargetBit();
+    void clearTargetBit();
 
     // Behaviours
     virtual cocos2d::Vec2 seek(cocos2d::Vec2 target, bool slowdown = false);
@@ -78,4 +79,6 @@ protected:
     double w_seek_bits;
     double w_avoid_wall;
     double w_leash;
+
+    Bit* target_bit = nullptr;
 };

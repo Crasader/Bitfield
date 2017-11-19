@@ -155,6 +155,7 @@ void World::updateFleet(float delta) {
                 for (auto ship : ships) {
                     auto streak = ship->getStreak();
                     if (streak) streak->removeFromParent();
+                    ship->clearTargetBit();
                     ship->removeFromParent();
                 }
                 ships.clear();
