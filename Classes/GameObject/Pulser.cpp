@@ -57,10 +57,10 @@ void Pulser::calculateForces(float delta)
                 target_y = cell.y;
 
                 // Make sure neighbours have a place to land
-                if (target_x == 0) target_x++;
-                else if (target_x == GRID_RESOLUTION - 1) target_x--;
-                if (target_y == 0) target_y++;
-                else if (target_y == GRID_RESOLUTION - 1) target_y--;
+                while (target_x <= 0) target_x++;
+                while (target_x >= GRID_RESOLUTION - 1) target_x--;
+                while (target_y <= 0) target_y++;
+                while (target_y >= GRID_RESOLUTION - 1) target_y--;
             }
         }
         else { // Neighbours base their tile on the leader's tile

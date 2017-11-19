@@ -24,7 +24,6 @@ bool ShipStreak::init(Ship* ship, StreakInfo info)
 {
     if (!MotionStreak::initWithFade(info.fade, info.minSeg, info.stroke, info.color, info.path)) return false;
     this->ship = ship;
-    scheduleUpdate();
     return true;
 }
 

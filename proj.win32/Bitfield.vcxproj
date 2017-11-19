@@ -157,6 +157,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClCompile Include="..\Classes\GameObject\ShipStreak.cpp" />
     <ClCompile Include="..\Classes\GameObject\Snake.cpp" />
     <ClCompile Include="..\Classes\GameObject\SquadronFactory.cpp" />
+    <ClCompile Include="..\Classes\GameObject\Sweeper.cpp" />
     <ClCompile Include="..\Classes\GameObject\Unstable.cpp" />
     <ClCompile Include="..\Classes\Input.cpp" />
     <ClCompile Include="..\Classes\PlayerData\Player.cpp" />
@@ -188,6 +189,7 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)" /D /E /I /F /Y
     <ClInclude Include="..\Classes\GameObject\ShipStreak.h" />
     <ClInclude Include="..\Classes\GameObject\Snake.h" />
     <ClInclude Include="..\Classes\GameObject\SquadronFactory.h" />
+    <ClInclude Include="..\Classes\GameObject\Sweeper.h" />
     <ClInclude Include="..\Classes\GameObject\Unstable.h" />
     <ClInclude Include="..\Classes\Input.h" />
     <ClInclude Include="..\Classes\PlayerData\Player.h" />

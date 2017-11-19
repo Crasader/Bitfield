@@ -114,6 +114,9 @@
     <ClCompile Include="..\Classes\GameObject\Pulser.cpp">
       <Filter>src\GameObject</Filter>
     </ClCompile>
+    <ClCompile Include="..\Classes\GameObject\Sweeper.cpp">
+      <Filter>src\GameObject</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -204,6 +207,9 @@
       <Filter>src\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\GameObject\Carrier.h">
+      <Filter>src\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\GameObject\Sweeper.h">
       <Filter>src\GameObject</Filter>
     </ClInclude>
   </ItemGroup>

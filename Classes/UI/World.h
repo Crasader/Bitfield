@@ -37,7 +37,7 @@ public:
     // Get the cell of a position (Vec(300, 10) --> Vec(1, 0))
     cocos2d::Vec2 getCellIndex(cocos2d::Vec2 pos);
     cocos2d::Vec2 getCellPosition(int x, int y, bool center = false);
-    void addTileGlow(int x, int y, cocos2d::Color3B color, float a);
+    void addTileGlow(int x, int y, cocos2d::Color3B color, float a, float scale = 1);
     void consumeTile(int x, int y);
 
 private:

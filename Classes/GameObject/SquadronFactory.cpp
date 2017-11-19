@@ -5,6 +5,7 @@
 #include "Blossom.h"
 #include "Carrier.h"
 #include "Snake.h"
+#include "Sweeper.h"
 #include "Pulser.h"
 #include "Unstable.h"
 
@@ -26,6 +27,9 @@ Ship* SquadronFactory::createShipWithInfo(World* world, SquadronInfo info, int s
     }
     else if (type == "Serpent") {
         ship = Snake::create(world, info, squadronID, shipID);
+    }
+    else if (type == "Sweeper") {
+        ship = Sweeper::create(world, info, squadronID, shipID);
     }
     else if (type == "Pulser") {
         ship = Pulser::create(world, info, squadronID, shipID);

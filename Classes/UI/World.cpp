@@ -173,7 +173,8 @@ void World::updateFleet(float delta) {
                     ship->setPosition(Vec2(rand_0_1() * WORLD_WIDTH, rand_0_1() * WORLD_HEIGHT));
                 }
                 else {
-                    ship->setPosition(ships.at(0)->getPosition());
+                    ship->setPosition(ships.at(0)->getPosition()
+                        + Vec2(rand_minus1_1() * (16 + rand_0_1() * 16), rand_minus1_1() * (16 + rand_0_1() * 16)));
                 }
 
                 ships.pushBack(ship);
@@ -262,20 +263,21 @@ void World::removeBit(Bit* bit)
     free_list[type] = bit;
 }
 
-void World::addTileGlow(int x, int y, Color3B color, float a)
+void World::addTileGlow(int x, int y, Color3B color, float a, float scale)
 {
     auto pos = getCellPosition(x, y, true);
-    if (!cameraContains(pos)) return;;
+    //if (!cameraContains(pos)) return;
 
     auto square = DrawNode::create();
-    square->drawSolidRect(Vec2(-GRID_SIZE /2 , -GRID_SIZE /2 ), Vec2(GRID_SIZE/2, GRID_SIZE/2), Color4F(color));
+    auto size = GRID_SIZE / 2.f * scale;
+    square->drawSolidRect(Vec2(-size, -size), Vec2(size, size), Color4F(color));
     square->setAnchorPoint(VEC_CENTER);
     square->setPosition(pos);
     square->setOpacity(255 * a);
     square->runAction(Sequence::create(
         EaseSineInOut::create(
             Spawn::createWithTwoActions(
-                FadeOut::create(0.4f),
+                FadeOut::create(0.3f),
                 ScaleTo::create(0.4f, 0.75f)
             )
         ),
@@ -450,8 +452,10 @@ void World::createInput() {
             auto cell = getCellIndex(touch->getLocation() - getPosition());
             int x = cell.x;
             int y = cell.y;
-            if (gridContains(x, y))
+            if (gridContains(x, y)) {
                 addTileGlow(x, y, Color3B::WHITE, 0.2f);
+                addTileGlow(x, y, Color3B::WHITE, 0.2f, 3);
+            }
             //consumeTile(x, y); // IF (TOUCH_RELIC_UNLOCKED) ...
         }
         return true;
